@@ -1,56 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista Tree Mejorada -->
     <record id="it_component_view_tree" model="ir.ui.view">
         <field name="name">it.component.tree</field>
         <field name="model">it.component</field>
         <field name="arch" type="xml">
-            <tree string="Componentes" decoration-danger="status == 'failed'" decoration-warning="status == 'maintenance'" decoration-success="status == 'operational'" decoration-muted="status == 'retired'">
-                <field name="model" string="Modelo"/>
-                <field name="subtype_id" string="Subtipo"/>
-                <field name="type" string="Tipo"/>
-                <field name="serial_number" string="N° Serie"/>
-                <field name="inventory_number" string="N° Inventario"
-                    attrs="{'invisible': [('is_internal','=',True)]}"/>
-                <field name="hardware_id" string="Hardware Asignado"/>
-                <field name="status" string="Estado" widget="badge"/>
-                <!-- Campo REQUERIDO para que funcione attrs -->
-                <field name="is_internal" invisible="1"/>
-            </tree>
+            <tree string="Componentes" decoration-danger="status == 'failed' or assignment_status == 'conflict'" decoration-warning="status == 'maintenance'" decoration-success="status == 'operational'" decoration-muted="status == 'retired'">
+                <field name="model"/>
+                <field name="subtype_id"/>
+                <field name="serial_number"/>
+                <field name="hardware_id"/>
+                <field name="assignment_status" widget="badge"
+                    decoration-success="assignment_status == 'available'"
+                    decoration-info="assignment_status == 'assigned'"
+                    decoration-danger="assignment_status == 'conflict'"/>
+                <field name="status" widget="badge"/>
+                
+                <button name="action_view_assigned_hardware"
+                        string="Ver Hardware"
+                        type="object"
+                        class="oe_link"
+                        icon="fa-external-link"
+                        attrs="{'invisible': [('hardware_id', '=', False)]}"/>
+                </tree>
         </field>
     </record>
 
-    <!-- Vista Form Mejorada -->
     <record id="it_component_view_form" model="ir.ui.view">
         <field name="name">it.component.form</field>
         <field name="model">it.component</field>
         <field name="arch" type="xml">
             <form string="Componente">
                 <header>
-                    <button name="action_unassign_from_hardware" type="object" string="Desasignar de Hardware" class="oe_highlight" attrs="{'invisible': [('hardware_id','=',False)]}"/>
+                    <button name="action_unassign_from_hardware" type="object" string="Desasignar de Hardware" class="btn-warning" attrs="{'invisible': [('hardware_id','=',False)]}" confirm="¿Está seguro de que desea desasignar este componente?"/>
+                    <button name="check_assignment_conflicts" type="object" string="Verificar Conflictos" class="btn-info"/>
                 </header>
                 <sheet>
+                    <widget name="web_ribbon" title="Disponible" bg_color="bg-success" attrs="{'invisible': [('assignment_status', '!=', 'available')]}"/>
+                    <widget name="web_ribbon" title="Asignado" bg_color="bg-info" attrs="{'invisible': [('assignment_status', '!=', 'assigned')]}"/>
+                    <widget name="web_ribbon" title="Conflicto" bg_color="bg-danger" attrs="{'invisible': [('assignment_status', '!=', 'conflict')]}"/>
                     <group>
                         <group string="Identificación">
                             <field name="model"/>
-                            <field name="subtype_id"/>
+                            <field name="manufacturer"/>
+                            <field name="subtype_id" options="{'no_create': True}"/>
                             <field name="type"/>
+                            <field name="subtype_name" invisible="1"/>
+                            <field name="size_gb" attrs="{'invisible': [('subtype_name', 'not in', ['RAM', 'SSD', 'DISCO DURO'])]}"/>
+                            <field name="ram_type" attrs="{'invisible': [('subtype_name', '!=', 'RAM')]}"/>
                         </group>
                         <group string="Ubicación y Estado">
                             <field name="hardware_id"/>
                             <field name="status" widget="radio" options="{'horizontal': true}"/>
-                        </group>
+                            <field name="assignment_status" readonly="1"/>
+                            </group>
                     </group>
-                    <group string="Datos Técnicos">
+                    <group string="Datos de Inventario">
                         <field name="serial_number"/>
-                        <field name="inventory_number" 
-                            attrs="{'invisible': [('is_internal','=',True)]}"
-                            string="N° Inventario (Solo Periféricos)"/>
-                        <!-- Campo REQUERIDO para que funcione attrs -->
-                        <field name="is_internal" invisible="1"/>
+                        <field name="inventory_number" attrs="{'required': [('type', '=', 'peripheral')]}"/>
                     </group>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
-    </record>
+    </record>       
 </odoo>

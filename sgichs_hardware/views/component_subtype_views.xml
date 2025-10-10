@@ -4,10 +4,14 @@
         <field name="name">it.component.subtype.tree</field>
         <field name="model">it.component.subtype</field>
         <field name="arch" type="xml">
-            <tree string="Subtipos de Componente">
+            <tree string="Subtipos de Componente" decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
                 <field name="name"/>
-                <field name="type"/>
+                <field name="code"/>
+                <field name="type" widget="badge"/>
                 <field name="component_count"/>
+                <field name="is_critical"/>
+                <field name="active" widget="boolean_toggle"/>
             </tree>
         </field>
     </record>
@@ -17,25 +21,62 @@
         <field name="model">it.component.subtype</field>
         <field name="arch" type="xml">
             <form string="Subtipo de Componente">
+                <header>
+                     <button name="toggle_active" string="Activar/Desactivar" type="object" class="btn-secondary"/>
+                </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_components" type="object" class="oe_stat_button" icon="fa-cogs">
                             <field name="component_count" widget="statinfo" string="Componentes"/>
                         </button>
                     </div>
+                    <widget name="web_ribbon" title="Inactivo" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
                     <group>
-                        <field name="name"/>
-                        <field name="type"/>
-                        <field name="description"/>
+                        <group string="Información Básica">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="type"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Reglas y Validaciones">
+                            <field name="is_critical"/>
+                            <field name="max_per_hardware"/>
+                        </group>
+                    </group>
+                    <group string="Descripción">
+                        <field name="description" nolabel="1" placeholder="Descripción detallada del subtipo..."/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
+    <record id="it_component_subtype_view_kanban" model="ir.ui.view">
+        <field name="name">it.component.subtype.kanban</field>
+        <field name="model">it.component.subtype</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="type"/>
+                <field name="component_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <strong><field name="name"/></strong>
+                            <div><span class="badge badge-pill badge-primary" t-if="record.type.raw_value == 'internal'">Interno</span>
+                            <span class="badge badge-pill badge-secondary" t-if="record.type.raw_value == 'peripheral'">Periférico</span></div>
+                            <div><field name="component_count"/> Componentes</div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <record id="action_it_component_subtype" model="ir.actions.act_window">
         <field name="name">Subtipos de Componente</field>
         <field name="res_model">it.component.subtype</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">tree,kanban,form</field>
     </record>
 </odoo>

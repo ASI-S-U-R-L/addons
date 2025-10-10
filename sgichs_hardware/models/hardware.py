@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 import logging
 _logger = logging.getLogger(__name__)
 
 class Hardware(models.Model):
     _name = 'it.asset.hardware'
     _description = 'Activo de Hardware'
-    # COMENTARIO: Usamos _inherit para extender 'it.asset' del módulo core.
     _inherit = 'it.asset'
 
-    # COMENTARIO: Este campo extiende la selección del modelo padre.
+    # Este campo extiende la selección del modelo padre.
     # Odoo combina automáticamente las selecciones de los modelos heredados.
     type = fields.Selection(
         selection_add=[('hardware', 'Hardware')],
-        ondelete={'hardware': 'cascade'}
+        ondelete={'hardware': 'cascade'},
+        default='hardware'
     )
 
     subtype = fields.Selection(
@@ -25,15 +26,22 @@ class Hardware(models.Model):
             ('other', 'Otro')
         ],
         string='Subtipo',
-        required=True
+        required=True,
+        tracking=True
     )
-    inventory_number = fields.Char(string='Número de Inventario', unique=True)
+    inventory_number = fields.Char(string='Número de Inventario', unique=True, copy=False)
+    
+    _sql_constraints = [
+        ('inventory_number_uniq', 'unique (inventory_number)', 'El número de inventario debe ser único!')
+    ]
+    
     components_ids = fields.Many2many(
         'it.component',
         'hardware_component_rel',
         'hardware_id',
         'component_id',
-        string='Componentes'
+        string='Componentes',
+        tracking=True
     )
     
     # Campos computados para control de módulos
@@ -53,61 +61,75 @@ class Hardware(models.Model):
         compute_sudo=True,
         string='Tiene Módulo de Software?'
     )
-    software_ids = fields.Many2many(
-    'it.asset.software',
-    string="Software Instalado",
-    compute='_compute_software_ids',
-    store=False
-    )
 
     # COMENTARIO: Los campos y la lógica para 'software_ids' y 'ip_ids' (y el ping)
     # han sido OMITIDOS intencionadamente. Serán añadidos por los módulos
     # 'sgich_software' y 'sgich_network' respectivamente, heredando este modelo.
     # Esto previene errores si esos módulos no están instalados.
 
-    @api.model
-    def create(self, vals):
-        # Forzamos el tipo a 'hardware' en la creación.
-        vals['type'] = 'hardware'
-        return super(Hardware, self).create(vals)
+    # --- LÓGICA DE SINCRONIZACIÓN Y VALIDACIÓN ---
+    def _update_component_assignments(self):
+        """
+        Asegura que la relación bidireccional entre hardware y componente sea correcta.
+        Esta función es clave para mantener la integridad de los datos.
+        """
+        for hardware in self:
+            # 1. Asigna este hardware a los componentes que están en su lista
+            components_to_assign = hardware.components_ids.filtered(lambda c: c.hardware_id != hardware)
+            if components_to_assign:
+                components_to_assign.write({'hardware_id': hardware.id})
+
+            # 2. Desasigna este hardware de los componentes que ya no están en su lista
+            components_to_unassign = self.env['it.component'].search([
+                ('hardware_id', '=', hardware.id),
+                ('id', 'not in', hardware.components_ids.ids)
+            ])
+            if components_to_unassign:
+                components_to_unassign.write({'hardware_id': False})
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """ Sobrescrito para asegurar la sincronización de componentes al crear. """
+        for vals in vals_list:
+            vals['type'] = 'hardware'
+        hardwares = super(Hardware, self).create(vals_list)
+        hardwares._update_component_assignments()
+        return hardwares
 
     def write(self, vals):
-        # Prevenimos que el tipo se cambie a algo que no sea 'hardware'.
+        """ Sobrescrito para asegurar la sincronización de componentes al editar. """
         if 'type' in vals and vals['type'] != 'hardware':
             vals['type'] = 'hardware'
-        return super(Hardware, self).write(vals)
+        res = super(Hardware, self).write(vals)
+        if 'components_ids' in vals:
+            self._update_component_assignments()
+        return res
+
+    def unlink(self):
+        """
+        Antes de eliminar un hardware, desasigna todos sus componentes
+        para que queden como 'disponibles'.
+        """
+        for hardware in self:
+            hardware.components_ids.write({'hardware_id': False})
+        return super(Hardware, self).unlink()
     
-    def _compute_software_ids(self):
-        """Manejo seguro para campo que podría no existir"""
-        for record in self:
-            if 'software_ids' in record._fields:
-                # Si el campo existe (módulo instalado), mantener valor
-                record.software_ids = record.software_ids
-            else:
-                # Si no existe, devolver lista vacía
-                record.software_ids = [(5, 0, 0)]
-    
-    
-    @api.depends_context('modules')
+    @api.depends_context()
     def _compute_module_status(self):
         """Calcula si los módulos dependientes están instalados"""
-        modules = self.env['ir.module.module'].sudo()
-        
-        # Usamos búsqueda directa para mejor performance
-        self.has_reporting_module = bool(modules.search_count([
-            ('name', '=', 'sgichs_reporting'),
+        installed_modules = self.env['ir.module.module'].search([
+            ('name', 'in', ['sgichs_reporting', 'sgichs_red', 'sgichs_software']),
             ('state', '=', 'installed')
-        ]))
-        
-        self.has_network_module = bool(modules.search_count([
-            ('name', '=', 'sgichs_red'),
-            ('state', '=', 'installed')
-        ]))
-        
-        self.has_software_module = bool(modules.search_count([
-            ('name', '=', 'sgichs_software'),
-            ('state', '=', 'installed')
-        ]))
+        ]).mapped('name')
+
+        has_reporting = 'sgichs_reporting' in installed_modules
+        has_network = 'sgichs_red' in installed_modules
+        has_software = 'sgichs_software' in installed_modules
+
+        for record in self:
+            record.has_reporting_module = has_reporting
+            record.has_network_module = has_network
+            record.has_software_module = has_software
     
     def action_manual_ping(self):
         """Manejo seguro para dependencias de módulos"""
@@ -134,20 +156,11 @@ class Hardware(models.Model):
     
     def action_llamar_reporte_ficha_tecnica(self):
         self.ensure_one() 
-
-        report_action_xml_id = 'test_sgichs.action_hardware_technical_sheet'
-
-        # Obtener la acción del reporte y ejecutarla para el(los) registro(s) actual(es)
+        # Es mejor referenciar la acción de reporte del módulo de reportes
+        # para evitar dependencias cruzadas.
+        report_action_xml_id = 'sgichs_reporting.action_report_hardware_technical_sheet'
         try:
             report_action = self.env.ref(report_action_xml_id)
-            if not report_action or report_action.report_type == '': # Comprobación simple
-                _logger.error(f"No se pudo encontrar o no es válida la acción de reporte: {report_action_xml_id}")
-            
-                raise UserError(f"La acción de reporte '{report_action_xml_id}' no se encuentra o no es válida.")
-                return False 
             return report_action.report_action(self)
-        except ValueError as e:
-        
-            # raise UserError(f"Error al obtener la acción del reporte '{report_action_xml_id}': {e}")
-            _logger.error(f"Error al intentar encontrar el XML ID '{report_action_xml_id}': {e}")
-            return False # O un diccionario de error para el cliente
+        except ValueError:
+            raise UserError(_("La acción de reporte '%s' no se encuentra. Asegúrese de que el módulo de reportes esté instalado correctamente.") % report_action_xml_id)

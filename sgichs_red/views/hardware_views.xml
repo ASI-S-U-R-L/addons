@@ -22,6 +22,7 @@
                         <group string="Conectividad">
                             <field name="connection_status" widget="badge"
                                 decoration-success="connection_status == 'online'"
+                                decoration-primary="connection_status == 'online_agent'" 
                                 decoration-danger="connection_status in ('offline', 'unreachable')"
                                 decoration-muted="connection_status in ('pending', 'unknown')"/>
                             <field name="last_ping_time"/>
@@ -36,6 +37,7 @@
                             <field name="ping_time"/>
                             <field name="status" widget="badge"
                                 decoration-success="status == 'online'"
+                                decoration-primary="status == 'online_agent'" 
                                 decoration-danger="status in ('offline', 'unreachable')"
                                 decoration-muted="status == 'unknown'"/>
                             <field name="response_time_ms"/>

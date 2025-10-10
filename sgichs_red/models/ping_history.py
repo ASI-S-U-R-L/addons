@@ -15,8 +15,10 @@ class PingHistory(models.Model):
     ping_time = fields.Datetime(string='Fecha y Hora', default=fields.Datetime.now, required=True)
     status = fields.Selection([
         ('online', 'Online'),
+        ('online_agent', 'Online (Vía Agente)'),
         ('offline', 'Offline'),
         ('unreachable', 'Inalcanzable'),
+        ('pending', 'Pendiente'),
         ('unknown', 'Desconocido')
     ], string='Estado', required=True)
     response_time_ms = fields.Float(string='Tiempo de Respuesta (ms)')

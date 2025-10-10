@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <record id="it_asset_backlog_view_tree_inherit_network" model="ir.ui.view">
+        <field name="name">it.asset.backlog.tree.inherit.network</field>
+        <field name="model">it.asset.backlog</field>
+        <field name="inherit_id" ref="sgichs_core2.it_asset_backlog_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="ip_ids" string="IPs Detectadas" widget="many2many_tags"/>
+            </xpath>
+        </field>
+    </record>
     <record id="it_asset_backlog_view_form_inherit_network" model="ir.ui.view">
         <field name="name">it.asset.backlog.form.inherit.network</field>
         <field name="model">it.asset.backlog</field>
@@ -12,4 +23,5 @@
             </xpath>
         </field>
     </record>
+
 </odoo>

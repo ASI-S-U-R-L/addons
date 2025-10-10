@@ -1,34 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
-        
-        <record id="user_juan_perez" model="res.users">
-            <field name="name">Juan Pérez</field>
-            <field name="login">jperez@sgichs.demo</field>
-        </record>
-        <record id="user_maria_gomez" model="res.users">
-            <field name="name">María Gómez</field>
-            <field name="login">mgomez@sgichs.demo</field>
-        </record>
-
-        <record id="it_user_jperez" model="it.user">
-            <field name="user_id" ref="user_juan_perez"/>
+        <record id="it_user_admin" model="it.user">
+            <field name="user_id" ref="base.user_admin"/>
             <field name="status">active</field>
-        </record>
-        <record id="it_user_mgomez" model="it.user">
-            <field name="user_id" ref="user_maria_gomez"/>
-            <field name="status">active</field>
+            <field name="notes">Usuario Administrador del Sistema con autorización de TI.</field>
         </record>
 
         <function model="it.asset.hardware" name="write">
-            <value eval="[ref('sgichs_hardware.hardware_pc_oficina_01')]"/>
-            <value eval="{'responsible_id': ref('it_user_jperez')}"/>
+            <value eval="[ref('sgichs_hardware.demo_hardware_pc_1')]"/>
+            <value eval="{'responsible_id': ref('it_user_admin')}"/>
         </function>
 
         <function model="it.asset.hardware" name="write">
-            <value eval="[ref('sgichs_hardware.hardware_laptop_gerencia_01')]"/>
-            <value eval="{'responsible_id': ref('it_user_mgomez')}"/>
+            <value eval="[ref('sgichs_hardware.demo_hardware_laptop_1')]"/>
+            <value eval="{'responsible_id': ref('it_user_admin')}"/>
         </function>
 
+        <function model="it.asset.hardware" name="write">
+            <value eval="[ref('sgichs_hardware.demo_hardware_server_1')]"/>
+            <value eval="{'responsible_id': ref('it_user_admin')}"/>
+        </function>
     </data>
 </odoo>

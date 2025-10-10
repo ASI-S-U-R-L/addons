@@ -5,25 +5,27 @@
         <field name="model">it.asset.backlog</field>
         <field name="inherit_id" ref="sgichs_core2.it_asset_backlog_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//sheet/group" position="after">
-                <notebook>
-                    <page string="Análisis de Aprobación" name="analysis">
-                        <group>
-                            <field name="existing_hardware_id" readonly="1"/>
-                        </group>
-                        <div class="alert alert-info" role="alert" attrs="{'invisible': [('existing_hardware_id', '!=', False)]}">
-                            <strong>Este es un activo NUEVO.</strong> Al aprobar, se creará un nuevo registro de hardware.
-                        </div>
-                        <div class="alert alert-warning" role="alert" attrs="{'invisible': [('existing_hardware_id', '=', False)]}">
-                            <strong>Este activo ya existe.</strong> Al aprobar, se actualizará el registro de hardware existente.
-                        </div>
-                        <button name="action_analyze_changes" string="Analizar Cambios" type="object" class="oe_highlight my-2"/>
-                        <field name="analysis_report" nolabel="1"/>
-                    </page>
-                    <page string="Componentes Detectados" name="components">
-                        <field name="components_ids" readonly="1"/>
-                    </page>
-                </notebook>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Análisis de Aprobación" name="analysis" autofocus="autofocus">
+                    <group>
+                        <field name="existing_hardware_id" readonly="1"/>
+                
+                    </group>
+                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('existing_hardware_id', '!=', False)]}">
+                        <strong>Este es un activo NUEVO.</strong> Al aprobar, se creará un nuevo registro de hardware.
+                    </div>
+                    <div class="alert alert-warning" role="alert" attrs="{'invisible': [('existing_hardware_id', '=', False)]}">
+
+                        <strong>Este activo ya existe.</strong> Al aprobar, se actualizará el registro de hardware existente.
+                    </div>
+                    <button name="action_analyze_changes" string="Analizar Cambios" type="object" class="oe_highlight my-2"/>
+                    <field name="analysis_report" nolabel="1"/>
+                </page>
+                
+                <page string="Componentes Detectados" name="components">
+                    <field name="components_ids" readonly="1"/>
+                </page>
             </xpath>
         </field>
     </record>

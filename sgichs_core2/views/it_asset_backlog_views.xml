@@ -5,7 +5,9 @@
         <field name="model">it.asset.backlog</field>
         <field name="arch" type="xml">
             <tree string="Backlog de Activos" decoration-muted="status == 'processed' or status == 'ignored'">
-                <field name="name"/>
+                <field name="description" string="Nombre Descriptivo"/>
+
+                <field name="name" string="Nº Inventario"/>
                 <field name="type"/>
                 <field name="status"/>
             </tree>
@@ -17,18 +19,24 @@
         <field name="model">it.asset.backlog</field>
         <field name="arch" type="xml">
             <form string="Activo en Backlog">
-                 <header>
+            
+                <header>
                     <button name="action_approve" string="Aprobar y Crear Activo" type="object" class="oe_highlight" attrs="{'invisible': [('status', '!=', 'pending')]}"/>
                     <button name="action_ignore" string="Ignorar" type="object" attrs="{'invisible': [('status', '!=', 'pending')]}"/>
                     <field name="status" widget="statusbar" statusbar_visible="pending,processed"/>
                 </header>
                 <sheet>
+
                     <group>
-                        <field name="name"/>
+                        <field name="name" string="Nº Inventario"/>
                         <field name="type"/>
                         <field name="description"/>
-                        <field name="raw_data"  invisible="1"/>
                     </group>
+                    <notebook>
+                        <page string="Datos en Bruto (JSON)">
+                            <field name="raw_data"/>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>

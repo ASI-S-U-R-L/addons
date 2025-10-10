@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="it_asset_hardware_view_form_inherit_software" model="ir.ui.view">
+        <field name="name">it.asset.hardware.form.inherit.software</field>
+        <field name="model">it.asset.hardware</field>
+        
+        <field name="inherit_id" ref="sgichs_hardware.it_asset_hardware_view_form"/>
+        
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page 
+                    string="Software Instalado" 
+                    name="software_page"
+                    attrs="{'invisible': [('has_software_module', '=', False)]}">
+                    
+                    <field name="software_ids" widget="many2many_tags" placeholder="Añadir software..."/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

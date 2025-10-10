@@ -17,7 +17,7 @@
         'views/it_asset_backlog_views.xml',
         'views/menus.xml',
 	
-	    #'data/demo_data_hardware.xml',
+	    'data/demo_data_hardware.xml',
     ],
     'installable': True,
     'application': False,

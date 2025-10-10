@@ -1,6 +1,8 @@
 {
     "intervalo_principal_min": 60,
     "intervalo_reintento_min": 5,
+    "listener_port": 9191,
+    "inventory_number": "00000",
     "odoo_config": {
         "url": "http://localhost:8067",
         "db": "odoo",

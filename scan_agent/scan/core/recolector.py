@@ -1,3 +1,5 @@
+# RUTA: scan_agent/scan/core/recolector.py
+
 # Asumo que las importaciones de hardware, etc. están correctas
 from ..hardware.cpu import RecolectorCPU
 from ..hardware.ram import RecolectorRAM
@@ -8,11 +10,25 @@ from ..hardware.perifericos import RecolectorPerifericos
 from ..hardware.placamadre import RecolectorPlacaMadre
 from .exportador import ExportadorOdoo
 from ..sistema.os import RecolectorOS
-from ..sistema.programas import RecolectorProgramas
-import wmi
+from ..sistema.programas import RecoltadorProgramas
 import platform
 import hashlib
 import logging
+import subprocess
+import psutil
+
+if platform.system() == "Linux":
+    from .linux_sudo_helper import sudo_manager
+
+# --- Importación condicional de WMI ---
+if platform.system() == "Windows":
+    try:
+        import wmi
+    except ImportError:
+        logging.error("La librería 'wmi' no está instalada. Es necesaria para Windows.")
+        wmi = None
+else:
+    wmi = None
 
 class GestorTI:
     def __init__(self, software_installed=False, network_installed=False):
@@ -34,7 +50,7 @@ class GestorTI:
         # Recolección condicional
         if software_installed:
             logging.info("El módulo de software está instalado. Se recolectarán los programas.")
-            self.recolectores["programas"] = RecolectorProgramas()
+            self.recolectores["programas"] = RecoltadorProgramas()
         else:
             logging.warning("El módulo de software no está instalado. Se omitirá la recolección de programas.")
 
@@ -50,70 +66,83 @@ class GestorTI:
         """Asigna una instancia pre-configurada y probada del exportador."""
         self.exportador = exportador
 
+    # --- MÉTODO MODIFICADO PARA SER MULTIPLATAFORMA ---
     def recolectar_todo(self):
         resultados = {}
+        
+        # Obtenemos el serial de la placa madre una sola vez
+        motherboard_serial = self._get_motherboard_serial()
+        
         for nombre, recolector in self.recolectores.items():
             try:
                 if nombre == "perifericos":
                     perifericos = recolector.obtener_info()
-                    resultados[nombre] = [self._generar_id_periferico(p) for p in perifericos]      
+                    resultados[nombre] = [self._generar_id_periferico(p) for p in perifericos]
                 elif nombre == "ram":
-                    # Crear conexión WMI
-                    c = wmi.WMI()
-
-                    # Extraer serial de la motherboard y guardar en variable
-                    motherboard_serial = next((board.SerialNumber.strip() for board in c.Win32_BaseBoard()), "UNKNOWN")
+                    # Usamos el serial ya obtenido
                     pc_identifier = f"{platform.node()}_{motherboard_serial}"
-                    ram = recolector.obtener_info()
-                    resultados[nombre] = [self._generar_id_local_ram(p, pc_identifier) for p in ram]     
+                    ram_info = recolector.obtener_info()
+                    resultados[nombre] = [self._generar_id_local_ram(p, pc_identifier) for p in ram_info]
                 else:
                     resultados[nombre] = recolector.obtener_info()
             except Exception as e:
                 resultados[nombre] = {"error": str(e)}
+        
+        # --- CÁLCULO DE RAM TOTAL ---
+        # Es más fiable obtener la RAM total directamente del sistema que sumar los módulos.
+        try:
+            total_ram_bytes = psutil.virtual_memory().total
+            resultados['ram_total_gb'] = round(total_ram_bytes / (1024**3), 2)
+            logging.debug(f"RAM total detectada (psutil): {resultados['ram_total_gb']} GB")
+        except Exception as e:
+            logging.error(f"No se pudo obtener la RAM total con psutil: {e}")
+            # Si psutil falla, usamos la suma de los módulos como plan B.
+            ram_modules = resultados.get('ram', [])
+            if isinstance(ram_modules, list):
+                resultados['ram_total_gb'] = sum(r.get('Tamaño (GB)', 0) for r in ram_modules)
+                logging.warning(f"Fallback: RAM total calculada sumando módulos: {resultados['ram_total_gb']} GB")
+            else:
+                resultados['ram_total_gb'] = 0.0
+        
         return resultados
 
+    # --- Método multiplataforma para el serial de la placa madre ---
+    def _get_motherboard_serial(self) -> str:
+        """Obtiene el número de serie de la placa madre según el SO."""
+        system = platform.system()
+        serial = "UNKNOWN"
+        try:
+            if system == "Windows" and wmi:
+                c = wmi.WMI()
+                serial = next((board.SerialNumber.strip() for board in c.Win32_BaseBoard()), "UNKNOWN")
+            elif system == "Linux":
+                # Usamos el gestor en lugar de Popen
+                command = "dmidecode -s baseboard-serial-number"
+                serial = sudo_manager.run(command).strip()
+            elif system == "Darwin": # macOS
+                command = "ioreg -l | grep IOPlatformSerialNumber"
+                process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout, stderr = process.communicate()
+                if process.returncode == 0:
+                    serial = stdout.decode().split('=')[-1].strip().replace('"', '')
+                else:
+                    logging.warning(f"No se pudo obtener serial de placa base con ioreg: {stderr.decode().strip()}")
+        except Exception as e:
+            logging.error(f"Error obteniendo serial de la placa base: {e}")
+        
+        return serial if serial and "to be filled" not in serial.lower() else "UNKNOWN"
 
-    def _generar_id_local_ram(self, ram, motherboard_serial):
-        """
-        Genera un ID local único y robusto para un módulo de RAM en una PC específica.
-
-        La función prioriza el número de serie de la RAM por ser el identificador más
-        confiable. Si el número de serie no está disponible o parece genérico, 
-        crea un identificador "débil" a partir de otras propiedades de la RAM.
-
-        Luego, combina este identificador de la RAM con el número de serie de la
-        placa madre para crear un hash final que representa el vínculo único
-        entre ese componente y esa PC.
-
-        Args:
-            ram (dict): Un diccionario con las propiedades de la RAM.
-                        Debe contener 'Número de Serie' y otros detalles.
-            motherboard_serial (str): El número de serie de la placa madre.
-
-        Returns:
-            str: Un hash SHA256 que representa el vínculo único RAM-PC.
-        """
+    # El resto de los métodos (_generar_id_local_ram, etc.) no necesitan cambios.
+    def _generar_id_local_ram(self, ram, pc_identifier):
         ram_serial = ram.get('Número de Serie', '').strip()
-
-        # Paso 1: Determinar el identificador más único posible para la RAM.
-        # Se prioriza el número de serie si parece válido.
-        # Un serial válido no debería ser '0', 'N/A' o un placeholder.
         if ram_serial and ram_serial not in ['0', 'N/A', 'SerNum'] and len(ram_serial) > 4:
-            # Se considera un número de serie válido. Es el mejor identificador.
             id_unico_ram = ram_serial
         else:
-            # Fallback: Si no hay número de serie, se crea un ID "débil" con otras propiedades.
-            # ADVERTENCIA: Esto aumenta el riesgo de colisiones entre RAMs idénticas.
             id_unico_ram = (f"{ram.get('Fabricante', '')}-{ram.get('Modelo', '')}-"
                             f"{ram.get('Tamaño (GB)', '')}-{ram.get('Banco', '')}-{ram.get('Slot', '')}")
 
-        # Paso 2: Crear el hash combinado con el serial de la placa madre.
-        # Normalizar datos (a minúsculas y sin espacios) para consistencia.
-        datos_para_hash = (f"ram_id:{id_unico_ram.lower()}-"
-                        f"mb_serial:{str(motherboard_serial).strip().lower()}")
-        
+        datos_para_hash = f"ram_id:{id_unico_ram.lower()}-pc_id:{pc_identifier.strip().lower()}"
         hash_final = hashlib.sha256(datos_para_hash.encode('utf-8')).hexdigest()
-        
         return {**ram, "id_unico": hash_final}
     
     def _generar_id_periferico(self, periferico):
@@ -122,19 +151,15 @@ class GestorTI:
         return {**periferico, "id_unico": hash_id}
 
     def exportar_datos(self):
-        """Orquesta la recolección y exportación de todos los datos como un único activo."""
         if not self.exportador:
             logging.error("El exportador no está configurado. No se pueden enviar datos.")
             raise Exception("Exportador no configurado")
 
         logging.info("Recolectando todos los datos para la exportación...")
         datos_completos = self.recolectar_todo()
-
-        # Nueva lógica: enviar todo el paquete de datos al exportador
         self.exportador.exportar_activo_completo(datos_completos)
-
+    
     def test(self):
-        """Función de prueba que recolecta y muestra la información por consola"""
         print("\n" + "="*50)
         print("INICIO DE PRUEBA DEL GESTOR DE TI")
         print("="*50)
@@ -145,7 +170,6 @@ class GestorTI:
         print("="*50)
         
     def imprimir_datos(self, datos):
-        """Imprime los datos recolectados de forma estructurada."""
         for categoria, info in datos.items():
             print(f"\n[{categoria.upper()}]")
             if isinstance(info, list):

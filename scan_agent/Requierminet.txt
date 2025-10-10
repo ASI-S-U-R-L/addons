@@ -1,0 +1,20 @@
+# Dependencias comunes para todos los sistemas operativos
+requests
+psutil
+keyring
+
+# Dependencias específicas para Linux
+pyudev; sys_platform == 'linux'
+jeepney; sys_platform == 'linux'
+SecretStorage; sys_platform == 'linux'
+python3-tk; sys_platform == 'linux'
+requests; sys_platform == 'linux'
+psutil; sys_platform == 'linux'
+keyring; sys_platform == 'linux'
+keyreg.alt; sys_platform == 'linux'
+requests; sys_platform == 'linux'
+psutil; sys_platform == 'linux'
+
+# Dependencias específicas para Windows
+pywin32; sys_platform == 'win32'
+WMI; sys_platform == 'win32'

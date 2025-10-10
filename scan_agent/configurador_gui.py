@@ -1,100 +1,171 @@
-# -*- coding: utf-8 -*-
-import tkinter as tk
-from tkinter import messagebox
-import keyring  # Importamos la librería
+# RUTA: scan_agent/configurador_gui.py
 
-# Definimos un nombre de servicio único para nuestra aplicación
+import tkinter as tk
+from tkinter import ttk, messagebox # ¡NUEVO! Importamos ttk
+import keyring
+import requests
+import time
+import subprocess
+import sys
+import logging
+from pathlib import Path
+
+# Importamos la lógica necesaria
+try:
+    from configurador import LOCK_FILE, remove_lock
+    from scan.core.deployment import get_install_path
+except ImportError:
+    LOCK_FILE = Path.home() / '.sgichs_agent.lock'
+    get_install_path = lambda: Path.home()
+    remove_lock = lambda: None
+
+_logger = logging.getLogger(__name__)
 KEYRING_SERVICE_NAME = "sgich-scan-agent"
 
 class ConfiguratorApp(tk.Tk):
     """
-    Aplicación de Tkinter para configurar los detalles de conexión del agente.
-    Ahora guarda la contraseña de forma segura usando keyring.
+    Interfaz gráfica mejorada para la configuración del agente.
     """
     def __init__(self, initial_config=None):
         super().__init__()
-        self.title("Configuración del Agente de Escaneo")
-        self.geometry("400x250")
+
+        # --- Mejoras Visuales ---
+        self.title("Configuración del Agente SGICH")
+        self.geometry("450x360")
         self.resizable(False, False)
+        
+        # Estilo ttk
+        style = ttk.Style(self)
+        style.theme_use('clam') # Tema moderno y limpio
+
+        # Icono de la ventana
+        try:
+            # Asegúrate de tener un archivo 'agent.ico' en la carpeta scan_agent
+            icon_path = Path(__file__).parent / "agent.ico"
+            if icon_path.exists():
+                self.iconbitmap(icon_path)
+        except Exception:
+            _logger.warning("No se pudo cargar 'agent.ico'. Asegúrate de que el archivo exista.")
 
         self.config_data = initial_config if initial_config else {}
         self.saved = False
 
-        # --- Widgets ---
-        tk.Label(self, text="URL de Odoo:", anchor="w").grid(row=0, column=0, padx=10, pady=5, sticky="w")
-        self.url_entry = tk.Entry(self, width=40)
-        self.url_entry.grid(row=0, column=1, padx=10, pady=5)
+        # --- Contenedor Principal con Padding ---
+        main_frame = ttk.Frame(self, padding="20 20 20 20")
+        main_frame.pack(expand=True, fill='both')
 
-        tk.Label(self, text="Base de Datos:", anchor="w").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.db_entry = tk.Entry(self, width=40)
-        self.db_entry.grid(row=1, column=1, padx=10, pady=5)
+        # --- Título ---
+        ttk.Label(main_frame, text="Conexión con Odoo", font=("Helvetica", 14, "bold")).pack(pady=(0, 15))
 
-        tk.Label(self, text="Usuario:", anchor="w").grid(row=2, column=0, padx=10, pady=5, sticky="w")
-        self.user_entry = tk.Entry(self, width=40)
-        self.user_entry.grid(row=2, column=1, padx=10, pady=5)
+        # --- Frame para los campos ---
+        fields_frame = ttk.Frame(main_frame)
+        fields_frame.pack(fill='x')
+        
+        # Configuración de las columnas del grid
+        fields_frame.columnconfigure(1, weight=1)
 
-        tk.Label(self, text="Contraseña / API Key:", anchor="w").grid(row=3, column=0, padx=10, pady=5, sticky="w")
-        self.pass_entry = tk.Entry(self, show="*", width=40)
-        self.pass_entry.grid(row=3, column=1, padx=10, pady=5)
+        # --- Widgets (usando ttk) ---
+        ttk.Label(fields_frame, text="Nº de Inventario PC:").grid(row=0, column=0, padx=5, pady=8, sticky="w")
+        self.inventory_entry = ttk.Entry(fields_frame, width=40)
+        self.inventory_entry.grid(row=0, column=1, padx=5, pady=8, sticky="ew")
+
+        ttk.Label(fields_frame, text="URL de Odoo:").grid(row=1, column=0, padx=5, pady=8, sticky="w")
+        self.url_entry = ttk.Entry(fields_frame, width=40)
+        self.url_entry.grid(row=1, column=1, padx=5, pady=8, sticky="ew")
+
+        ttk.Label(fields_frame, text="Base de Datos:").grid(row=2, column=0, padx=5, pady=8, sticky="w")
+        self.db_entry = ttk.Entry(fields_frame, width=40)
+        self.db_entry.grid(row=2, column=1, padx=5, pady=8, sticky="ew")
+
+        ttk.Label(fields_frame, text="Usuario:").grid(row=3, column=0, padx=5, pady=8, sticky="w")
+        self.user_entry = ttk.Entry(fields_frame, width=40)
+        self.user_entry.grid(row=3, column=1, padx=5, pady=8, sticky="ew")
+
+        ttk.Label(fields_frame, text="Contraseña / API Key:").grid(row=4, column=0, padx=5, pady=8, sticky="w")
+        self.pass_entry = ttk.Entry(fields_frame, show="*", width=40)
+        self.pass_entry.grid(row=4, column=1, padx=5, pady=8, sticky="ew")
 
         # --- Botones ---
-        button_frame = tk.Frame(self)
-        button_frame.grid(row=4, column=0, columnspan=2, pady=20)
-        save_button = tk.Button(button_frame, text="Guardar y Continuar", command=self.save_config)
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(pady=(20, 10))
+        
+        style.configure('Save.TButton', foreground='white', background='#007bff')
+        save_button = ttk.Button(button_frame, text="Guardar y Continuar", command=self.save_config, style='Save.TButton')
         save_button.pack(side="left", padx=10)
-        cancel_button = tk.Button(button_frame, text="Cancelar", command=self.cancel)
-        cancel_button.pack(side="left", padx=10)
 
+        cancel_button = ttk.Button(button_frame, text="Cancelar", command=self.cancel)
+        cancel_button.pack(side="left", padx=10)
+        
         self.load_initial_config()
 
+    # --- El resto de los métodos (load_initial_config, save_config, etc.) no cambian ---
     def load_initial_config(self):
-        """Carga la configuración. La contraseña se recupera de keyring."""
+        self.inventory_entry.insert(0, self.config_data.get("inventory_number", "00000"))
         odoo_config = self.config_data.get("odoo_config", {})
         username = odoo_config.get("username", "")
-        
-        self.url_entry.insert(0, odoo_config.get("url", "http://localhost:8067"))
+        self.url_entry.insert(0, odoo_config.get("url", "http://localhost:8069"))
         self.db_entry.insert(0, odoo_config.get("db", ""))
         self.user_entry.insert(0, username)
-        
-        # Intentamos recuperar la contraseña del keyring si ya existe un usuario
         if username:
             password = keyring.get_password(KEYRING_SERVICE_NAME, username)
             if password:
                 self.pass_entry.insert(0, password)
 
     def save_config(self):
-        """Valida, guarda la configuración en JSON (sin contraseña) y la contraseña en keyring."""
+        inventory_number = self.inventory_entry.get().strip()
         url = self.url_entry.get().strip()
         db = self.db_entry.get().strip()
         user = self.user_entry.get().strip()
         password = self.pass_entry.get().strip()
-
-        if not all([url, db, user, password]):
+        if not all([inventory_number, url, db, user, password]):
             messagebox.showerror("Error", "Todos los campos son obligatorios.")
             return
-
-        # Guardamos la contraseña de forma segura en el gestor de credenciales del SO
         try:
             keyring.set_password(KEYRING_SERVICE_NAME, user, password)
-            messagebox.showinfo("Éxito", "La contraseña ha sido guardada de forma segura en el sistema.")
+            messagebox.showinfo("Éxito", "La contraseña ha sido guardada de forma segura.")
         except Exception as e:
-            messagebox.showerror("Error de Keyring", f"No se pudo guardar la contraseña de forma segura:\n{e}")
+            messagebox.showerror("Error de Keyring", f"No se pudo guardar la contraseña:\n{e}")
             return
-
-        # El archivo JSON ya NO contendrá la contraseña
         self.config_data = {
             "intervalo_principal_min": self.config_data.get("intervalo_principal_min", 60),
             "intervalo_reintento_min": self.config_data.get("intervalo_reintento_min", 5),
-            "odoo_config": {
-                "url": url,
-                "db": db,
-                "username": user,
-                # "password" ya no se guarda aquí
-            }
+            "listener_port": self.config_data.get("listener_port", 9191),
+            "inventory_number": inventory_number,
+            "odoo_config": {"url": url, "db": db, "username": user}
         }
         self.saved = True
+        if LOCK_FILE.exists():
+            answer = messagebox.askyesno(
+                "Aplicar Cambios",
+                "Configuración guardada.\n\n¿Desea reiniciar el agente ahora para aplicar los cambios?\n\n(Si elige 'No', los cambios se aplicarán en el próximo inicio del sistema)."
+            )
+            if answer:
+                self.restart_agent()
         self.destroy()
 
+    def restart_agent(self):
+        _logger.info("Intentando reiniciar el agente...")
+        listener_port = self.config_data.get("listener_port", 9191)
+        restart_url = f"http://localhost:{listener_port}/restart"
+        try:
+            requests.post(restart_url, timeout=5)
+            messagebox.showinfo("Reinicio en Progreso", "El agente anterior se está deteniendo. Se iniciará uno nuevo en breve.")
+        except requests.exceptions.RequestException as e:
+            _logger.error(f"No se pudo conectar con el agente en {restart_url}. Error: {e}")
+            messagebox.showwarning("Advertencia", "No se pudo conectar con el agente. Es posible que deba reiniciarse manualmente.")
+        time.sleep(2)
+        remove_lock()
+        try:
+            install_dir = get_install_path()
+            executable_name = Path(sys.executable).name
+            executable_path = install_dir / executable_name
+            if not executable_path.exists():
+                messagebox.showerror("Error", "No se pudo encontrar el agente instalado para relanzarlo.")
+                return
+            subprocess.Popen([str(executable_path)])
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo relanzar el agente:\n{e}")
+            
     def cancel(self):
         self.saved = False
         self.destroy()

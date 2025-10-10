@@ -12,7 +12,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/cron_jobs.xml',
-	    #'data/demo_data_network.xml',
+	    'data/demo_data_network.xml',
         'views/ip_address_views.xml',
         'views/network_service_views.xml',
         'views/hardware_views.xml',

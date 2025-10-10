@@ -46,6 +46,8 @@ class Software(models.Model):
     
     color = fields.Integer(string="Color Index", help="Color para representación visual")
     
+    os_type = fields.Selection(string="Sistema Operativo En el que funciona", selection=[('windows', 'Windows'),('linux', 'Linux'),('mac', 'MacOS'),('android', 'Android')])
+    
     #=====================#
     #      FUNCIONES      #
     #=====================#

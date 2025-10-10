@@ -2,6 +2,12 @@ import psutil
 import platform
 import subprocess
 import re
+import logging
+
+if platform.system() == "Linux":
+    from ..core.linux_sudo_helper import sudo_manager
+
+_logger = logging.getLogger(__name__) 
 
 class RecolectorRAM:
     def obtener_info(self):
@@ -20,37 +26,41 @@ class RecolectorRAM:
         }]
 
     def _obtener_info_windows(self):
-        import wmi
-        c = wmi.WMI()
-        modulos = []
-        
-        
-        
-        for modulo in c.Win32_PhysicalMemory():
-            modulos.append({
-                'Fabricante': modulo.Manufacturer,
-                'Modelo': modulo.PartNumber,
-                'Tamaño (GB)': int(modulo.Capacity) / (1024**3),  # Cambiado a división para float
-                'Número de Serie': modulo.SerialNumber.strip(),
-                'Tipo': modulo.MemoryType,  # Mantenemos el código numérico
-                'Velocidad (MHz)': modulo.Speed,
-                'Factor de Forma': modulo.FormFactor,  # Mantenemos el código numérico
-                'Banco': modulo.BankLabel,
-                'Slot': modulo.DeviceLocator
-            })
-        
-        return modulos
+        try:
+            import wmi
+            c = wmi.WMI()
+            modulos = []
+            
+            for modulo in c.Win32_PhysicalMemory():
+                modulos.append({
+                    'Fabricante': modulo.Manufacturer,
+                    'Modelo': modulo.PartNumber,
+                    'Tamaño (GB)': int(modulo.Capacity) / (1024**3),
+                    'Número de Serie': modulo.SerialNumber.strip(),
+                    'Tipo RAM': self._traducir_tipo_ram_windows(modulo.MemoryType), # ¡NUEVO!
+                    'Velocidad (MHz)': modulo.Speed,
+                    'Factor de Forma': self._traducir_factor_forma_windows(modulo.FormFactor),
+                    'Banco': modulo.BankLabel,
+                    'Slot': modulo.DeviceLocator
+                })
+            
+            return modulos
+        except ImportError:
+            _logger.error("Módulo WMI no disponible para recolectar info de RAM en Windows.")
+            return self._info_basica()
+        except Exception as e:
+            _logger.error(f"Error al obtener info de RAM en Windows: {e}")
+            return self._info_basica()
 
     def _obtener_info_linux(self):
         try:
-            output = subprocess.check_output(
-                "sudo dmidecode --type memory",
-                shell=True,
-                text=True,
-                stderr=subprocess.STDOUT
-            )
+            
+            # Ya no usamos subprocess directamente
+            output = sudo_manager.run("dmidecode --type memory")
+            
             return self._parsear_dmidecode(output)
         except Exception as e:
+            _logger.error(f"No se pudo obtener información detallada de RAM: {str(e)}")
             return [{
                 'error': f"No se pudo obtener información detallada: {str(e)}",
                 'sugerencia': "Ejecutar con permisos sudo o instalar dmidecode"
@@ -105,7 +115,22 @@ class RecolectorRAM:
                 bloque_actual = {}
                 
         return modulos or self._info_basica()
+    
+    
+    # --- MÉTODOS HELPER WINDOWS---
+    def _traducir_tipo_ram_windows(self, tipo_id):
+        tipos = {
+            20: "DDR", 21: "DDR2", 22: "DDR2 FB-DIMM", 24: "DDR3",
+            26: "DDR4", 27: "LPDDR4", 28: "LPDDR5", 29: "DDR5"
+        }
+        return tipos.get(tipo_id, "Otro")
 
+    def _traducir_factor_forma_windows(self, factor_id):
+        factores = {8: "DIMM", 12: "SODIMM"}
+        return factores.get(factor_id, "Otro")
+
+
+    # --- MÉTODOS HELPER STANDAR---
     def _traducir_tipo(self, tipo_id):
         tipos = {
             20: "DDR",

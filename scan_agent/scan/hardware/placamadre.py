@@ -1,6 +1,13 @@
 import platform
 import subprocess
 import re
+import logging
+
+if platform.system() == "Linux":
+    from ..core.linux_sudo_helper import sudo_manager
+
+
+_logger = logging.getLogger(__name__)
 
 class RecolectorPlacaMadre:
     def obtener_info(self):
@@ -59,31 +66,16 @@ class RecolectorPlacaMadre:
     def _obtener_info_linux(self):
         try:
             # Información de la placa base
-            output_baseboard = subprocess.check_output(
-                "sudo dmidecode -t baseboard",
-                shell=True,
-                text=True,
-                stderr=subprocess.STDOUT
-            )
+            output_baseboard = sudo_manager.run("dmidecode -t baseboard")
             info = self._parsear_dmidecode(output_baseboard, "Base Board Information")
             
             # Información del sistema
-            output_system = subprocess.check_output(
-                "sudo dmidecode -t system",
-                shell=True,
-                text=True,
-                stderr=subprocess.STDOUT
-            )
+            output_system = sudo_manager.run("dmidecode -t system")
             system_info = self._parsear_dmidecode(output_system, "System Information")
             info.update(system_info)
             
             # Información del BIOS
-            output_bios = subprocess.check_output(
-                "sudo dmidecode -t bios",
-                shell=True,
-                text=True,
-                stderr=subprocess.STDOUT
-            )
+            output_bios = sudo_manager.run("dmidecode -t bios")
             bios_info = self._parsear_dmidecode(output_bios, "BIOS Information")
             info.update(bios_info)
             

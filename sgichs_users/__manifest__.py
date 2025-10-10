@@ -12,7 +12,7 @@
         'views/it_user_views.xml',
         'views/it_user_profile_views.xml',
         'views/menus.xml',
-	    #'data/demo_data_users.xml',
+	    'data/demo_data_users.xml',
     ],
     'installable': True,
     'application': False,

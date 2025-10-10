@@ -4,50 +4,112 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.external_layout">
-                    <div class="page" style="font-family: 'Helvetica', sans-serif; color: #333;">
+                    <div class="page" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px;">
 
-                        <div class="header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0077B6; padding-bottom: 15px; margin-bottom: 30px;">
-                            
-                            <div class="logo-company" style="flex: 1 1 0;">
-                                <img t-if="user.company_id.logo" t-att-src="image_data_uri(user.company_id.logo)" style="max-height: 60px; max-width: 150px;" alt="Company Logo"/>
-                            </div>
-
-                            <div class="title" style="flex: 2 1 0; text-align: center;">
-                                <h1 style="color: #0077B6; font-weight: bold; margin: 0; font-size: 24px;">
-                                    Ficha Técnica de Hardware
-                                </h1>
-                            </div>
-
-                            <div class="logo-module" style="flex: 1 1 0; text-align: right;">
-                                <img src="/sgichs_reporting/static/description/logo.png" style="max-height: 60px; max-width: 150px;" alt="Module Logo"/>
+                        <div class="header" style="padding-bottom: 15px; margin-bottom: 25px; border-bottom: 2px solid #0077B6;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="flex: 1;">
+                                    <img t-if="user.company_id.logo" t-att-src="image_data_uri(user.company_id.logo)" style="max-height: 60px;" alt="Logo"/>
+                                    </div>
+                                <div style="flex: 2; text-align: center;">
+                                    <h2 style="color: #0077B6; margin: 0;">Ficha Técnica de Hardware</h2>
+                                </div>
+                                <div style="flex: 1; text-align: right;">
+                                    <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y %H:%M')"/>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="main-details" style="margin-bottom: 35px;">
-                            <h2 style="color: #0077B6; border-bottom: 1px solid #CCC; padding-bottom: 8px; margin-bottom: 15px;">
+                        <div class="main-details" style="margin-bottom: 30px;">
+                            <h3 style="color: #0077B6; border-bottom: 1px solid #EEE; padding-bottom: 5px;">
                                 Datos del Equipo: <span t-field="doc.name" style="font-weight: normal;"/>
-                            </h2>
-                            <table class="table table-sm table-bordered" style="border-color: #DEE2E6;">
-                                <tbody>
-                                    <tr>
-                                        <td style="width: 25%; background-color: #F8F9FA;"><strong>Nº de Inventario</strong></td>
-                                        <td style="width: 25%;"><span t-field="doc.inventory_number"/></td>
-                                        <td style="width: 25%; background-color: #F8F9FA;"><strong>Estado</strong></td>
-                                        <td style="width: 25%;"><span t-field="doc.status"/></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="background-color: #F8F9FA;"><strong>Tipo de Activo</strong></td>
-                                        <td><span t-field="doc.subtype"/></td>
-                                        <td style="background-color: #F8F9FA;"><strong>Responsable</strong></td>
-                                        <td><span t-field="doc.responsible_id.name"/></td>
-                                    </tr>
-                                </tbody>
+                            </h3>
+                            <table class="table table-sm table-bordered mt-3">
+                                <tr>
+                                    <td style="width: 25%; background-color: #F8F9FA;"><strong>Nº de Inventario</strong></td>
+                                    <td style="width: 25%;"><span t-field="doc.inventory_number"/></td>
+                                    <td style="width: 25%; background-color: #F8F9FA;"><strong>Estado</strong></td>
+                                    <td style="width: 25%;"><span t-field="doc.status"/></td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color: #F8F9FA;"><strong>Subtipo</strong></td>
+                                    <td><span t-field="doc.subtype"/></td>
+                                    <td style="background-color: #F8F9FA;"><strong>Responsable</strong></td>
+                                    <td><span t-field="doc.responsible_id.name"/></td>
+                                </tr>
                             </table>
                         </div>
+
+                        <div class="components" style="margin-bottom: 30px;">
+                            <h3 style="color: #0077B6; border-bottom: 1px solid #EEE; padding-bottom: 5px;">Componentes Instalados</h3>
+                            <t t-if="doc.components_ids">
+                                <table class="table table-sm table-striped mt-3">
+                                    <thead>
+                                        <tr style="background-color: #E9ECEF;">
+                                            <th style="padding: 8px;">Subtipo</th>
+                                            <th style="padding: 8px;">Modelo</th>
+                                            <th style="padding: 8px;">Tamaño (GB)</th>
+                                            <th style="padding: 8px;">Tipo RAM</th>
+                                            <th style="padding: 8px;">N° Serie</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="doc.components_ids" t-as="component">
+                                            <td><span t-field="component.subtype_id.name"/></td>
+                                            <td><span t-field="component.model"/></td>
+                                            <td>
+                                                <span t-if="component.size_gb > 0" t-esc="component.size_gb"/>
+                                            </td>
+                                            <td>
+                                                <span t-if="component.ram_type" t-field="component.ram_type"/>
+                                            </td>
+                                            <td><span t-field="component.serial_number"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <t t-else="">
+                                <p style="color: #888; font-style: italic; margin-top: 10px;">Sin componentes registrados.</p>
+                            </t>
+                        </div>
+
+                        <div t-if="doc.has_network_module" class="network-details" style="margin-bottom: 30px;">
+                            <h3 style="color: #0077B6; border-bottom: 1px solid #EEE; padding-bottom: 5px;">Conectividad de Red</h3>
+                            <t t-if="doc.ip_ids">
+                                <table class="table table-sm table-striped mt-3">
+                                    <thead>
+                                        <tr style="background-color: #E9ECEF;">
+                                            <th style="padding: 8px;">Dirección IP</th>
+                                            <th style="padding: 8px;">Descripción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="doc.ip_ids" t-as="ip">
+                                            <td><span t-field="ip.address"/></td>
+                                            <td><span t-field="ip.description"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <t t-else="">
+                                <p style="color: #888; font-style: italic; margin-top: 10px;">Sin direcciones IP asignadas.</p>
+                            </t>
+                        </div>
                         
-                        <div class="footer" style="position: absolute; bottom: 20px; width: 100%; border-top: 1px solid #CCC; padding-top: 10px; font-size: 10px; color: #777; text-align: center;">
-                            <p>Documento generado automáticamente por el Sistema de Gestión de TI | Fecha de generación: <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y a las %H:%M')"/></p>
-                            <p t-if="user.company_id.name"><t t-esc="user.company_id.name"/> | <t t-esc="user.company_id.website or ''"/></p>
+                        <div t-if="doc.has_software_module" class="software-details">
+                            <h3 style="color: #0077B6; border-bottom: 1px solid #EEE; padding-bottom: 5px;">Software Instalado</h3>
+                            <t t-if="doc.software_ids">
+                                <ul class="list-group list-group-flush mt-3">
+                                    <t t-foreach="doc.software_ids" t-as="sw">
+                                        <li class="list-group-item" style="padding: 5px 0px;">
+                                            <span t-field="sw.name"/> <span class="text-muted">(Versión: <t t-esc="sw.version or 'N/A'"/>)</span>
+                                        </li>
+                                    </t>
+                                </ul>
+                            </t>
+                            <t t-else="">
+                                <p style="color: #888; font-style: italic; margin-top: 10px;">Sin software registrado.</p>
+                            </t>
                         </div>
                     </div>
                 </t>

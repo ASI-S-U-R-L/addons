@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Definición de la Acción de Reporte para la Ficha Técnica -->
     <record id="action_report_hardware_technical_sheet" model="ir.actions.report">
         <field name="name">Ficha Técnica de Hardware</field>
         <field name="model">it.asset.hardware</field>
@@ -8,7 +7,6 @@
         <field name="report_name">sgichs_reporting.template_hardware_technical_sheet</field>
         <field name="report_file">sgichs_reporting.template_hardware_technical_sheet</field>
         <field name="print_report_name">'Ficha Técnica - %s' % (object.name)</field>
-        <!-- CORRECCIÓN: Se usa el nombre de módulo correcto 'sgichs_hardware' -->
         <field name="binding_model_id" ref="sgichs_hardware.model_it_asset_hardware"/>
         <field name="binding_type">report</field>
     </record>

@@ -1,132 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Software de ejemplo -->
-    <record id="software_windows" model="it.asset.software">
-        <field name="name">Windows 10 Professional</field>
-        <field name="version">22H2</field>
-        <field name="license_key">W269N-WFGWX-YVC9B-4J6C9-T83GX</field>
-        <field name="subtype">sistema_operativo</field>
-    </record>
-    
-    <record id="software_office" model="it.asset.software">
-        <field name="name">Microsoft Office 365</field>
-        <field name="version">16.0</field>
-        <field name="license_key">XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</field>
-        <field name="subtype">ofimatica</field>
-    </record>
-    
-    <record id="software_chrome" model="it.asset.software">
-        <field name="name">Google Chrome</field>
-        <field name="version">115.0.5790.110</field>
-        <field name="subtype">navegador</field>
-    </record>
-    
-    <record id="software_avast" model="it.asset.software">
-        <field name="name">Avast Business Antivirus</field>
-        <field name="version">23.5.6068</field>
-        <field name="license_key">AVST-XXXX-XXXX-XXXX-XXXX</field>
-        <field name="subtype">antivirus</field>
-    </record>
-    
-    <record id="software_photoshop" model="it.asset.software">
-        <field name="name">Adobe Photoshop</field>
-        <field name="version">2023</field>
-        <field name="license_key">ADBE-PS-XXXX-XXXX-XXXX</field>
-        <field name="subtype">multimedia</field>
-    </record>
-    
-    <record id="software_game" model="it.asset.software">
-        <field name="name">Juego Prohibido XYZ</field>
-        <field name="version">1.5.3</field>
-        <field name="is_authorized">False</field>
-        <field name="subtype">otros</field>
-    </record>
-    
-    <record id="software_vscode" model="it.asset.software">
-        <field name="name">Visual Studio Code</field>
-        <field name="version">1.79.2</field>
-        <field name="subtype">desarrollo</field>
-    </record>
-    
-    <record id="software_ubuntu" model="it.asset.software">
-        <field name="name">Ubuntu Server</field>
-        <field name="version">22.04 LTS</field>
-        <field name="subtype">sistema_operativo</field>
-    </record>
-    
-    <record id="software_mysql" model="it.asset.software">
-        <field name="name">MySQL Community Server</field>
-        <field name="version">8.0.33</field>
-        <field name="subtype">gestor_bd</field>
-    </record>
-    
-    <record id="software_wireshark" model="it.asset.software">
-        <field name="name">Wireshark</field>
-        <field name="version">4.0.6</field>
-        <field name="subtype">redes</field>
-    </record>
-    
-    <!-- Lista Blanca Predeterminada -->
-    <record id="whitelist_default" model="it.hw.list">
-        <field name="name">Lista Blanca Predeterminada</field>
-        <field name="type">white</field>
-        <field name="active">True</field>
-        <field name="software_ids" eval="[(6, 0, [
-            ref('software_windows'),
-            ref('software_office'),
-            ref('software_chrome'),
-            ref('software_avast'),
-            ref('software_vscode'),
-            ref('software_ubuntu'),
-            ref('software_mysql'),
-            ref('software_wireshark')
-        ])]"/>
-    </record>
-    
-    <!-- Lista Negra Predeterminada -->
-    <record id="blacklist_default" model="it.hw.list">
-        <field name="name">Lista Negra Predeterminada</field>
-        <field name="type">black</field>
-        <field name="active">True</field>
-        <field name="software_ids" eval="[(4, ref('software_game'))]"/>
-    </record>
-    
-    <!-- Asignación de software a hardware existente -->
-    <!-- PC Oficina 101 -->
-    <function model="it.asset.hardware" name="write">
-        <value eval="[ref('sgichs_hardware.hardware_pc_1')]"/>
-        <value eval="{
-            'software_ids': [
-                (4, ref('software_windows')),
-                (4, ref('software_office')),
-                (4, ref('software_chrome')),
-                (4, ref('software_avast'))
-            ]
-        }"/>
-    </function>
-    
-    <!-- Laptop Gerencia -->
-    <function model="it.asset.hardware" name="write">
-        <value eval="[ref('sgichs_hardware.hardware_laptop_1')]"/>
-        <value eval="{
-            'software_ids': [
-                (4, ref('software_windows')),
-                (4, ref('software_office')),
-                (4, ref('software_photoshop')),
-                (4, ref('software_avast'))
-            ]
-        }"/>
-    </function>
-    
-    <!-- Servidor Principal -->
-    <function model="it.asset.hardware" name="write">
-        <value eval="[ref('sgichs_hardware.hardware_server_1')]"/>
-        <value eval="{
-            'software_ids': [
-                (4, ref('software_ubuntu')),
-                (4, ref('software_mysql')),
-                (4, ref('software_wireshark'))
-            ]
-        }"/>
-    </function>
+    <data noupdate="1">
+        
+        <record id="software_windows" model="it.asset.software">
+            <field name="name">Windows 11 Professional</field>
+            <field name="version">22H2</field>
+            <field name="license_key">W269N-WFGWX-YVC9B-4J6C9-T83GX</field>
+            <field name="subtype">sistema_operativo</field>
+        </record>
+        
+        <record id="software_office" model="it.asset.software">
+            <field name="name">Microsoft Office 365</field>
+            <field name="version">16.0.15128</field>
+            <field name="license_key">XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</field>
+            <field name="subtype">ofimatica</field>
+        </record>
+        
+        <record id="software_chrome" model="it.asset.software">
+            <field name="name">Google Chrome</field>
+            <field name="version">115.0.5790.110</field>
+            <field name="subtype">navegador</field>
+        </record>
+        
+        <record id="software_avast" model="it.asset.software">
+            <field name="name">Avast Business Antivirus</field>
+            <field name="version">23.5.6068</field>
+            <field name="license_key">AVST-XXXX-XXXX-XXXX-XXXX</field>
+            <field name="subtype">antivirus</field>
+        </record>
+        
+        <record id="software_photoshop" model="it.asset.software">
+            <field name="name">Adobe Photoshop</field>
+            <field name="version">2023</field>
+            <field name="license_key">ADBE-PS-XXXX-XXXX-XXXX</field>
+            <field name="subtype">multimedia</field>
+        </record>
+        
+        <record id="software_game" model="it.asset.software">
+            <field name="name">Juego Prohibido XYZ</field>
+            <field name="version">1.5.3</field>
+            <field name="is_authorized">False</field>
+            <field name="subtype">otros</field>
+        </record>
+        
+        <record id="software_vscode" model="it.asset.software">
+            <field name="name">Visual Studio Code</field>
+            <field name="version">1.79.2</field>
+            <field name="subtype">desarrollo</field>
+        </record>
+        
+        <record id="software_ubuntu" model="it.asset.software">
+            <field name="name">Ubuntu Server</field>
+            <field name="version">22.04 LTS</field>
+            <field name="subtype">sistema_operativo</field>
+        </record>
+        
+        <record id="software_mysql" model="it.asset.software">
+            <field name="name">MySQL Community Server</field>
+            <field name="version">8.0.33</field>
+            <field name="subtype">gestor_bd</field>
+        </record>
+
+        <record id="whitelist_default" model="it.hw.list">
+            <field name="name">Lista Blanca Predeterminada</field>
+            <field name="type">white</field>
+            <field name="active">True</field>
+            <field name="software_ids" eval="[(6, 0, [
+                ref('software_windows'), ref('software_office'), ref('software_chrome'),
+                ref('software_avast'), ref('software_vscode'), ref('software_ubuntu'), ref('software_mysql')
+            ])]"/>
+        </record>
+        
+        <record id="blacklist_default" model="it.hw.list">
+            <field name="name">Lista Negra Predeterminada</field>
+            <field name="type">black</field>
+            <field name="active">True</field>
+            <field name="software_ids" eval="[(4, ref('software_game'))]"/>
+        </record>
+        
+        <function model="it.asset.hardware" name="write">
+            <value eval="[ref('sgichs_hardware.demo_hardware_pc_1')]"/>
+            <value eval="{
+                'software_ids': [
+                    (4, ref('software_windows')), (4, ref('software_office')),
+                    (4, ref('software_chrome')), (4, ref('software_avast'))
+                ]
+            }"/>
+        </function>
+        
+        <function model="it.asset.hardware" name="write">
+            <value eval="[ref('sgichs_hardware.demo_hardware_laptop_1')]"/>
+            <value eval="{
+                'software_ids': [
+                    (4, ref('software_windows')), (4, ref('software_office')),
+                    (4, ref('software_photoshop')), (4, ref('software_avast'))
+                ]
+            }"/>
+        </function>
+        
+        <function model="it.asset.hardware" name="write">
+            <value eval="[ref('sgichs_hardware.demo_hardware_server_1')]"/>
+            <value eval="{
+                'software_ids': [
+                    (4, ref('software_ubuntu')), (4, ref('software_mysql'))
+                ]
+            }"/>
+        </function>
+    </data>
 </odoo>

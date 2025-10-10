@@ -1,9 +1,10 @@
+<?xml version="1.0"?>
 <odoo>
-    <!-- Vista árbol para software -->
     <record id="view_software_tree" model="ir.ui.view">
         <field name="name">it.asset.software.tree</field>
         <field name="model">it.asset.software</field>
         <field name="arch" type="xml">
+        
             <tree>
                 <field name="name"/>
                 <field name="version"/>
@@ -13,9 +14,9 @@
         </field>
     </record>
 
-    <!-- Vista formulario para software -->
     <record id="view_software_form" model="ir.ui.view">
         <field name="name">it.asset.software.form</field>
+
         <field name="model">it.asset.software</field>
         <field name="arch" type="xml">
             <form>
@@ -24,17 +25,29 @@
                 </header>
                 <sheet>
                     <group>
-                        <field name="name"/>
-                        <field name="version"/>
-                        <field name="license_key"/>
-                        <field name="subtype"/>
+
+                        <group string="Datos principales">
+                            <field name="name"/>
+                            <field name="version"/>
+                            <field name="license_key"/>
+                            <field name="subtype"/>
+                            <field name="os_type"/>
+                        </group>
+
+                        <group string="Autorización">
+                            <field name="is_authorized"/>
+                        </group>
                     </group>
+                    <notebook>
+                        <page string="Detalles">
+                            <field name="description" placeholder="Agregar notas adicionales..."/>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- Acción para software -->
     <record id="action_software" model="ir.actions.act_window">
         <field name="name">Software</field>
         <field name="res_model">it.asset.software</field>

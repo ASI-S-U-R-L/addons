@@ -61,6 +61,7 @@ class ITAssetBacklog(models.Model):
                 if hasattr(self, 'ip_ids') and 'red' in data:
                     ip_address_model = self.env['it.ip.address']
                     ip_ids = []
+                    
                     for net_interface in data.get('red', []):
                         ip_str = net_interface.get('ip')
                         if ip_str:
@@ -75,7 +76,7 @@ class ITAssetBacklog(models.Model):
                         vals['ip_ids'] = [(6, 0, ip_ids)]
                         _logger.info(f"Backlog para '{vals.get('name')}': IPs procesadas: {ip_ids}")
 
-                # --- Aquí se podría añadir la lógica para componentes, software, etc. ---
+                # --- Aquí se añade la lógica para componentes, software, etc. ---
                 # Ejemplo para componentes (si sgichs_hardware está instalado)
                 # if hasattr(self, 'components_ids') and 'componentes' in data:
                 #     ... (lógica similar a la de IPs)
