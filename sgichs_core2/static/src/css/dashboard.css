@@ -1,0 +1,138 @@
+/*
+  Reutilizando el CSS del módulo de prueba, ya que proporciona
+  una base visual sólida y profesional para el dashboard. Este enfoque
+  ahorra tiempo y mantiene una estética consistente.
+*/
+
+
+
+
+
+/* ---- Estructura General ---- */
+.o_dashboard_main {
+    background-color: #f0f2f5;
+    font-family: 'Inter', sans-serif;
+}
+.dashboard_title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #4c4c4c;
+}
+
+/* ---- Tarjetas KPI ---- */
+.kpi-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+.kpi-card .card-content {
+    display: flex;
+    align-items: center;
+}
+.kpi-card .icon-container {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+.kpi-card .icon-container .fa {
+    font-size: 22px;
+}
+.kpi-card .text-container {
+    line-height: 1.2;
+}
+.kpi-card .kpi-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6c757d;
+    margin: 0;
+}
+.kpi-card .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #343a40;
+    margin: 0;
+}
+
+/* Colores para fondos de iconos */
+.bg-primary-soft { background-color: rgba(110, 103, 237, 0.1); }
+.bg-success-soft { background-color: rgba(40, 167, 69, 0.1); }
+.bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+.bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+.bg-info-soft { background-color: rgba(23, 162, 184, 0.1); }
+
+/* ---- Tarjetas de Gráficos y Listas ---- */
+.chart-card, .list-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.chart-card .card-header, .list-card .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
+}
+.chart-card .card-header h3, .list-card .card-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+.chart-card .card-body {
+    padding: 20px;
+    height: 300px;
+}
+.list-card .list-group-item-action {
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
+}
+.list-card .list-group-item-action:last-child {
+    border-bottom: none;
+}
+.list-card .list-group-item-action:hover {
+    background-color: #f8f9fa;
+}
+.list-card h5 {
+    font-size: 15px;
+    font-weight: 500;
+    color: #343a40;
+}
+.list-card .badge {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Insignias de severidad */
+.severity-high { background-color: #dc3545; color: white; }
+.severity-medium { background-color: #ffc107; color: #212529; }
+.severity-low { background-color: #17a2b8; color: white; }
+.severity-info { background-color: #6c757d; color: white; }
+
+
+
+/*
+ *
+ * Habilita el scroll vertical en el contenedor del dashboard.
+ * - overflow-y: auto → muestra scroll solo cuando hay contenido extra.
+ * - -webkit-overflow-scrolling: touch → scroll suave en iOS.
+ * - overscroll-behavior: contain → evita que el scroll “se escape” al body.
+ * - height: 100% → ocupa todo el alto disponible del área de acción de Odoo.
+ */
+.o-dashboard-scroll {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
