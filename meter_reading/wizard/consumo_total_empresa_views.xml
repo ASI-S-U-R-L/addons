@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+    
+        <record id="view_consumo_total_empresa_form" model="ir.ui.view">
+            <field name="name">consumo.total.empresa.form</field>
+            <field name="model">consumo.total.empresa</field>
+            <field name="arch" type="xml">
+                <form string="Consumo Total de la Empresa">
+                    <div class="alert alert-info" role="alert">
+                        <strong>Consumo Total de la Empresa</strong><br/>
+                        Seleccione el período para generar el reporte consolidado de consumo.
+                    </div>
+                    <group col="2">
+                        <field name="mes"/>
+                        <field name="ano"/>
+                    </group>
+                    
+                    <div class="alert alert-success" role="alert" style="margin-top: 15px;">
+                        <p><i class="fa fa-info-circle"/> <strong>Información:</strong></p>
+                        <ul style="margin-bottom: 0;">
+                            <li>Los metrocontadores <strong>Normales</strong> e <strong>Inteligentes</strong> se calculan automáticamente desde las lecturas diarias</li>
+                            <li>Los metrocontadores <strong>Prepago</strong> se calculan sumando todas las recargas registradas en el mes</li>
+                        </ul>
+                    </div>
+                    
+                    <footer>
+                        <!-- Botón Vista Previa -->
+                        <button name="action_vista_previa" 
+                                string="Vista Previa" 
+                                type="object" 
+                                class="btn-info" 
+                                icon="fa-eye"/>
+                        
+                        <!-- Botón para generar PDF directamente -->
+                        <button name="action_generar_pdf" 
+                                string="Generar PDF" 
+                                type="object" 
+                                class="btn-primary" 
+                                icon="fa-file-pdf-o"/>
+                        
+                        <button string="Cancelar" 
+                                class="btn-secondary" 
+                                special="cancel" 
+                                icon="fa-times"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Acción del wizard -->
+        <record id="action_consumo_total_empresa" model="ir.actions.act_window">
+            <field name="name">Consumo Total de la Empresa</field>
+            <field name="res_model">consumo.total.empresa</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="view_id" ref="view_consumo_total_empresa_form"/>
+        </record>
+
+        <!-- Reporte PDF -->
+        <record id="report_consumo_total_empresa_pdf" model="ir.actions.report">
+            <field name="name">Consumo Total de la Empresa</field>
+            <field name="model">consumo.total.empresa</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">meter_reading.template_consumo_total_empresa</field>
+            <field name="report_file">consumo_total_empresa</field>
+            <field name="print_report_name">object.get_nombre_reporte_consumo_total()</field>
+            <field name="paperformat_id" ref="base.paperformat_euro"/>
+        </record>
+
+        <!-- Reporte HTML para vista previa -->
+        <record id="report_consumo_total_empresa_html" model="ir.actions.report">
+            <field name="name">Consumo Total de la Empresa - Vista Previa</field>
+            <field name="model">consumo.total.empresa</field>
+            <field name="report_type">qweb-html</field>
+            <field name="report_name">meter_reading.template_consumo_total_empresa</field>
+            <field name="report_file">consumo_total_empresa_preview</field>
+        </record>
+
+        <!-- Template unificado para PDF y HTML -->
+        <template id="template_consumo_total_empresa">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-set="data" t-value="doc.get_datos_reporte()"/>
+                    <t t-call="web.external_layout">
+                        <div class="page">
+                            <style>
+                                .consumo-header { text-align: center; margin-bottom: 20px; }
+                                .consumo-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 15px; }
+                                .consumo-table th, .consumo-table td { border: 1px solid #000; padding: 5px 8px; vertical-align: middle; }
+                                .consumo-table th { background-color: #e9ecef; font-weight: bold; text-align: center; }
+                                .consumo-table td { text-align: left; }
+                                .consumo-table td.text-right { text-align: right; }
+                                .consumo-table .total-row { border-top: 2px solid #000; font-weight: bold; background-color: #f8f9fa; }
+                                .resumen-box { margin: 20px 0; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; }
+                                .resumen-box h5 { margin: 0 0 10px 0; color: #155724; }
+                                .badge { padding: 3px 8px; border-radius: 3px; color: white; font-size: 9px; font-weight: bold; }
+                                .badge-primary { background-color: #007bff; }
+                                .badge-info { background-color: #17a2b8; }
+                                .badge-warning { background-color: #ffc107; color: #000; }
+                                .info-footer { margin-top: 15px; font-size: 9px; color: #666; border-top: 1px solid #dee2e6; padding-top: 10px; }
+                                
+                                /* Estilos para vista previa HTML */
+                                @media screen {
+                                    .consumo-table { font-size: 11px; }
+                                    .info-footer { font-size: 10px; }
+                                }
+                                
+                                /* Estilos para impresión */
+                                @media print {
+                                    .consumo-table { font-size: 10px; }
+                                    .info-footer { font-size: 9px; }
+                                }
+                            </style>
+
+                            <div class="consumo-header">
+                                <h2 style="margin-bottom: 5px;">CONSUMO TOTAL DE LA EMPRESA</h2>
+                                <h3 style="margin: 5px 0; color: #495057;" t-esc="data['periodo']"/>
+                                <p style="margin: 5px 0; font-size: 11px; color: #6c757d;">
+                                    Generado el: <span t-esc="data['fecha_generacion']"/>
+                                </p>
+                            </div>
+
+                            <div class="resumen-box">
+                                <h5><i class="fa fa-chart-bar"/> Resumen del Período</h5>
+                                <p style="margin: 5px 0;">
+                                    <strong>Consumo Total:</strong> 
+                                    <span t-esc="'{:,.2f}'.format(data['total_general'])"/> kWh
+                                </p>
+                                <p style="margin: 5px 0;">
+                                    <strong>Total de Metrocontadores:</strong> 
+                                    <span t-esc="data['cantidad_metrocontadores']"/> unidades
+                                </p>
+                                <p style="margin: 5px 0;">
+                                    <strong>Promedio por Metrocontador:</strong> 
+                                    <span t-esc="'{:,.2f}'.format(data['promedio_por_metro'])"/> kWh
+                                </p>
+                            </div>
+
+                            <table class="consumo-table">
+                                <thead>
+                                    <tr>
+                                        <th>Metrocontador</th>
+                                        <th>Ubicación</th>
+                                        <th>Tipo</th>
+                                        <th>Responsable</th>
+                                        <th class="text-right">Consumo Mensual (kWh)</th>
+                                        <th>Tipo Cálculo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="data['metrocontadores']">
+                                        <t t-foreach="data['metrocontadores']" t-as="metro">
+                                            <tr>
+                                                <td><span t-esc="metro['nombre']"/></td>
+                                                <td><span t-esc="metro['ubicacion']"/></td>
+                                                <td>
+                                                    <t t-if="metro['tipo_medidor'] == 'normal'">
+                                                        <span class="badge badge-primary">Normal</span>
+                                                    </t>
+                                                    <t t-if="metro['tipo_medidor'] == 'inteligente'">
+                                                        <span class="badge badge-info">Inteligente</span>
+                                                    </t>
+                                                    <t t-if="metro['tipo_medidor'] == 'prepago'">
+                                                        <span class="badge badge-warning">Prepago</span>
+                                                    </t>
+                                                </td>
+                                                <td><span t-esc="metro['responsable']"/></td>
+                                                <td class="text-right">
+                                                    <span t-esc="'{:,.2f}'.format(metro['consumo_mensual'])"/>
+                                                </td>
+                                                <td>
+                                                    <small style="color: #6c757d;" t-esc="metro['tipo_calculo']"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <tr class="total-row">
+                                            <td colspan="4" class="text-right">
+                                                <strong>TOTAL GENERAL (<span t-esc="data['cantidad_metrocontadores']"/> metrocontadores):</strong>
+                                            </td>
+                                            <td class="text-right">
+                                                <strong><span t-esc="'{:,.2f}'.format(data['total_general'])"/></strong>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </t>
+                                    <t t-else="1">
+                                        <tr>
+                                            <td colspan="6" style="text-align: center; padding: 20px; color: #6c757d;">
+                                                <em>No se encontraron metrocontadores activos</em>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+
+                            <div class="info-footer">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div>
+                                        <p><strong>Período:</strong> <span t-esc="data['periodo']"/></p>
+                                        <p><strong>Metrocontadores activos:</strong> <span t-esc="data['cantidad_metrocontadores']"/></p>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <p><strong>Fecha de generación:</strong> <span t-esc="data['fecha_generacion']"/></p>
+                                        <p><strong>Usuario:</strong> <span t-esc="user.name"/></p>
+                                        <p><strong>Sistema:</strong> Odoo - Meter Reading</p>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #dee2e6;">
+                                    <p><strong>Notas:</strong></p>
+                                    <p style="margin: 2px 0;">
+                                        • Los metrocontadores <span class="badge badge-primary">Normal</span> e 
+                                        <span class="badge badge-info">Inteligente</span> se calculan automáticamente desde lecturas diarias<br/>
+                                        • Los metrocontadores <span class="badge badge-warning">Prepago</span> se calculan sumando todas las recargas del mes
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+    </data>
+</odoo>

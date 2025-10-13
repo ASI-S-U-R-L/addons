@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Grupo único con todos los permisos para el módulo de control energético -->
+        <record id="group_meter_reading_user" model="res.groups">
+            <field name="name">Control Energético</field>
+            <field name="category_id" ref="base.module_category_operations"/>
+            <field name="comment">Acceso completo al módulo de control energético - crear, leer, escribir y eliminar</field>
+        </record>
+        
+    </data>
+</odoo>

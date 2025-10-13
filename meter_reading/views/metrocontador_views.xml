@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_metrocontador_tree" model="ir.ui.view">
+            <field name="name">meter.reading.metrocontador.tree</field>
+            <field name="model">meter.reading.metrocontador</field>
+            <field name="arch" type="xml">
+                <tree string="Metrocontadores" decoration-muted="not activo">
+                    <field name="name"/>
+                    <field name="tipo_medidor"/>
+                    <field name="factor_conversion"/>
+                    <field name="ubicacion"/>
+                    <field name="responsable_id"/>
+                    <field name="ultima_lectura" attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="consumo_hoy" attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="activo"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record id="view_metrocontador_form" model="ir.ui.view">
+            <field name="name">meter.reading.metrocontador.form</field>
+            <field name="model">meter.reading.metrocontador</field>
+            <field name="arch" type="xml">
+                <form string="Metrocontador">
+                    <header>
+                        <button name="action_view_lecturas" 
+                                type="object" 
+                                string="Ver Lecturas" 
+                                class="oe_highlight"
+                                attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_lecturas"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-list"
+                                    attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}">
+                                <field name="lectura_ids" widget="statinfo" string="Lecturas"/>
+                            </button>
+                        </div>
+                        
+                        <widget name="web_ribbon" title="Inactivo" bg_color="bg-danger" 
+                                attrs="{'invisible': [('activo', '=', True)]}"/>
+                        
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="ubicacion"/>
+                                <field name="tipo_medidor"/>
+                                <field name="factor_conversion"/>
+                            </group>
+                            <group>
+                                <field name="responsable_id"/>
+                                <field name="activo"/>
+                                <field name="ultima_lectura" attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                                <field name="consumo_hoy" attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                            </group>
+                        </group>
+                        
+                        <div attrs="{'invisible': [('tipo_medidor', '!=', 'prepago')]}" class="alert alert-info" role="alert">
+                           <div><i class="fa fa-info-circle mr-2"/><strong>Medidor Prepago:</strong> Este tipo de medidor no requiere lecturas ni planes energéticos.</div>
+                        </div>
+                        
+                        <notebook attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}">
+                            <page string="Planes Energéticos">
+                                <field name="plan_energetico_ids">
+                                    <tree>
+                                        <field name="name"/>
+                                        <field name="fecha_inicio"/>
+                                        <field name="fecha_fin"/>
+                                        <field name="consumo_diario_plan"/>
+                                        <field name="state"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            
+                            <page string="Últimas Lecturas">
+                                <field name="lectura_ids" readonly="1">
+                                    <tree limit="10">
+                                        <field name="fecha"/>
+                                        <field name="hora"/>
+                                        <field name="lectura_kwh"/>
+                                        <field name="consumo_parcial"/>
+                                        <field name="tipo_horario"/>
+                                        <field name="excede_plan" widget="boolean_toggle"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <record id="view_metrocontador_kanban" model="ir.ui.view">
+            <field name="name">meter.reading.metrocontador.kanban</field>
+            <field name="model">meter.reading.metrocontador</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_mobile">
+                    <field name="name"/>
+                    <field name="ubicacion"/>
+                    <field name="responsable_id"/>
+                    <field name="tipo_medidor"/>
+                    <field name="factor_conversion"/>
+                    <field name="ultima_lectura"/>
+                    <field name="consumo_hoy"/>
+                    <field name="activo"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_global_click o_kanban_record">
+                                <div class="o_kanban_card_header d-flex justify-content-between align-items-center">
+                                    <div class="o_kanban_card_header_title">
+                                        <strong><field name="name"/></strong>
+                                    </div>
+                                    <div class="o_kanban_card_header_side">
+                                        <field name="activo" widget="boolean_toggle"/>
+                                    </div>
+                                </div>
+                                
+                                <div class="o_kanban_card_content mt-2" style="font-size: 12px;">
+                                    
+                                    <div class="row no-gutters">
+                                        <div class="col-12">
+                                            <span><i class="fa fa-map-marker mr-1 text-muted"/> <field name="ubicacion"/></span>
+                                        </div>
+                                    </div>
+                                    <div class="row no-gutters mt-1">
+                                         <div class="col-12">
+                                            <span><i class="fa fa-user mr-1 text-muted"/> <field name="responsable_id"/></span>
+                                        </div>
+                                    </div>
+                                    <div class="row no-gutters mt-1">
+                                        <div class="col-12">
+                                            <span><i class="fa fa-calculator mr-1 text-muted"/> Factor: <field name="factor_conversion"/></span>
+                                        </div>
+                                    </div>
+
+                                    <t t-if="record.tipo_medidor.raw_value != 'prepago'">
+                                        <hr class="mt-2 mb-1"/>
+                                        <div class="row no-gutters text-center">
+                                            <div class="col-6 border-right">
+                                                <small class="text-muted">Últ. Lectura</small>
+                                                <div><strong><field name="ultima_lectura"/></strong> kWh</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Consumo Hoy</small>
+                                                <div class="text-success"><strong><field name="consumo_hoy"/></strong> kWh</div>
+                                            </div>
+                                        </div>
+                                    </t>
+
+                                    <t t-if="record.tipo_medidor.raw_value == 'prepago'">
+                                         <div class="alert alert-info py-1 px-2 mt-2 mb-0 text-center" style="font-size: 11px;">
+                                            <i class="fa fa-credit-card mr-1"/>Medidor Prepago
+                                        </div>
+                                    </t>
+
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+        
+        <record id="action_metrocontador_tree" model="ir.actions.act_window">
+            <field name="name">Metrocontadores</field>
+            <field name="res_model">meter.reading.metrocontador</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="context">{'search_default_activo': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ¡Crea tu primer metrocontador!
+                </p>
+                <p>
+                    Los metrocontadores te permiten registrar y controlar 
+                    el consumo energético de tu empresa.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>
