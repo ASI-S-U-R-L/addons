@@ -1,23 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Menú Principal -->
     <menuitem
         id="menu_it_root"
         name="Gestión de TI"
-        sequence="10"/>
-
-    <!-- Menú para Activos -->
-    <menuitem
+        sequence="10"
+        action="action_it_dashboard"/> <menuitem
+        id="menu_it_dashboard"
+        name="Dashboard"
+        parent="menu_it_root"
+        action="action_it_dashboard"
+        sequence="1"/> <menuitem
         id="menu_it_assets"
         name="Bienes Informaticos"
         parent="menu_it_root"
         sequence="10"/>
-
-    <!-- <menuitem
-        id="menu_action_it_asset"
-        action="action_it_asset"
-        parent="menu_it_assets"
-        sequence="10"/> -->
 
     <menuitem
         id="menu_action_it_asset_backlog"
@@ -25,7 +21,6 @@
         parent="menu_it_assets"
         sequence="9"/>
 
-    <!-- Menú para Operaciones -->
     <menuitem
         id="menu_it_operations"
         name="Operaciones"
@@ -38,7 +33,6 @@
         parent="menu_it_operations"
         sequence="10"/>
 
-    <!-- Menú para Configuración -->
     <menuitem
         id="menu_it_config"
         name="Configuración"

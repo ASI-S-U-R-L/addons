@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="dashboard_hardware_assets" inherit_id="sgichs_core2.Dashboard" name="Hardware Dashboard Extension">
+        <xpath expr="//div[@id='kpi_total_hardware_placeholder']" position="replace">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.hardware" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container bg-primary-soft"><i class="fa fa-desktop text-primary"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Total de Activos HW</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.total_hardware or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <xpath expr="//div[@id='kpi_total_components_placeholder']" position="replace">
+             <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.component" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container" style="background-color: #e7e7e7;"><i class="fa fa-cogs" style="color: #6c757d;"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Componentes Totales</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.total_components or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <xpath expr="//div[@id='chart_asset_type_placeholder']" position="replace">
+            <div class="col-lg-5 mb-4">
+                <div class="chart-card h-100">
+                    <div class="card-header"><h3><i class="fa fa-pie-chart mr-2"/>Activos por Tipo</h3></div>
+                    <div class="card-body"><canvas id="assetTypeChart"/></div>
+                </div>
+            </div>
+        </xpath>
+
+         <xpath expr="//div[@id='chart_component_subtype_placeholder']" position="replace">
+             <div class="col-lg-7 mb-4">
+                <div class="chart-card h-100">
+                    <div class="card-header"><h3><i class="fa fa-hdd-o mr-2"/>Distribución de Componentes</h3></div>
+                    <div class="card-body"><canvas id="componentSubtypeChart"/></div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

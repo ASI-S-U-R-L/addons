@@ -3,3 +3,4 @@ access_it_asset_user,it.asset.user,model_it_asset,base.group_user,1,1,1,0
 access_it_asset_backlog_user,it.asset.backlog.user,model_it_asset_backlog,base.group_user,1,1,1,1
 access_it_incident_user,it.incident.user,model_it_incident,base.group_user,1,1,1,0
 access_it_scheduled_task_manager,it.scheduled.task.manager,model_it_scheduled_task,base.group_system,1,1,1,1
+access_it_dashboard,it.dashboard,model_it_dashboard,base.group_user,1,1,1,1

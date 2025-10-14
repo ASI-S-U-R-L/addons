@@ -16,9 +16,15 @@
         'views/hardware_views.xml',
         'views/it_asset_backlog_views.xml',
         'views/menus.xml',
-	
+        #'views/dashboard_views.xml', 
 	    'data/demo_data_hardware.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'sgichs_hardware/static/src/js/dashboard_hardware.js',
+            'sgichs_hardware/static/src/xml/dashboard_hardware_templates.xml',
+        ],
+    },
     'installable': True,
     'application': False,
     'auto_install': False,
