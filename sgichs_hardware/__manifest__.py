@@ -16,7 +16,6 @@
         'views/hardware_views.xml',
         'views/it_asset_backlog_views.xml',
         'views/menus.xml',
-        #'views/dashboard_views.xml', 
 	    'data/demo_data_hardware.xml',
     ],
     'assets': {
