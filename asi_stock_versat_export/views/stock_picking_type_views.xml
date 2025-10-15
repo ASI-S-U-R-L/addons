@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_type_form_inherit_versat" model="ir.ui.view">
+        <field name="name">stock.picking.type.form.inherit.versat</field>
+        <field name="model">stock.picking.type</field>
+        <field name="inherit_id" ref="stock.view_picking_type_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='first']" position="after">
+                <group string="Configuración VERSAT">
+                    <!-- Todos los elementos en una sola línea -->
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <!-- Concepto VERSAT -->
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label for="versat_concept" string="Concepto VERSAT" style="margin: 0; white-space: nowrap;"/>
+                            <field name="versat_concept" class="o_field_widget" style="min-width: 150px;"/>
+                        </div>
+                        
+                        <!-- Descripción VERSAT -->
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label for="versat_description" string="Descripción VERSAT" style="margin: 0; white-space: nowrap;"/>
+                            <field name="versat_description" readonly="1" style="font-weight: bold; color: #666; min-width: 200px;" class="o_field_widget"/>
+                        </div>
+                    </div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_bitacora_simple_form" model="ir.ui.view">
+            <field name="name">bitacora.simple.form</field>
+            <field name="model">bitacora.simple</field>
+            <field name="arch" type="xml">
+                <form string="Generar Bitácora de Consumo">
+                    <div class="alert alert-info" role="alert">
+                        <strong>Bitácora de Consumo Energético</strong><br/>
+                        Seleccione el metrocontador y el plan energético para generar la bitácora.
+                    </div>
+                    <group col="2">
+                        <field name="metrocontador_id" options="{'no_create': True}"/>
+                        <field name="plan_energetico_id" 
+                               string="Plan Energético" 
+                               options="{'no_create': True}"
+                               attrs="{'required': [('metrocontador_id', '!=', False)]}"/>
+                        <field name="fecha_inicio_plan" readonly="1" string="Inicio Plan"/>
+                        <field name="fecha_fin_plan" readonly="1" string="Fin Plan"/>
+                    </group>
+                    <footer>
+                        <button name="action_vista_previa" string="Vista Previa" type="object" 
+                                class="btn-info" icon="fa-eye"/>
+                        <button name="action_generar_bitacora" string="Generar PDF" type="object" 
+                                class="btn-primary" icon="fa-file-pdf-o"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel" icon="fa-times"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_bitacora_simple" model="ir.actions.act_window">
+            <field name="name">Bitácora de Consumo</field>
+            <field name="res_model">bitacora.simple</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_bitacora_simple_form"/>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Reporte PDF -->
+        <record id="report_bitacora_simple" model="ir.actions.report">
+            <field name="name">Bitácora de Consumo</field>
+            <field name="model">bitacora.simple</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">meter_reading.template_bitacora_simple</field>
+            <field name="report_file">bitacora_consumo</field>
+            <field name="print_report_name">object.get_nombre_reporte_bitacora()</field>
+            <field name="paperformat_id" ref="base.paperformat_euro"/>
+        </record>
+
+        <!-- Reporte HTML para vista previa -->
+        <record id="report_bitacora_simple_html" model="ir.actions.report">
+            <field name="name">Bitácora de Consumo - Vista Previa</field>
+            <field name="model">bitacora.simple</field>
+            <field name="report_type">qweb-html</field>
+            <field name="report_name">meter_reading.template_bitacora_simple</field>
+            <field name="report_file">bitacora_consumo_preview</field>
+        </record>
+
+        <!-- Template con gráfico SVG (con alineación derecha para números) -->
+        <template id="template_bitacora_simple">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-set="data" t-value="doc.get_datos_bitacora()"/>
+                    <t t-call="web.external_layout">
+                        <div class="page">
+                            <style>
+                                .bitacora-header { text-align: center; margin-bottom: 20px; }
+                                .bitacora-table { width: 100%; border-collapse: collapse; font-size: 8px; margin-top: 10px; }
+                                .bitacora-table th, .bitacora-table td { border: 1px solid #000; padding: 2px 3px; vertical-align: middle; }
+                                .bitacora-table th { background-color: #e9ecef; font-weight: bold; font-size: 7px; text-align: center; }
+                                .bitacora-table td { text-align: left; }
+                                .bitacora-table td.text-right { text-align: right; }
+                                .bitacora-table .total-row { border-top: 2px solid #000; font-weight: bold; background-color: #f8f9fa; }
+                                .exceso { color: #dc3545; font-weight: bold; }
+                                .ahorro { color: #28a745; font-weight: bold; }
+                                .neutral { color: #000; font-weight: bold; }
+                                .resumen-totales { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 11px; background-color: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 5px; }
+                                .info-footer { margin-top: 15px; font-size: 9px; color: #666; border-top: 1px solid #dee2e6; padding-top: 10px; }
+                                .chart-container { 
+                                    width: 100%; 
+                                    margin: 20px 0; 
+                                    padding: 15px;
+                                    background-color: #fff;
+                                    border: 1px solid #dee2e6;
+                                    border-radius: 5px;
+                                    page-break-inside: avoid;
+                                }
+                                .chart-title {
+                                    text-align: center;
+                                    font-size: 14px;
+                                    font-weight: bold;
+                                    margin-bottom: 10px;
+                                    color: #495057;
+                                }
+                                .chart-legend {
+                                    display: flex;
+                                    justify-content: center;
+                                    gap: 20px;
+                                    margin-top: 10px;
+                                    font-size: 10px;
+                                }
+                                .legend-item {
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 5px;
+                                }
+                                .legend-line {
+                                    width: 30px;
+                                    height: 3px;
+                                }
+                                
+                                @media screen {
+                                    .bitacora-table { font-size: 10px; }
+                                    .bitacora-table th { font-size: 9px; }
+                                    .resumen-totales { font-size: 12px; }
+                                    .info-footer { font-size: 11px; }
+                                }
+                                
+                                @media print {
+                                    .bitacora-table { font-size: 8px; }
+                                    .bitacora-table th { font-size: 7px; }
+                                    .resumen-totales { font-size: 11px; }
+                                    .info-footer { font-size: 9px; }
+                                }
+                            </style>
+
+                            <div class="bitacora-header">
+                                <h2 style="margin-bottom: 5px;">BITÁCORA DE CONSUMO DE ENERGÍA</h2>
+                                <h3 style="margin: 5px 0; color: #495057;" t-esc="data['metrocontador']"/>
+                                <p style="margin: 5px 0; font-size: 12px;"><strong>Período:</strong> <span t-esc="data['periodo']"/></p>
+                                <p style="margin: 5px 0; font-size: 10px; color: #6c757d;">
+                                    <strong>Plan Energético:</strong> <span t-esc="data['plan_info']['nombre']"/> 
+                                    (<span t-esc="'%.1f kWh/mes' % data['plan_info']['consumo_mensual']"/>)
+                                </p>
+                            </div>
+                            
+                            <div class="resumen-totales">
+                                <div><strong>Plan Total:</strong> <span t-esc="'%.2f kWh' % data['totales']['plan_total']"/></div>
+                                <div><strong>Consumo Real:</strong> <span t-esc="'%.0f kWh' % data['totales']['consumo_total']"/></div>
+                                <div>
+                                    <strong>Diferencia:</strong> 
+                                    <t t-set="dif" t-value="data['totales']['diferencia_total']"/>
+                                    <span t-if="dif &gt; 0" class="exceso" t-esc="'+%.2f kWh (Exceso)' % dif"/>
+                                    <span t-elif="dif &lt; 0" class="ahorro" t-esc="'%.2f kWh (Ahorro)' % dif"/>
+                                    <span t-else="1" class="neutral" t-esc="'0 kWh (Exacto)'"/>
+                                </div>
+                                <div>
+                                    <strong>Consumido:</strong>
+                                    <span t-esc="'%.1f' % (data['totales']['porcentaje_consumido'] or 0) + '%'"/>
+                                </div>
+                            </div>
+                            
+                            <!-- GRÁFICO SVG NATIVO -->
+                            <div class="chart-container" t-if="data['datos']">
+                                <div class="chart-title">Gráfico de Consumo: Plan vs Real</div>
+                                
+                                <t t-set="chart_width" t-value="700"/>
+                                <t t-set="chart_height" t-value="250"/>
+                                <t t-set="margin_left" t-value="60"/>
+                                <t t-set="margin_right" t-value="20"/>
+                                <t t-set="margin_top" t-value="20"/>
+                                <t t-set="margin_bottom" t-value="60"/>
+                                <t t-set="plot_width" t-value="chart_width - margin_left - margin_right"/>
+                                <t t-set="plot_height" t-value="chart_height - margin_top - margin_bottom"/>
+                                
+                                <!-- Calcular escalas -->
+                                <t t-set="valores_totales" t-value="[row['plan_diario'] for row in data['datos']] + [row['consumo_diario'] for row in data['datos']]"/>
+                                <t t-set="max_valor" t-value="max(valores_totales) if valores_totales else 100"/>
+                                <t t-set="min_valor" t-value="0"/>
+                                <t t-set="num_datos" t-value="len(data['datos'])"/>
+                                <t t-set="step_x" t-value="plot_width / max(num_datos - 1, 1)"/>
+                                
+                                <svg t-att-width="chart_width" t-att-height="chart_height" style="display: block; margin: 0 auto;">
+                                    <!-- Fondo y grid -->
+                                    <rect x="0" y="0" t-att-width="chart_width" t-att-height="chart_height" fill="white"/>
+                                    
+                                    <!-- Líneas de grid horizontal -->
+                                    <t t-set="num_lines" t-value="5"/>
+                                    <t t-foreach="range(num_lines + 1)" t-as="i">
+                                        <t t-set="y_pos" t-value="margin_top + (plot_height * i / num_lines)"/>
+                                        <line t-att-x1="margin_left" 
+                                              t-att-y1="y_pos" 
+                                              t-att-x2="margin_left + plot_width" 
+                                              t-att-y2="y_pos" 
+                                              stroke="#e5e7eb" 
+                                              stroke-width="1"/>
+                                        <!-- Etiquetas del eje Y -->
+                                        <t t-set="valor_y" t-value="max_valor * (1 - i / num_lines)"/>
+                                        <text t-att-x="margin_left - 10" 
+                                              t-att-y="y_pos + 4" 
+                                              text-anchor="end" 
+                                              font-size="10" 
+                                              fill="#6b7280">
+                                            <t t-esc="'%.0f' % valor_y"/>
+                                        </text>
+                                    </t>
+                                    
+                                    <!-- Ejes -->
+                                    <line t-att-x1="margin_left" 
+                                          t-att-y1="margin_top" 
+                                          t-att-x2="margin_left" 
+                                          t-att-y2="margin_top + plot_height" 
+                                          stroke="#374151" 
+                                          stroke-width="2"/>
+                                    <line t-att-x1="margin_left" 
+                                          t-att-y1="margin_top + plot_height" 
+                                          t-att-x2="margin_left + plot_width" 
+                                          t-att-y2="margin_top + plot_height" 
+                                          stroke="#374151" 
+                                          stroke-width="2"/>
+                                    
+                                    <!-- Etiqueta eje Y -->
+                                    <text t-att-x="20" 
+                                          t-att-y="margin_top + plot_height / 2" 
+                                          text-anchor="middle" 
+                                          font-size="11" 
+                                          font-weight="bold" 
+                                          fill="#374151"
+                                          transform="rotate(-90 20 {margin_top + plot_height / 2})">
+                                        kWh
+                                    </text>
+                                    
+                                    <!-- Línea del PLAN (azul punteada) -->
+                                    <t t-set="plan_points" t-value="''"/>
+                                    <t t-foreach="data['datos']" t-as="row">
+                                        <t t-set="x" t-value="margin_left + (row_index * step_x)"/>
+                                        <t t-set="y" t-value="margin_top + plot_height - ((row['plan_diario'] - min_valor) / (max_valor - min_valor) * plot_height)"/>
+                                        <t t-set="plan_points" t-value="plan_points + ('%s,%s ' % (x, y))"/>
+                                    </t>
+                                    <polyline t-att-points="plan_points" 
+                                              fill="none" 
+                                              stroke="#3b82f6" 
+                                              stroke-width="3" 
+                                              stroke-dasharray="5,5"/>
+                                    
+                                    <!-- Líneas del CONSUMO REAL (verde/rojo según exceda) -->
+                                    <t t-foreach="data['datos']" t-as="row">
+                                        <t t-if="row_index &lt; num_datos - 1">
+                                            <t t-set="x1" t-value="margin_left + (row_index * step_x)"/>
+                                            <t t-set="y1" t-value="margin_top + plot_height - ((row['consumo_diario'] - min_valor) / (max_valor - min_valor) * plot_height)"/>
+                                            <t t-set="next_row" t-value="data['datos'][row_index + 1]"/>
+                                            <t t-set="x2" t-value="margin_left + ((row_index + 1) * step_x)"/>
+                                            <t t-set="y2" t-value="margin_top + plot_height - ((next_row['consumo_diario'] - min_valor) / (max_valor - min_valor) * plot_height)"/>
+                                            
+                                            <!-- Color del segmento: rojo si excede, verde si no -->
+                                            <t t-set="color_segmento" t-value="'#ef4444' if (row['consumo_diario'] &gt; row['plan_diario'] or next_row['consumo_diario'] &gt; next_row['plan_diario']) else '#10b981'"/>
+                                            
+                                            <line t-att-x1="x1" 
+                                                  t-att-y1="y1" 
+                                                  t-att-x2="x2" 
+                                                  t-att-y2="y2" 
+                                                  t-att-stroke="color_segmento" 
+                                                  stroke-width="3"/>
+                                        </t>
+                                    </t>
+                                    
+                                    <!-- Puntos del CONSUMO REAL -->
+                                    <t t-foreach="data['datos']" t-as="row">
+                                        <t t-set="x" t-value="margin_left + (row_index * step_x)"/>
+                                        <t t-set="y" t-value="margin_top + plot_height - ((row['consumo_diario'] - min_valor) / (max_valor - min_valor) * plot_height)"/>
+                                        <t t-set="color_punto" t-value="'#ef4444' if row['consumo_diario'] &gt; row['plan_diario'] else '#10b981'"/>
+                                        
+                                        <circle t-att-cx="x" 
+                                                t-att-cy="y" 
+                                                r="5" 
+                                                t-att-fill="color_punto" 
+                                                t-att-stroke="color_punto" 
+                                                stroke-width="2"/>
+                                    </t>
+                                    
+                                    <!-- Etiquetas del eje X (fechas) -->
+                                    <t t-foreach="data['datos']" t-as="row">
+                                        <t t-set="x" t-value="margin_left + (row_index * step_x)"/>
+                                        <t t-set="mostrar_fecha" t-value="row_index % max(1, int(num_datos / 15)) == 0 or row_index == num_datos - 1"/>
+                                        <t t-if="mostrar_fecha">
+                                            <text t-att-x="x" 
+                                                  t-att-y="margin_top + plot_height + 15" 
+                                                  text-anchor="middle" 
+                                                  font-size="9" 
+                                                  fill="#6b7280"
+                                                  transform="rotate(45 {x} {margin_top + plot_height + 15})">
+                                                <t t-esc="row['fecha'].strftime('%d/%m')"/>
+                                            </text>
+                                        </t>
+                                    </t>
+                                </svg>
+                                
+                                <!-- Leyenda -->
+                                <div class="chart-legend">
+                                    <div class="legend-item">
+                                        <div class="legend-line" style="background-color: #3b82f6; border: 2px dashed #3b82f6;"></div>
+                                        <span>Plan Diario</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-line" style="background-color: #10b981;"></div>
+                                        <span>Consumo Real (Normal)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-line" style="background-color: #ef4444;"></div>
+                                        <span>Consumo Real (Exceso)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <table class="bitacora-table">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">Día</th>
+                                        <th rowspan="2">Fecha</th>
+                                        <th rowspan="2">Plan Diario</th>
+                                        <th rowspan="2">Lectura Diaria</th>
+                                        <th rowspan="2">Consumo Diario</th>
+                                        <th rowspan="2">Plan Acum.</th>
+                                        <th rowspan="2">Real Acum.</th>
+                                        <th rowspan="2">Diferencia</th>
+                                        <th colspan="4">Franjas Horarias (kWh - Consumo)</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Madrug.</th>
+                                        <th>Día</th>
+                                        <th>Pico</th>
+                                        <th>Reactivo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="data['datos']">
+                                        <t t-foreach="data['datos']" t-as="row">
+                                            <tr>
+                                                <td><span t-esc="row['dia_semana'][:3]"/><br/><strong t-esc="row['fecha'].day"/></td>
+                                                <td t-esc="row['fecha'].strftime('%d/%m')"/>
+                                                <td class="text-right" t-esc="'%.2f' % row['plan_diario']"/>
+                                                <td class="text-right">
+                                                    <t t-if="row['lectura_diaria']">
+                                                        <span t-esc="'%.0f' % row['lectura_diaria']"/>
+                                                    </t>
+                                                    <t t-else="1">-</t>
+                                                </td>
+                                                <td class="text-right">
+                                                    <t t-if="row['consumo_diario']">
+                                                        <span t-esc="'%.0f' % row['consumo_diario']"/>
+                                                    </t>
+                                                    <t t-else="1">-</t>
+                                                </td>
+                                                <td class="text-right" t-esc="'%.2f' % row['plan_acumulado']"/>
+                                                <td class="text-right" t-esc="'%.0f' % row['real_acumulado']"/>
+                                                <td class="text-right">
+                                                    <t t-set="diferencia" t-value="row['diferencia']"/>
+                                                    <span t-if="diferencia &gt; 0" class="exceso" t-esc="'+%.2f' % diferencia"/>
+                                                    <span t-elif="diferencia &lt; 0" class="ahorro" t-esc="'%.2f' % diferencia"/>
+                                                    <span t-else="1" class="neutral">0</span>
+                                                </td>
+                                                <td class="text-right"><t t-if="row['madrugada']"><span t-esc="'%.0f' % row['madrugada']"/></t><t t-else="1">-</t></td>
+                                                <td class="text-right"><t t-if="row['dia']"><span t-esc="'%.0f' % row['dia']"/></t><t t-else="1">-</t></td>
+                                                <td class="text-right"><t t-if="row['pico']"><span t-esc="'%.0f' % row['pico']"/></t><t t-else="1">-</t></td>
+                                                <td class="text-right"><t t-if="row['reactivo']"><span t-esc="'%.0f' % row['reactivo']"/></t><t t-else="1">-</t></td>
+                                            </tr>
+                                        </t>
+                                        <tr class="total-row">
+                                            <td colspan="2"><strong>TOTALES</strong></td>
+                                            <td class="text-right"><strong t-esc="'%.2f' % data['totales']['plan_total']"/></td>
+                                            <td class="text-right">-</td>
+                                            <td class="text-right"><strong t-esc="'%.0f' % data['totales']['consumo_total']"/></td>
+                                            <td class="text-right"><strong t-esc="'%.2f' % data['totales']['plan_total']"/></td>
+                                            <td class="text-right"><strong t-esc="'%.0f' % data['totales']['real_total']"/></td>
+                                            <td class="text-right">
+                                                <t t-set="dif_total" t-value="data['totales']['diferencia_total']"/>
+                                                <strong t-if="dif_total &gt; 0" class="exceso" t-esc="'+%.2f' % dif_total"/>
+                                                <strong t-elif="dif_total &lt; 0" class="ahorro" t-esc="'%.2f' % dif_total"/>
+                                                <strong t-else="1" class="neutral">0</strong>
+                                            </td>
+                                            <td class="text-right"><strong t-esc="'%.0f' % data['totales']['madrugada_total']"/></td>
+                                            <td class="text-right"><strong t-esc="'%.0f' % data['totales']['dia_total']"/></td>
+                                            <td class="text-right"><strong t-esc="'%.0f' % data['totales']['pico_total']"/></td>
+                                            <td class="text-right"><strong t-esc="'%.0f' % data['totales']['reactivo_total']"/></td>
+                                        </tr>
+                                    </t>
+                                    <t t-else="1">
+                                        <tr>
+                                            <td colspan="12" class="text-center" style="padding: 20px; color: #6c757d;">
+                                                <em>No se encontraron lecturas para el período seleccionado</em>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+
+                            <div class="info-footer">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div>
+                                        <p><strong>Metrocontador:</strong> <span t-esc="doc.metrocontador_id.name"/></p>
+                                        <p><strong>Tipo:</strong> <span t-esc="doc.metrocontador_id.tipo_medidor or 'No especificado'"/></p>
+                                        <p><strong>Ubicación:</strong> <span t-esc="doc.metrocontador_id.ubicacion or 'No especificada'"/></p>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <p><strong>Fecha de generación:</strong> <span t-esc="data['fecha_generacion']"/></p>
+                                        <p><strong>Usuario:</strong> <span t-esc="user.name"/></p>
+                                        <p><strong>Sistema:</strong> Odoo - Meter Reading</p>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #dee2e6;">
+                                    <p><strong>Leyenda:</strong></p>
+                                    <p style="margin: 2px 0;">
+                                        • <span class="exceso">Valores en rojo:</span> Exceso sobre el plan energético<br/>
+                                        • <span class="ahorro">Valores en verde:</span> Ahorro respecto al plan energético<br/>
+                                        • <strong>Gráfico:</strong> La línea azul punteada representa el plan, los puntos verdes indican cumplimiento y los rojos exceso
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+        
+    </data>
+</odoo>

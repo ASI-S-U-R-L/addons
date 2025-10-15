@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista del Wizard -->
+    <record id="stock_versat_export_wizard_form" model="ir.ui.view">
+        <field name="name">stock.versat.export.wizard.form</field>
+        <field name="model">stock.versat.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Exportar a VERSAT">
+                <header>
+                    <button name="action_export" 
+                            string="Generar Exportación" 
+                            type="object" 
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'done')]}"/>
+                    <button name="action_download" 
+                            string="Descargar ZIP" 
+                            type="object" 
+                            class="btn-success"
+                            attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                    <button string="Cancelar" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Exportar Transferencias a VERSAT</h1>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <label for="picking_ids" string="Transferencias Seleccionadas"/>
+                            <field name="picking_ids" 
+                                   widget="many2many_tags" 
+                                   options="{'no_create': True, 'no_open': True}"
+                                   attrs="{'readonly': [('state', '=', 'done')]}"/>
+                            <div class="text-muted mt-2">
+                                <small>Selecciona las transferencias que deseas exportar al formato VERSAT</small>
+                            </div>
+                        </group>
+                        <group attrs="{'invisible': [('state', '!=', 'done')]}">
+                            <label for="export_filename" string="Archivo Generado"/>
+                            <field name="export_filename" readonly="1"/>
+                            <div class="text-muted mt-2">
+                                <small>Haz clic en "Descargar ZIP" para obtener el archivo comprimido</small>
+                            </div>
+                        </group>
+                    </group>
+                    
+                    <!-- Mensaje de éxito -->
+                    <div attrs="{'invisible': [('state', '!=', 'done')]}" class="alert alert-success mt-4">
+                        <p><strong>¡Exportación completada exitosamente!</strong></p>
+                        <p>Los archivos para VERSAT han sido generados y comprimidos en un archivo ZIP.</p>
+                        <p>Haz clic en "Descargar ZIP" para obtener el archivo con todos los archivos .mvt generados.</p>
+                    </div>
+                    
+                    <!-- Instrucciones detalladas -->
+                    <div attrs="{'invisible': [('state', '=', 'done')]}" class="alert alert-info mt-4">
+                        <p><strong>📋 Instrucciones de Exportación:</strong></p>
+                        <ul>
+                            <li><strong>Configuración previa:</strong> Asegúrate de que los tipos de operación tengan configurado el concepto VERSAT</li>
+                            <li><strong>Selección de transferencias:</strong> Elige las transferencias de stock que deseas exportar</li>
+                            <li><strong>Estado requerido:</strong> Todas las transferencias deben estar en estado "Realizado"</li>
+                            <li><strong>Tipo de operación:</strong> Todas deben ser del mismo tipo de operación</li>
+                            <li><strong>Generar archivos:</strong> Haz clic en "Generar Exportación" para crear los archivos .mvt</li>
+                            <li><strong>Descargar:</strong> Una vez generados, haz clic en "Descargar ZIP" para obtener los archivos</li>
+                        </ul>
+                        
+                        <p class="mb-1"><strong>⚙️ Configurar conceptos VERSAT:</strong></p>
+                        <p>Ve a <strong>Almacén → Configuración → Tipos de Operación</strong> y asigna el concepto VERSAT correspondiente a cada tipo de operación.</p>
+                    </div>
+                </sheet>
+                
+                <!-- Información adicional -->
+                <div class="alert alert-warning mt-4" attrs="{'invisible': [('state', '=', 'done')]}">
+                    <p><strong>📁 Formato de archivos generados:</strong></p>
+                    <p>Se generarán archivos con extensión <strong>.mvt</strong> con el siguiente formato de nombre:</p>
+                    <p><code>{Concepto}-Mov {Número} Alm {Almacén} De {dd-mm-aaaa}.mvt</code></p>
+                    <p><strong>Ejemplo:</strong> <code>202-Mov 63 Alm 02 De 21-06-2025.mvt</code></p>
+                </div>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Acción principal del Wizard -->
+    <record id="action_stock_versat_export_wizard" model="ir.actions.act_window">
+        <field name="name">Exportar movimientos a VERSAT</field>
+        <field name="res_model">stock.versat.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Acción contextual para transferencias -->
+    <record id="action_stock_versat_export_contextual" model="ir.actions.act_window">
+        <field name="name">Exportar a VERSAT</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">stock.versat.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_picking_ids': active_ids}</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_view_types">list</field>
+    </record>
+    
+    <!-- Menú dentro de Informes -->
+    <menuitem id="menu_stock_versat_export"
+              name="Exportar a VERSAT"
+              parent="stock.menu_warehouse_report"
+              action="action_stock_versat_export_wizard"
+              sequence="15"/>
+</odoo>

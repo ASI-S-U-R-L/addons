@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Acción para abrir el calendario de días en ventana separada -->
+        <record id="action_plan_dias_calendar" model="ir.actions.act_window">
+            <field name="name">Calendario de Distribución</field>
+            <field name="res_model">meter.reading.plan.dia</field>
+            <field name="view_mode">calendar,form</field>
+            <field name="domain">[('plan_id', '=', active_id)]</field>
+            <field name="context">{'default_plan_id': active_id, 'form_view_ref': 'meter_reading.view_plan_dia_form_popup'}</field>
+        </record>
+        
+        <!-- Vista Calendar para días del plan -->
+        <record id="view_plan_dia_calendar" model="ir.ui.view">
+            <field name="name">meter.reading.plan.dia.calendar</field>
+            <field name="model">meter.reading.plan.dia</field>
+            <field name="arch" type="xml">
+                <calendar string="Distribución Diaria" 
+                          date_start="fecha" 
+                          color="modificado_manualmente"
+                          quick_add="False"
+                          mode="month"
+                          event_open_popup="true"
+                          create="false">
+                    <field name="dia_semana"/>
+                    <field name="consumo_planificado"/>
+                    <field name="modificado_manualmente"/>
+                </calendar>
+            </field>
+        </record>
+
+        <!-- Vista Form popup para editar días -->
+        <record id="view_plan_dia_form_popup" model="ir.ui.view">
+            <field name="name">meter.reading.plan.dia.form.popup</field>
+            <field name="model">meter.reading.plan.dia</field>
+            <field name="arch" type="xml">
+                <form string="Editar Consumo del Día">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="fecha" readonly="1"/>
+                                <field name="dia_semana" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="consumo_planificado"/>
+                                <field name="modificado_manualmente" readonly="1" invisible="1"/>
+                            </group>
+                        </group>
+                        <separator/>
+                        <div class="alert alert-info" role="alert" style="margin-top: 10px;">
+                            <p><strong>Redistribución Automática:</strong></p>
+                            <p>Al modificar este valor, los días laborales restantes (no modificados) se ajustarán automáticamente para cumplir el presupuesto total del plan.</p>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Vista Tree de planes -->
+        <record id="view_plan_energetico_tree" model="ir.ui.view">
+            <field name="name">meter.reading.plan.energetico.tree</field>
+            <field name="model">meter.reading.plan.energetico</field>
+            <field name="arch" type="xml">
+                <tree string="Planes Energéticos" 
+                      decoration-success="state == 'active'"
+                      decoration-muted="state == 'finished'"
+                      decoration-danger="state == 'cancelled'">
+                    <field name="name"/>
+                    <field name="metrocontador_id"/>
+                    <field name="fecha_inicio"/>
+                    <field name="fecha_fin"/>
+                    <field name="consumo_mensual_plan" string="Presupuesto Total (kWh)"/>
+                    <field name="state" widget="badge" 
+                           decoration-success="state == 'active'"
+                           decoration-info="state == 'draft'"
+                           decoration-muted="state == 'finished'"
+                           decoration-danger="state == 'cancelled'"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Vista Form Principal  -->
+        <record id="view_plan_energetico_form" model="ir.ui.view">
+            <field name="name">meter.reading.plan.energetico.form</field>
+            <field name="model">meter.reading.plan.energetico</field>
+            <field name="arch" type="xml">
+                <form string="Plan Energético">
+                    <header>
+                        <button name="action_activate" 
+                                type="object" 
+                                string="Activar" 
+                                class="btn-primary"
+                                attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button name="action_finish" 
+                                type="object" 
+                                string="Finalizar" 
+                                class="btn-secondary"
+                                attrs="{'invisible': [('state', '!=', 'active')]}"/>
+                        <button name="action_cancel" 
+                                type="object" 
+                                string="Cancelar" 
+                                class="btn-secondary"
+                                attrs="{'invisible': [('state', 'in', ['finished', 'cancelled'])]}"/>
+                        <field name="state" widget="statusbar" 
+                               statusbar_visible="draft,active,finished,cancelled"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="%(meter_reading.action_plan_dias_calendar)d" 
+                                    type="action" 
+                                    class="oe_stat_button"
+                                    icon="fa-calendar">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_text">Gestionar Distribución</span>
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <div class="alert alert-info" role="alert" style="margin-bottom: 15px;">
+                            <strong>Gestión Automática</strong> - Haz clic en "Gestionar Distribución" para ajustar consumos diarios.
+                        </div>
+                        
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="metrocontador_id" 
+                                       context="{'search_default_activo': True}"
+                                       options="{'no_create': True}"/>
+                                <field name="fecha_inicio"/>
+                                <field name="fecha_fin"/>
+                            </group>
+                            <group>
+                                <field name="consumo_mensual_plan"/>
+                                <field name="consumo_sabados"/>
+                                <field name="consumo_domingos"/>
+                                <field name="consumo_diario_semana" readonly="1" invisible="1"/>
+                            </group>
+                        </group>
+                        
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Acción Principal -->
+        <record id="action_plan_energetico_tree" model="ir.actions.act_window">
+            <field name="name">Planes Energéticos</field>
+            <field name="res_model">meter.reading.plan.energetico</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ¡Crea tu primer plan energético!
+                </p>
+                <p>
+                    Los planes energéticos te permiten establecer presupuestos de consumo
+                    y distribuirlos a lo largo del período planificado.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>
