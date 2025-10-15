@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<odoo>
+    <data noupdate="1">
+        <record id="cron_classify_software_ai" model="ir.cron">
+            <field name="name">Clasificar Software con IA</field>
+            <field name="model_id" ref="model_sgichs_software_ai_classification"/>
+            <field name="state">code</field>
+            <field name="code">model.classify_software_with_ai()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="numbercall">-1</field>
+            <field name="doall">0</field>
+            <field name="active">True</field>
+        </record>
+    </data>
+</odoo>

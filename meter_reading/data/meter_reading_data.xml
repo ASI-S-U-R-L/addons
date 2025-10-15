@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Actividades de correo para alertas -->
+        <record id="mail_activity_type_exceso_consumo" model="mail.activity.type">
+            <field name="name">Exceso de Consumo Energético</field>
+            <field name="summary">Revisar exceso de consumo</field>
+            <field name="delay_count">0</field>
+            <field name="delay_unit">days</field>
+            <field name="delay_from">current_date</field>
+            <field name="icon">fa-bolt</field>
+            <field name="decoration_type">warning</field>
+        </record>
+        
+        <!-- Secuencias para códigos automáticos -->
+        <record id="seq_metrocontador" model="ir.sequence">
+            <field name="name">Secuencia Metrocontador</field>
+            <field name="code">meter.reading.metrocontador</field>
+            <field name="prefix">MTC</field>
+            <field name="padding">4</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+        
+        <record id="seq_plan_energetico" model="ir.sequence">
+            <field name="name">Secuencia Plan Energético</field>
+            <field name="code">meter.reading.plan.energetico</field>
+            <field name="prefix">PE</field>
+            <field name="padding">4</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+        
+    </data>
+</odoo>

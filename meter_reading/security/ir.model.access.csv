@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_metrocontador_user,access.metrocontador.user,model_meter_reading_metrocontador,group_meter_reading_user,1,1,1,1
+access_plan_energetico_user,access.plan.energetico.user,model_meter_reading_plan_energetico,group_meter_reading_user,1,1,1,1
+access_lectura_consumo_user,access.lectura.consumo.user,model_meter_reading_lectura_consumo,group_meter_reading_user,1,1,1,1
+access_bitacora_simple_user,access.bitacora.simple.user,model_bitacora_simple,group_meter_reading_user,1,1,1,1
+access_consumo_total_empresa_user,access.consumo.total.empresa.user,model_consumo_total_empresa,group_meter_reading_user,1,1,1,1
+access_meter_reading_plan_dia,access_meter_reading_plan_dia,model_meter_reading_plan_dia,,1,1,1,1

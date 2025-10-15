@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_lectura_consumo_tree" model="ir.ui.view">
+            <field name="name">meter.reading.lectura.consumo.tree</field>
+            <field name="model">meter.reading.lectura.consumo</field>
+            <field name="arch" type="xml">
+                <tree string="Lecturas de Consumo" 
+                      decoration-danger="excede_plan == True"
+                      decoration-info="tipo_horario == 'pico'"
+                      create="true"
+                      edit="true"
+                      delete="true">
+                    <field name="fecha"/>
+                    <field name="metrocontador_id"/>
+                    <field name="tipo_medidor" invisible="1"/>
+                    
+                    <!-- Campos para PREPAGO -->
+                    <field name="consumo_mes" attrs="{'column_invisible': [('tipo_medidor', '!=', 'prepago')]}"/>
+                    
+                    <!-- Campos para NORMAL e INTELIGENTE -->
+                    <field name="hora" attrs="{'column_invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="lectura_kwh" attrs="{'column_invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="consumo_parcial" attrs="{'column_invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="consumo_diario_acumulado" string="Total Día" attrs="{'column_invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="consumo_reactivo" attrs="{'column_invisible': ['|', ('tipo_medidor', '!=', 'inteligente'), ('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="tipo_horario" widget="badge"
+                           decoration-warning="tipo_horario == 'pico'"
+                           decoration-success="tipo_horario == 'valle'"
+                           attrs="{'column_invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="plan_diario_proporcional" attrs="{'column_invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    <field name="excede_plan" widget="boolean_toggle" attrs="{'column_invisible': [('tipo_medidor', '=', 'prepago')]}"/>
+                    
+                    <field name="usuario_registro_id"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record id="view_lectura_consumo_form" model="ir.ui.view">
+            <field name="name">meter.reading.lectura.consumo.form</field>
+            <field name="model">meter.reading.lectura.consumo</field>
+            <field name="arch" type="xml">
+                <form string="Lectura de Consumo">
+                    <header>
+                        <widget name="web_ribbon" title="Excede Plan" bg_color="bg-danger" 
+                                attrs="{'invisible': ['|', ('excede_plan', '=', False), ('tipo_medidor', '=', 'prepago')]}"/>
+                    </header>
+                    <sheet>
+                        <field name="tipo_medidor" invisible="1"/>
+                        
+                       
+                        <group>
+                            <group>
+                                <field name="metrocontador_id" 
+                                       options="{'no_create': True, 'no_create_edit': True}"  
+                                       domain="[('activo', '=', True)]"/>
+                                <field name="fecha"/>
+                            </group>
+                        </group>
+                        
+                        <!--  VISTA PARA PREPAGO -->
+                        <group attrs="{'invisible': [('tipo_medidor', '!=', 'prepago')]}">
+                            <group>
+                                <field name="consumo_mes" attrs="{'required': [('tipo_medidor', '=', 'prepago')]}"/>
+                                <field name="usuario_registro_id" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <group string="Observaciones" attrs="{'invisible': [('tipo_medidor', '!=', 'prepago')]}">
+                            <field name="observaciones" nolabel="1"/>
+                        </group>
+                        
+                        <!-- VISTA PARA NORMAL E INTELIGENTE -->
+                        <group attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}">
+                            <group>
+                                <field name="hora" options="{'no_create': True}" attrs="{'required': [('tipo_medidor', '!=', 'prepago')]}"/>
+                                <field name="lectura_kwh" attrs="{'required': [('tipo_medidor', '!=', 'prepago')]}"/>
+                            </group>
+                            <group>
+                                <field name="consumo_parcial" readonly="1"/>
+                                <field name="consumo_diario_acumulado" readonly="1" string="Total Consumo del Día"/>
+                                <field name="consumo_reactivo" attrs="{'invisible': [('tipo_medidor', '!=', 'inteligente')]}" readonly="1"/>
+                                <field name="tipo_horario" widget="badge" readonly="1"/>
+                                <field name="plan_diario_proporcional" readonly="1"/>
+                                <field name="excede_plan" widget="boolean_toggle" readonly="1"/>
+                                <field name="usuario_registro_id" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <group string="Observaciones" attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}">
+                            <field name="observaciones" nolabel="1"/>
+                        </group>
+                        
+                        <group string="Información del Metrocontador" attrs="{'invisible': [('tipo_medidor', '=', 'prepago')]}">
+                            <field name="responsable_id" readonly="1"/>
+                        </group>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        
+        <record id="action_lectura_consumo_tree" model="ir.actions.act_window">
+            <field name="name">Lecturas de Consumo</field>
+            <field name="res_model">meter.reading.lectura.consumo</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_lectura_consumo_tree"/>
+            <field name="context">{}</field>
+            <field name="domain">[]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ¡Registra tu primera lectura de consumo!
+                </p>
+                <p>
+                    Aquí puedes registrar las lecturas diarias de los metrocontadores
+                    y hacer seguimiento al consumo energético.
+                </p>
+            </field>
+        </record>
+        
+        </data>
+</odoo>

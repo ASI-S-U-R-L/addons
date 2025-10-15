@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Menú principal  -->
+        <menuitem id="menu_meter_reading_main"
+                  name="Control Energético"
+                  groups="meter_reading.group_meter_reading_user"
+                  sequence="10"/>
+        
+        <!-- Submenús  -->
+        <menuitem id="menu_meter_reading_metrocontadores"
+                  name="Metrocontadores"
+                  parent="menu_meter_reading_main"
+                  action="action_metrocontador_tree"
+                  groups="meter_reading.group_meter_reading_user"
+                  sequence="10"/>
+        
+        <menuitem id="menu_meter_reading_planes"
+                  name="Planes Energéticos"
+                  parent="menu_meter_reading_main"
+                  action="action_plan_energetico_tree"
+                  groups="meter_reading.group_meter_reading_user"
+                  sequence="20"/>
+        
+        <menuitem id="menu_meter_reading_lecturas"
+                  name="Lecturas Diarias"
+                  parent="menu_meter_reading_main"
+                  action="action_lectura_consumo_tree"
+                  groups="meter_reading.group_meter_reading_user"
+                  sequence="30"/>
+     
+        
+        <!-- Submenú Reportes -->
+        <menuitem id="menu_meter_reading_reportes"
+                  name="Reportes y Gráficos"
+                  parent="menu_meter_reading_main"
+                  groups="meter_reading.group_meter_reading_user"
+                  sequence="40"/>
+        
+        <menuitem id="menu_bitacora_simple"
+          name="Bitácora de Consumo"
+          parent="menu_meter_reading_reportes" 
+          action="action_bitacora_simple"
+          sequence="10"/>
+        
+       
+        <menuitem id="menu_consumo_total_empresa"
+                  name="Consumo Total Empresa"
+                  parent="menu_meter_reading_reportes"
+                  action="action_consumo_total_empresa"
+                  groups="meter_reading.group_meter_reading_user"
+                  sequence="20"/>
+        
+    </data>
+</odoo>

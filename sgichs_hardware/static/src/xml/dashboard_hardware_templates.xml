@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!--
+        Extensión del dashboard base para mostrar KPIs y gráficos de hardware.
+        Ajustado para usar campos reales:
+        - No existe 'connection_status' en it.asset.hardware; se reemplaza por
+          métricas de componentes (con/sin componentes).
+    -->
+    <t t-inherit="sgichs_core2.Dashboard" t-inherit-mode="extension" name="HardwareDashboardExtension">
+
+        <!-- KPI: Total de Activos HW -->
+        <xpath expr="//div[@id='kpi_total_hardware_placeholder']" position="replace">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.hardware" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container bg-primary-soft"><i class="fa fa-desktop text-primary"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Total de Activos HW</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.total_hardware or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- KPIs adicionales en la segunda fila -->
+        <xpath expr="//div[@id='kpi_row_2']" position="inside">
+            <!-- HW con Componentes -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.hardware" data-domain="[('components_ids','!=',False)]">
+                    <div class="card-content">
+                        <div class="icon-container bg-success-soft"><i class="fa fa-puzzle-piece text-success"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">HW con Componentes</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.hw_with_components_count or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HW sin Componentes -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.hardware" data-domain="[('components_ids','=',False)]">
+                    <div class="card-content">
+                        <div class="icon-container bg-warning-soft"><i class="fa fa-exclamation-circle text-warning"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">HW sin Componentes</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.hw_without_components_count or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Componentes Totales -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.component" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container" style="background-color: #e7e7e7;"><i class="fa fa-cogs" style="color: #6c757d;"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Componentes Totales</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.total_components or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Gráficas de hardware -->
+        <xpath expr="//div[@id='hardware_charts_row_placeholder']" position="replace">
+            <div class="row">
+                <!-- Gráfico: Activos por Tipo (usa etiquetas legibles del selection) -->
+                <div class="col-lg-5 mb-4">
+                    <div class="chart-card h-100">
+                        <div class="card-header"><h3><i class="fa fa-pie-chart mr-2"/>Activos por Tipo</h3></div>
+                        <div class="card-body"><canvas id="assetTypeChart"/></div>
+                    </div>
+                </div>
+
+                <!-- Gráfico: Componentes por Subtipo (usa nombre del many2one) -->
+                <div class="col-lg-7 mb-4">
+                    <div class="chart-card h-100">
+                        <div class="card-header"><h3><i class="fa fa-hdd-o mr-2"/>Distribución de Componentes</h3></div>
+                        <div class="card-body"><canvas id="componentSubtypeChart"/></div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+</templates>
