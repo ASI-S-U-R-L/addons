@@ -2,294 +2,128 @@
 <odoo>
     <template id="report_saledetails_extended" inherit_id="point_of_sale.report_saledetails">
 
-        <!-- Reemplazar todo el contenido de la página -->
-        <xpath expr="//div[hasclass('page')]" position="replace">
-            <div class="page" style="font-size: 12px; background-color: transparent;">
-
-                <!-- Logo de la compañía arriba del título -->
-                <div class="row mb-3">
-                    <div class="col-12 text-right">
-                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)"
-                            style="max-height: 80px; max-width: 200px;" alt="Logo" />
-                    </div>
+        <!-- Agregar logo de la compañía en el encabezado derecho (versión corregida) -->
+        <xpath expr="//div[hasclass('page')]" position="before">
+            <div class="row" style="position: absolute; top: 0; right: 0; padding: 10px; margin-right: 31px;">
+                <img t-att-src="company.logo and image_data_uri(company.logo) or ''" 
+                     t-if="company.logo" 
+                     style="max-height: 100px; max-width: 300px;"/>
+                <div t-if="not company.logo" style="font-size: 10px; color: #999;">
+                    No logo available
                 </div>
-
-                <!-- Encabezado del reporte -->
-                <div class="row mb-3">
-                    <div class="col-12"
-                        style="background-color: #2c3e50; padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        <h2 style="margin-bottom: 15px; font-size: 18px; color: white;">
-                            <strong>REPORTE DE VENTAS DETALLADO</strong>
-                        </h2>
-                        <h4 style="margin-bottom: 0; font-size: 14px; color: #ecf0f1;">
-                            <t t-esc="company.name" />
-                        </h4>
-                    </div>
-                </div>
-
-                <!-- Información de puntos de venta -->
-                <div class="row mb-4" style="margin-bottom: 10px;">
-                    <div class="col-12"
-                        style="background-color: #e8f4fd; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db;">
-                        <strong style="font-size: 12px; color: #2980b9;">Puntos de Venta: </strong>
-                        <t t-if="config_ids and len(config_ids) > 0">
-                            <t t-foreach="config_ids" t-as="config">
-                                <span t-esc="config.name"
-                                    style="font-size: 12px; color: #2c3e50; background-color: white; padding: 2px 8px; border-radius: 12px; margin-right: 5px; display: inline-block; border: 1px solid #bdc3c7;" />
-                                <t t-if="not config_last">, </t>
-                            </t>
-                        </t>
-                        <t t-else="">
-                            <span
-                                style="font-size: 12px; color: #2c3e50; background-color: white; padding: 2px 8px; border-radius: 12px; border: 1px solid #bdc3c7;">Todos
-                                los puntos de venta</span>
-                        </t>
-                    </div>
-                </div>
-
-                <!-- Información del período -->
-                <div class="row mb-4" style="margin-bottom: 10px;">
-                    <div class="col-12"
-                        style="background-color: #fdf2e9; padding: 15px; border-radius: 8px; border-left: 5px solid #e67e22;">
-                        <strong style="font-size: 12px; color: #d35400;">Período:</strong>
-                        <span t-esc="inicio" t-options="{'widget': 'date'}"
-                            style="font-size: 12px; color: #2c3e50; background-color: white; padding: 2px 8px; border-radius: 12px; margin: 0 5px; border: 1px solid #bdc3c7;" />
-                        <span style="font-size: 12px; color: #d35400;"> al </span>
-                        <span t-esc="date_stop" t-options="{'widget': 'date'}"
-                            style="font-size: 12px; color: #2c3e50; background-color: white; padding: 2px 8px; border-radius: 12px; margin: 0 5px; border: 1px solid #bdc3c7;" />
-                    </div>
-                </div>
-
-                <!-- Tabla de productos -->
-                <h3
-                    style="font-size: 14px; margin-bottom: 15px; color: white; background-color: #27ae60; padding: 10px; border-radius: 8px; text-align: center;">
-                    PRODUCTOS VENDIDOS
-                </h3>
-                <table class="table table-sm"
-                    style="font-size: 12px; border-collapse: collapse; border: 2px solid #27ae60; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
-                    <thead style="background-color: #27ae60; color: white;">
-                        <tr>
-                            <th class="text-center"
-                                style="border: 1px solid #229954; padding: 12px; font-size: 12px; color: white;">
-                                Producto</th>
-                            <th class="text-center"
-                                style="border: 1px solid #229954; padding: 12px; font-size: 12px; color: white;">
-                                Cantidad</th>
-                            <th class="text-center"
-                                style="border: 1px solid #229954; padding: 12px; font-size: 12px; color: white;">
-                                Precio</th>
-                            <th class="text-center"
-                                style="border: 1px solid #229954; padding: 12px; font-size: 12px; color: white;">Precio
-                                x Cantidad</th>
-                            <th class="text-center"
-                                style="border: 1px solid #229954; padding: 12px; font-size: 12px; color: white;">
-                                Coste</th>
-                            <th class="text-center"
-                                style="border: 1px solid #229954; padding: 12px; font-size: 12px; color: white;">Coste
-                                x Cantidad</th>
-                            <th class="text-center"
-                                style="border: 1px solid #229954; padding: 12px; font-size: 12px; color: white;">
-                                Ganancia</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr t-foreach="products" t-as="line" style="border: 1px solid #82e0aa;"
-                            t-att-style="'background-color: %s;' % ('#f8fff8' if line_index % 2 == 0 else '#f0fff0')">
-                            <td
-                                style="border: 1px solid #82e0aa; padding: 10px; font-size: 12px; color: #2c3e50;">
-                                <t t-set="internal_reference"
-                                    t-value="line['code'] and '[%s] ' % line['code'] or ''" />
-                                <strong>
-                                    <t t-esc="internal_reference" />
-                                </strong>
-                                <t t-esc="line['product_name']" />
-                            </td>
-                            <td class="text-center"
-                                style="border: 1px solid #82e0aa; padding: 10px; font-size: 12px; color: #2980b9; font-weight: bold;">
-                                <t t-esc="line['quantity']" />
-                                <t t-if="line['uom'] != 'Units'">
-                                    <t t-esc="line['uom']" />
-                                </t>
-                            </td>
-                            <td class="text-right"
-                                style="border: 1px solid #82e0aa; padding: 10px; font-size: 12px; color: #e67e22; font-weight: bold;">
-                                <t t-if="currency">
-                                    <t t-esc="line['price_unit']"
-                                        t-options="{'widget': 'monetary', 'display_currency': currency}" />
-                                </t>
-                                <t t-else="">
-                                    <t t-esc="line['price_unit']" />
-                                </t>
-                                <t t-if="line['discount'] != 0">
-                                    <br />
-                                    <small
-                                        style="color: #e74c3c; background-color: #fadbd8; padding: 2px 4px; border-radius: 4px;">
-                                        Desc: <t t-esc="line['discount']" />%</small>
-                                </t>
-                            </td>
-                            <td class="text-right"
-                                style="border: 1px solid #82e0aa; padding: 10px; font-size: 12px; color: #27ae60; font-weight: bold; background-color: #eafaf1;">
-                                <t t-if="currency">
-                                    <t t-esc="line['price_quantity']"
-                                        t-options="{'widget': 'monetary', 'display_currency': currency}" />
-                                </t>
-                                <t t-else="">
-                                    <t t-esc="line['price_quantity']" />
-                                </t>
-                            </td>
-                            <td class="text-right"
-                                style="border: 1px solid #82e0aa; padding: 10px; font-size: 12px; color: #e74c3c; font-weight: bold;">
-                                <t t-if="currency">
-                                    <t t-esc="line['cost']"
-                                        t-options="{'widget': 'monetary', 'display_currency': currency}" />
-                                </t>
-                                <t t-else="">
-                                    <t t-esc="line['cost']" />
-                                </t>
-                            </td>
-                            <td class="text-right"
-                                style="border: 1px solid #82e0aa; padding: 10px; font-size: 12px; color: #e74c3c; font-weight: bold; background-color: #fdedec;">
-                                <t t-if="currency">
-                                    <t t-esc="line['cost_subtotal']"
-                                        t-options="{'widget': 'monetary', 'display_currency': currency}" />
-                                </t>
-                                <t t-else="">
-                                    <t t-esc="line['cost_subtotal']" />
-                                </t>
-                            </td>
-                            <td class="text-right"
-                                style="border: 1px solid #82e0aa; padding: 10px; font-size: 12px; color: #1e8449; font-weight: bold; background-color: #d5f4e6;">
-                                <t t-if="currency">
-                                    <t t-esc="line['profit_with_tax']"
-                                        t-options="{'widget': 'monetary', 'display_currency': currency}" />
-                                </t>
-                                <t t-else="">
-                                    <t t-esc="line['profit_with_tax']" />
-                                </t>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <!-- Tabla de totales -->
-                <table class="table table-sm mt-4"
-                    style="margin-top: 35px; width: 100%; border-collapse: separate; border-spacing: 15px 0;">
-                    <tr>
-                        <td
-                            style="width: 33%; text-align: center; background-color: #3498db; color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            <strong style="font-size: 14px; color: white;">Venta Total:</strong>
-                            <br />
-                            <strong style="font-size: 16px; color: white;">
-                                <t t-esc="total_paid"
-                                    t-options="{'widget': 'float', 'precision': currency_precision}" />
-                            </strong>
-                        </td>
-                        <td
-                            style="width: 33%; text-align: center; background-color: #e74c3c; color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            <strong style="font-size: 14px; color: white;">Coste Total:</strong>
-                            <br />
-                            <strong style="font-size: 16px; color: white;">
-                                <t t-if="currency">
-                                    <t t-esc="total_cost_subtotal"
-                                        t-options="{'widget': 'monetary', 'display_currency': currency}" />
-                                </t>
-                                <t t-else="">
-                                    <t t-esc="total_cost_subtotal" />
-                                </t>
-                            </strong>
-                        </td>
-                        <td
-                            style="width: 33%; text-align: center; background-color: #27ae60; color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            <strong style="font-size: 14px; color: white;">Ganancia Total:</strong>
-                            <br />
-                            <strong style="font-size: 16px; color: white;">
-                                <t t-if="currency">
-                                    <t t-esc="total_profit_with_tax"
-                                        t-options="{'widget': 'monetary', 'display_currency': currency}" />
-                                </t>
-                                <t t-else="">
-                                    <t t-esc="total_profit_with_tax" />
-                                </t>
-                            </strong>
-                        </td>
-                    </tr>
-                </table>
-
-                <!-- Tabla de pagos -->
-                <h3
-                    style="font-size: 14px; margin-top: 30px; margin-bottom: 15px; color: white; background-color: #3498db; padding: 10px; border-radius: 8px; text-align: center;">
-                    METODOS DE PAGO
-                </h3>
-                <table class="table table-sm"
-                    style="font-size: 12px; border-collapse: collapse; border: 2px solid #3498db; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
-                    <thead style="background-color: #3498db; color: white;">
-                        <tr>
-                            <th
-                                style="border: 1px solid #2980b9; padding: 12px; font-size: 12px; color: white;">Método
-                                de Pago</th>
-                            <th class="text-right"
-                                style="border: 1px solid #2980b9; padding: 12px; font-size: 12px; color: white;">
-                                Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr t-foreach="payments" t-as="payment"
-                            t-att-style="'background-color: %s;' % ('#ebf3fd' if payment_index % 2 == 0 else '#f8fbff')">
-                            <td
-                                style="border: 1px solid #85c1e9; padding: 10px; font-size: 12px; color: #2c3e50; font-weight: bold;">
-                                <t t-esc="payment['name']" />
-                            </td>
-                            <td class="text-right"
-                                style="border: 1px solid #85c1e9; padding: 10px; font-size: 12px; color: #27ae60; font-weight: bold;">
-                                <t t-esc="payment['total']"
-                                    t-options="{'widget': 'float', 'precision': currency_precision}" />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <!-- Tabla de impuestos -->
-                <h3
-                    style="font-size: 14px; margin-top: 30px; margin-bottom: 15px; color: white; background-color: #8e44ad; padding: 10px; border-radius: 8px; text-align: center;">
-                    IMPUESTOS
-                </h3>
-                <table class="table table-sm"
-                    style="font-size: 12px; border-collapse: collapse; border: 2px solid #8e44ad; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
-                    <thead style="background-color: #8e44ad; color: white;">
-                        <tr>
-                            <th
-                                style="border: 1px solid #7d3c98; padding: 12px; font-size: 12px; color: white;">
-                                Impuesto</th>
-                            <th class="text-right"
-                                style="border: 1px solid #7d3c98; padding: 12px; font-size: 12px; color: white;">Monto
-                                del Impuesto</th>
-                            <th class="text-right"
-                                style="border: 1px solid #7d3c98; padding: 12px; font-size: 12px; color: white;">Base
-                                Imponible</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr t-foreach="taxes" t-as="tax"
-                            t-att-style="'background-color: %s;' % ('#f4ecf7' if tax_index % 2 == 0 else '#faf2fc')">
-                            <td
-                                style="border: 1px solid #bb8fce; padding: 10px; font-size: 12px; color: #2c3e50; font-weight: bold;">
-                                <t t-esc="tax['name']" />
-                            </td>
-                            <td class="text-right"
-                                style="border: 1px solid #bb8fce; padding: 10px; font-size: 12px; color: #e74c3c; font-weight: bold;">
-                                <t t-esc="tax['tax_amount']"
-                                    t-options="{'widget': 'float', 'precision': currency_precision}" />
-                            </td>
-                            <td class="text-right"
-                                style="border: 1px solid #bb8fce; padding: 10px; font-size: 12px; color: #27ae60; font-weight: bold;">
-                                <t t-esc="tax['base_amount']"
-                                    t-options="{'widget': 'float', 'precision': currency_precision}" />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
             </div>
+        </xpath>
+        
+        <!-- Ajustar margen superior para evitar solapamiento con el logo -->
+        <xpath expr="//div[hasclass('text-center')]" position="attributes">
+            <attribute name="style">margin-top: 0px;</attribute>
+        </xpath>
+
+        <xpath expr="//table[1]/thead/tr" position="replace">
+            <tr style="border: 1px solid #ddd;">
+                <th class="text-center" style="border: 1px solid #ddd;">Producto</th>
+                <th class="text-center" style="border: 1px solid #ddd;">Cantidad</th>
+                <th class="text-center" style="border: 1px solid #ddd;">Precio</th>
+                <th class="text-center" style="border: 1px solid #ddd;">Precio x Cantidad</th>
+                <th class="text-center" style="border: 1px solid #ddd;">Coste</th>
+                <th class="text-center" style="border: 1px solid #ddd;">Coste x Cantidad</th>
+                <th class="text-center" style="border: 1px solid #ddd;">Ganancia</th>
+            </tr>
+        </xpath>
+        
+        <xpath expr="//table[1]/tbody/tr" position="replace">
+            <tr t-foreach="products" t-as="line" style="border: 1px solid #ddd;">
+                <td style="border: 1px solid #ddd;"><t t-esc="line['product_name']" /></td>
+                <td class="text-center" style="border: 1px solid #ddd;">
+                    <t t-esc="line['quantity']" />
+                    <t t-if="line['uom'] != 'Units'">
+                        <t t-esc="line['uom']" />
+                    </t>
+                </td>
+                <td class="text-right text-end" style="border:1px solid #ddd; text-align:right;">
+                    <t t-if="currency">
+                        <t t-esc="line['price_unit']" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="line['price_unit']"/>
+                    </t>
+                </td>
+                <td class="text-right text-end" style="border:1px solid #ddd; text-align:right;">
+                    <t t-if="currency">
+                        <t t-esc="line['price_quantity']" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="line['price_quantity']"/>
+                    </t>
+                </td>
+                <td class="text-right text-end" style="border:1px solid #ddd; text-align:right;">
+                    <t t-if="currency">
+                        <t t-esc="line['cost']" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="line['cost']"/>
+                    </t>
+                </td>
+                <td class="text-right text-end" style="border:1px solid #ddd; text-align:right;">
+                    <t t-if="currency">
+                        <t t-esc="line['cost_subtotal']" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="line['cost_subtotal']"/>
+                    </t>
+                </td>
+                <td class="text-right text-end" style="border:1px solid #ddd; text-align:right;">
+                    <t t-if="currency">
+                        <t t-esc="line['profit_with_tax']" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="line['profit_with_tax']"/>
+                    </t>
+                </td>
+            </tr>
+        </xpath>
+        
+        <xpath expr="//h3[contains(text(), 'Payments') or contains(text(), 'Pagos')]" position="replace">
+            <h3>Ventas</h3>
+        </xpath>
+
+        <xpath expr="//strong[contains(text(), 'Total:')]" position="replace"></xpath>
+
+        <!-- Modificar el total al final del reporte para incluir coste total y ganancia total en paralelo -->
+        <xpath expr="//table[1]/tbody/tr" position="after">
+            <table class="table table-sm mt-4" style="margin-top: 35px; width: 100%; border-collapse: separate; border-spacing: 10px 0;">
+                <tr>
+                    <td style="width: 33%; text-align: center;">
+                        <strong>Venta Total:</strong>
+                        <br/>
+                        <strong><t t-esc="total_paid" t-options="{'widget': 'float', 'precision': currency_precision}"/></strong>
+                    </td>
+                    <td style="width: 33%; text-align: center;">
+                        <strong>Coste Total:</strong>
+                        <br/>
+                        <strong>
+                            <t t-if="currency">
+                                <t t-esc="total_cost_subtotal" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                            </t>
+                            <t t-else="">
+                                <t t-esc="total_cost_subtotal"/>
+                            </t>
+                        </strong>
+                    </td>
+                    <td style="width: 33%; text-align: center;">
+                        <strong>Ganancia Total:</strong>
+                        <br/>
+                        <strong>
+                            <t t-if="currency">
+                                <t t-esc="total_profit_with_tax" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                            </t>
+                            <t t-else="">
+                                <t t-esc="total_profit_with_tax"/>
+                            </t>
+                        </strong>
+                    </td>
+                </tr>
+            </table>
         </xpath>
     </template>
 </odoo>

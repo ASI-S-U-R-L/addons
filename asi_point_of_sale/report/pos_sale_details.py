@@ -152,19 +152,10 @@ class ReportSaleDetails(models.AbstractModel):
             'session_ids': data.get('session_ids') or (docids if not data.get('config_ids') and not data.get('date_start') and not data.get('date_stop') else None),
             'config_ids': data.get('config_ids'),
             'date_start': data.get('date_start'),
-            'date_stop': data.get('date_stop'),
-            'inicio': data.get('inicio')  # Agregar el campo inicio igual que en el módulo de inventario
+            'date_stop': data.get('date_stop')
         })
         
-        # Obtener los objetos de configuración de POS en lugar de solo los IDs
-        if data.get('config_ids'):
-            configs = self.env['pos.config'].browse(data['config_ids'])
-            data['config_ids'] = configs  # Pasar los objetos completos
-        else:
-            # Si no hay config_ids específicos, obtener todos los puntos de venta
-            configs = self.env['pos.config'].search([])
-            data['config_ids'] = configs
-        
+        configs = self.env['pos.config'].browse(data['config_ids'])
         data.update(self.get_sale_details(data['date_start'], data['date_stop'], configs.ids, data['session_ids']))
         
         # Asegurarnos de que formatLang esté disponible

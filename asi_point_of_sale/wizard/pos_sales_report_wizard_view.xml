@@ -6,59 +6,39 @@
         <field name="arch" type="xml">
             <form string="Reporte de Ventas">
                 <group>
-                    <field name="period_type" widget="radio" />
+                    <field name="period_type" widget="radio"/>
                 </group>
-
+                
                 <!-- Campos para selección de día -->
                 <group attrs="{'invisible': [('period_type', '!=', 'day')]}">
-                    <field name="day_datetime" attrs="{'required': [('period_type', '=', 'day')]}"
-                        help="Fecha y hora de inicio. La hora de fin será automáticamente las 23:59:59 del mismo día" />
+                    <field name="day_date" attrs="{'required': [('period_type', '=', 'day')]}"/>
                 </group>
-
+                
                 <!-- Campos para selección de semana -->
                 <group attrs="{'invisible': [('period_type', '!=', 'week')]}">
-                    <field name="week_year" attrs="{'required': [('period_type', '=', 'week')]}" />
-                    <field name="week_month" attrs="{'required': [('period_type', '=', 'week')]}" />
-                    <field name="week_number" attrs="{'required': [('period_type', '=', 'week')]}" />
+                    <field name="week_year" attrs="{'required': [('period_type', '=', 'week')]}"/>
+                    <field name="week_month" attrs="{'required': [('period_type', '=', 'week')]}"/>
+                    <field name="week_number" attrs="{'required': [('period_type', '=', 'week')]}"/>
                 </group>
-
+                
                 <!-- Campos para selección de mes -->
                 <group attrs="{'invisible': [('period_type', '!=', 'month')]}">
-                    <field name="month_year" attrs="{'required': [('period_type', '=', 'month')]}" />
-                    <field name="month" attrs="{'required': [('period_type', '=', 'month')]}" />
+                    <field name="month_year" attrs="{'required': [('period_type', '=', 'month')]}"/>
+                    <field name="month" attrs="{'required': [('period_type', '=', 'month')]}"/>
                 </group>
-
+                
                 <!-- Campo para selección de año -->
                 <group attrs="{'invisible': [('period_type', '!=', 'year')]}">
-                    <field name="year" attrs="{'required': [('period_type', '=', 'year')]}" />
+                    <field name="year" attrs="{'required': [('period_type', '=', 'year')]}"/>
                 </group>
-
-                <!-- Campos para período personalizado -->
-                <group attrs="{'invisible': [('period_type', '!=', 'custom')]}">
-                    <field name="custom_date_start"
-                        attrs="{'required': [('period_type', '=', 'custom')]}"
-                        help="Fecha y hora exacta de inicio del período" />
-                    <field name="custom_date_end"
-                        attrs="{'required': [('period_type', '=', 'custom')]}"
-                        help="Fecha y hora exacta de fin del período" />
-                </group>
-
-                <!-- Campos para selección de puntos de venta -->
-                <group string="Puntos de Venta">
-                    <field name="all_pos_configs" />
-                    <field name="pos_config_ids" widget="many2many_tags"
-                        attrs="{'invisible': [('all_pos_configs', '=', True)], 'required': [('all_pos_configs', '=', False)]}"
-                        placeholder="Selecciona los puntos de venta..." />
-                </group>
-
+                
                 <!-- Campos ocultos para las fechas calculadas -->
-                <field name="date_start" invisible="1" />
-                <field name="date_end" invisible="1" />
-
+                <field name="date_start" invisible="1"/>
+                <field name="date_end" invisible="1"/>
+                
                 <footer>
-                    <button name="action_generate_report" string="Crear" type="object"
-                        class="btn-primary" />
-                    <button string="Cancelar" class="btn-secondary" special="cancel" />
+                    <button name="action_generate_report" string="Crear" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>
@@ -73,8 +53,8 @@
 
     <!-- Añadimos nuestro menú de ventas como submenú -->
     <menuitem id="menu_pos_sales_report"
-        name="Reportes"
-        action="action_pos_sales_report_wizard"
-        parent="point_of_sale.menu_point_rep"
-        sequence="10" />
+              name="Reportes"
+              action="action_pos_sales_report_wizard"
+              parent="point_of_sale.menu_point_rep"
+              sequence="10"/>
 </odoo>

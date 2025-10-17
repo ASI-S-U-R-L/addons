@@ -219,13 +219,14 @@
 
                 <separator />
                 <filter
-                    string="Completados" name="completed" domain="[('state', '=', 'completed')]" />
+                    string="Borradores" name="draft" domain="[('state', '=', 'draft')]" />
                 <filter
                     string="Enviados" name="sent" domain="[('state', '=', 'sent')]" />
                 <filter
-                    string="Borradores" name="draft" domain="[('state', '=', 'draft')]" />
+                    string="Completados" name="completed" domain="[('state', '=', 'completed')]" />
                 <filter
                     string="Rechazados" name="rejected" domain="[('state', '=', 'rejected')]" />
+
                 <separator />
                 <filter
                     string="Documentos Locales" name="local_docs"

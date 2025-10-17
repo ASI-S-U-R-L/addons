@@ -182,7 +182,7 @@
         name="Dashboard"
         parent="asi_pdf_signature.menu_firma_digital_root"
         action="asi_signature_workflow.action_signature_workflow_dashboard"
-        sequence="9" />
+        sequence="10" />
 
     <!-- Separador visual en el menú -->
     <menuitem id="menu_separator_workflow"

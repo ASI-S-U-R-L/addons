@@ -269,14 +269,6 @@ class SignatureWorkflowWizard(models.TransientModel):
                 'target_user_id_4': [('id', '!=', self.env.user.id), ('id', '!=', self.target_user_id_1.id), ('id', '!=', self.target_user_id_2.id), ('id', '!=', self.target_user_id_3.id), ('active', '=', True)]
             }
         }
-    
-    @api.onchange('target_user_id_1', 'signature_role_id_1', 'signature_position_1',
-                  'target_user_id_2', 'signature_role_id_2', 'signature_position_2',
-                  'target_user_id_3', 'signature_role_id_3', 'signature_position_3',
-                  'target_user_id_4', 'signature_role_id_4', 'signature_position_4')
-    def _onchange_update_target_user_info(self):
-        """Actualiza la información de los usuarios destinatarios"""
-        self._compute_target_user_info()
 
     @api.onchange('document_source')
     def _onchange_document_source(self):
