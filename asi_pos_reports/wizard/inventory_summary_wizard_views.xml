@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista del wizard para resumen de inventario -->
+    <record id="view_inventory_summary_wizard_form" model="ir.ui.view">
+        <field name="name">inventory.summary.wizard.form</field>
+        <field name="model">inventory.summary.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Resumen de Inventario">
+                <group>
+                    <group>
+                        <field name="warehouse_ids" widget="many2many_tags" />
+                        <field name="location_ids" widget="many2many_tags"
+                            attrs="{'invisible': [('warehouse_ids', '!=', False)]}" />
+                    </group>
+                    <group>
+                        <field name="category_ids" widget="many2many_tags" />
+                        <field name="include_zero_qty" />
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_print_report"
+                        string="Generar Reporte PDF"
+                        type="object"
+                        class="btn-primary" />
+                    <button name="action_generate_excel"
+                        string="Generar Reporte Excel"
+                        type="object"
+                        class="btn-success" />
+                    <button name="action_preview_ticket"
+                        string="Previsualizar Ticket"
+                        type="object"
+                        class="btn-info" />
+                    <button name="action_print_ticket"
+                        string="Imprimir Ticket"
+                        type="object"
+                        class="btn-secondary" />
+                    <button string="Cancelar"
+                        class="btn-secondary"
+                        special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para abrir el wizard -->
+    <record id="action_inventory_summary_wizard" model="ir.actions.act_window">
+        <field name="name">Resumen de Inventario</field>
+        <field name="res_model">inventory.summary.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_inventory_summary_wizard_form" />
+    </record>
+</odoo>

@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de formulario para flujos de firma locales -->
+    <record id="view_local_workflow_form" model="ir.ui.view">
+        <field name="name">local.workflow.form</field>
+        <field name="model">local.workflow</field>
+        <field name="arch" type="xml">
+            <form string="Solicitud de Firma Digital Local">
+                <header>
+                    <button name="action_send_for_signature" string="Enviar para Firma"
+                        type="object" class="btn-primary"
+                        attrs="{'invisible': [('state', '!=', 'draft')]}" />
+                    <button name="action_sign_documents" string="Firmar Documentos"
+                        type="object" class="btn-success"
+                        attrs="{'invisible': [('state', '!=', 'sent')]}" />
+                    <button name="action_reject_workflow" string="Rechazar Solicitud"
+                        type="object" class="btn-danger"
+                        attrs="{'invisible': [('state', '!=', 'sent')]}" />
+                    <button name="action_send_reminder" string="Enviar Recordatorio"
+                        type="object" class="btn-warning"
+                        attrs="{'invisible': [('state', '!=', 'sent')]}" />
+                    <button name="action_mark_as_completed" string="Marcar como Completado"
+                        type="object" class="btn-secondary"
+                        attrs="{'invisible': [('state', 'not in', ['signed'])]}" />
+                    <button name="action_download_all_signed" string="Descargar Firmados"
+                        type="object" class="btn-info"
+                        attrs="{'invisible': [('state', '!=', 'completed')]}" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,sent,signed,completed" />
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nombre de la Solicitud de Firma" />
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="creator_id" readonly="1" />
+                            <field name="document_count" />
+                        </group>
+                        <group>
+                            <field name="sent_date" readonly="1"
+                                attrs="{'invisible': [('sent_date', '=', False)]}" />
+                            <field name="signed_date" readonly="1"
+                                attrs="{'invisible': [('signed_date', '=', False)]}" />
+                            <field name="completed_date" readonly="1"
+                                attrs="{'invisible': [('completed_date', '=', False)]}" />
+                            <field name="rejection_date" readonly="1"
+                                attrs="{'invisible': [('rejection_date', '=', False)]}" />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Destinatarios" name="recipients">
+                            <group>
+                                <group string="Destinatario 1">
+                                    <field name="target_user_id_1"
+                                        attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                    <field name="signature_role_id_1"
+                                        attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('target_user_id_1', '!=', False)]}" />
+                                    <field name="signature_position_1"
+                                        attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('target_user_id_1', '!=', False)]}" />
+                                    <field name="signed_by_user_1" readonly="1" />
+                                    <field name="signed_date_1" readonly="1"
+                                        attrs="{'invisible': [('signed_date_1', '=', False)]}" />
+                                </group>
+                                <group string="Destinatario 2">
+                                    <field name="target_user_id_2"
+                                        attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                    <field name="signature_role_id_2"
+                                        attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('target_user_id_2', '!=', False)]}" />
+                                    <field name="signature_position_2"
+                                        attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('target_user_id_2', '!=', False)]}" />
+                                    <field name="signed_by_user_2" readonly="1" />
+                                    <field name="signed_date_2" readonly="1"
+                                        attrs="{'invisible': [('signed_date_2', '=', False)]}" />
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Destinatario 3">
+                                    <field name="target_user_id_3"
+                                        attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                    <field name="signature_role_id_3"
+                                        attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('target_user_id_3', '!=', False)]}" />
+                                    <field name="signature_position_3"
+                                        attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('target_user_id_3', '!=', False)]}" />
+                                    <field name="signed_by_user_3" readonly="1" />
+                                    <field name="signed_date_3" readonly="1"
+                                        attrs="{'invisible': [('signed_date_3', '=', False)]}" />
+                                </group>
+                                <group string="Destinatario 4">
+                                    <field name="target_user_id_4"
+                                        attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                    <field name="signature_role_id_4"
+                                        attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('target_user_id_4', '!=', False)]}" />
+                                    <field name="signature_position_4"
+                                        attrs="{'readonly': [('state', '!=', 'draft')], 'required': [('target_user_id_4', '!=', False)]}" />
+                                    <field name="signed_by_user_4" readonly="1" />
+                                    <field name="signed_date_4" readonly="1"
+                                        attrs="{'invisible': [('signed_date_4', '=', False)]}" />
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Documentos" name="documents">
+                            <field name="document_ids">
+                                <tree string="Documentos" create="0" delete="0">
+                                    <field name="name" />
+                                    <field name="file_size" />
+                                    <field name="is_signed" />
+                                    <field name="signed_date" />
+                                    <button name="action_preview_document" string="Vista Previa"
+                                        type="object" icon="fa-eye" />
+                                    <button name="action_download_document" string="Descargar"
+                                        type="object" icon="fa-download"
+                                        attrs="{'invisible': [('is_signed', '=', False)]}" />
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="Configuración de Firma" name="signature_config">
+                            <group>
+                                <field name="signature_opaque_background"
+                                    attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                <field name="sign_all_pages"
+                                    attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                            </group>
+                        </page>
+
+                        <page string="Notas" name="notes">
+                            <group>
+                                <field name="notes" nolabel="1"
+                                    placeholder="Notas adicionales sobre la solicitud..."
+                                    attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                <field name="signature_notes" nolabel="1" readonly="1"
+                                    attrs="{'invisible': [('signature_notes', '=', False)]}" />
+                                <field name="rejection_notes" nolabel="1" readonly="1"
+                                    attrs="{'invisible': [('rejection_notes', '=', False)]}" />
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" />
+                    <field name="activity_ids" />
+                    <field name="message_ids" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de árbol -->
+    <record id="view_local_workflow_tree" model="ir.ui.view">
+        <field name="name">local.workflow.tree</field>
+        <field name="model">local.workflow</field>
+        <field name="arch" type="xml">
+            <tree string="Solicitudes de Firma Local">
+                <field name="name" />
+                <field name="creator_id" />
+                <field name="document_count" />
+                <field name="state" decoration-info="state=='draft'"
+                    decoration-warning="state=='sent'"
+                    decoration-success="state in ('signed','completed')"
+                    decoration-danger="state=='rejected'" />
+                <field name="create_date" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de búsqueda -->
+    <record id="view_local_workflow_search" model="ir.ui.view">
+        <field name="name">local.workflow.search</field>
+        <field name="model">local.workflow</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Solicitudes">
+                <field name="name" />
+                <field name="creator_id" />
+                <field name="target_user_id_1" />
+                <field name="target_user_id_2" />
+                <field name="target_user_id_3" />
+                <field name="target_user_id_4" />
+                <filter string="Mis Solicitudes Creadas" name="my_created"
+                    domain="[('creator_id', '=', uid)]" />
+                <filter string="Asignadas a Mí" name="assigned_to_me"
+                    domain="['|','|','|',('target_user_id_1', '=', uid),('target_user_id_2', '=', uid),('target_user_id_3', '=', uid),('target_user_id_4', '=', uid)]" />
+                <separator />
+                <filter
+                    string="Completados" name="completed" domain="[('state', '=', 'completed')]" />
+                <filter
+                    string="Enviados" name="sent" domain="[('state', '=', 'sent')]" />
+                <filter
+                    string="Borradores" name="draft" domain="[('state', '=', 'draft')]" />
+                <filter
+                    string="Rechazados" name="rejected" domain="[('state', '=', 'rejected')]" />
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}" />
+                    <filter string="Creador" name="group_creator"
+                        context="{'group_by': 'creator_id'}" />
+                    <filter string="Fecha de Creación" name="group_create_date"
+                        context="{'group_by': 'create_date'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Vista Kanban para el Dashboard -->
+    <record id="view_local_workflow_kanban" model="ir.ui.view">
+        <field name="name">local.workflow.kanban</field>
+        <field name="model">local.workflow</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name" />
+                <field name="creator_id" />
+                <field name="target_user_id_1" />
+                <field name="target_user_id_2" />
+                <field name="target_user_id_3" />
+                <field name="target_user_id_4" />
+                <field name="document_count" />
+                <field name="state" />
+                <field name="sent_date" />
+                <field name="completed_date" />
+                <field name="signature_role_id_1" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name" />
+                                        </strong>
+                                    </div>
+                                    <div class="o_kanban_record_top_right">
+                                        <span
+                                            t-att-class="'badge badge-pill ' + (record.state.raw_value == 'completed' ? 'badge-success' : record.state.raw_value == 'sent' ? 'badge-warning' : record.state.raw_value == 'signed' ? 'badge-info' : 'badge-secondary')">
+                                            <field name="state" />
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="o_kanban_record_body">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <strong>Creador:</strong>
+                                            <br />
+                                            <field name="creator_id" />
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-12">
+                                            <strong>Destinatarios:</strong>
+                                            <br />
+                                            <span t-if="record.target_user_id_1.raw_value">
+                                                <field name="target_user_id_1" />
+                                            </span>
+                                            <span t-if="record.target_user_id_2.raw_value"> , <field
+                                                    name="target_user_id_2" />
+                                            </span>
+                                            <span t-if="record.target_user_id_3.raw_value"> , <field
+                                                    name="target_user_id_3" />
+                                            </span>
+                                            <span t-if="record.target_user_id_4.raw_value"> , <field
+                                                    name="target_user_id_4" />
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-6">
+                                            <strong>Documentos:</strong>
+                                            <field name="document_count" />
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Origen:</strong>
+                                            <span>💻 Local</span>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2"
+                                        t-if="record.signature_role_id_1.raw_value">
+                                        <div class="col-12">
+                                            <strong>Rol Principal:</strong>
+                                            <field name="signature_role_id_1" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <span t-if="record.sent_date.raw_value" class="text-muted">
+                                            Enviado: <field name="sent_date" widget="date" />
+                                        </span>
+                                        <span t-if="record.completed_date.raw_value"
+                                            class="text-success"> Completado: <field
+                                                name="completed_date" widget="date" />
+                                        </span>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <button t-if="record.state.raw_value == 'sent'"
+                                            name="action_sign_documents" type="object"
+                                            class="btn btn-sm btn-success">
+                                            🖊️ Firmar
+                                        </button>
+                                        <button t-if="record.state.raw_value == 'completed'"
+                                            name="action_download_all_signed" type="object"
+                                            class="btn btn-sm btn-info">
+                                            📥 Descargar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Acción de ventana -->
+    <record id="action_local_workflow" model="ir.actions.act_window">
+        <field name="name">Solicitudes de Firma Local</field>
+        <field name="res_model">local.workflow</field>
+        <field name="view_mode">tree,form,kanban</field>
+        <field name="context">{'search_default_my_created': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear una nueva solicitud de firma local
+            </p>
+            <p>
+                Las solicitudes de firma local permiten enviar documentos a otros usuarios para que
+                los firmen digitalmente.
+            </p>
+        </field>
+    </record>
+</odoo>

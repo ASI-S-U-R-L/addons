@@ -16,10 +16,11 @@ class PosSalesReportWizard(models.TransientModel):
         ('week', 'Semana'),
         ('month', 'Mes'),
         ('year', 'Año'),
+        ('custom', 'Personalizado'),
     ], string='Tipo de Período', default='day', required=True)
     
     # Campos para selección de día
-    day_date = fields.Date(string='Fecha', default=fields.Date.today)
+    day_datetime = fields.Datetime(string='Fecha y Hora de Inicio', default=lambda self: fields.Datetime.now().replace(hour=0, minute=0, second=0))
     
     # Campos para selección de semana
     week_month = fields.Selection([
@@ -49,19 +50,36 @@ class PosSalesReportWizard(models.TransientModel):
     
     # Campo para selección de año
     year = fields.Integer(string='Año', default=lambda self: fields.Date.today().year)
+
+    # Campos para período personalizado
+    custom_date_start = fields.Datetime(string='Fecha y Hora de Inicio', default=lambda self: fields.Datetime.now().replace(hour=0, minute=0, second=0))
+    custom_date_end = fields.Datetime(string='Fecha y Hora de Fin', default=lambda self: fields.Datetime.now().replace(hour=23, minute=59, second=59))
+
+    # Campos para selección de puntos de venta
+    all_pos_configs = fields.Boolean(string='Todos los Puntos de Venta', default=True)
+    pos_config_ids = fields.Many2many(
+        'pos.config', 
+        string='Puntos de Venta',
+        help='Selecciona los puntos de venta para incluir en el reporte. Si no seleccionas ninguno, se incluirán todos.'
+    )
     
     # Campos ocultos para almacenar las fechas de inicio y fin calculadas
     date_start = fields.Datetime(string='Fecha Inicio', required=True)
     date_end = fields.Datetime(string='Fecha Fin', required=True)
     
-    @api.onchange('period_type', 'day_date', 'week_month', 'week_year', 'week_number', 'month', 'month_year', 'year')
+    @api.onchange('period_type', 'day_datetime', 'week_month', 'week_year', 'week_number', 'month', 'month_year', 'year', 'custom_date_start', 'custom_date_end')
     def _onchange_period_fields(self):
         """Actualiza las fechas de inicio y fin basadas en los campos seleccionados"""
-        if self.period_type == 'day' and self.day_date:
-            # Para día: desde las 00:00:00 hasta las 23:59:59 del día seleccionado
-            start_date = datetime.combine(self.day_date, datetime.min.time())
-            end_date = datetime.combine(self.day_date, datetime.max.time())
-            
+        if self.period_type == 'day' and self.day_datetime:
+            # Para día: desde la fecha y hora especificada hasta las 23:59:59 del mismo día
+            start_date = self.day_datetime
+            end_date = datetime.combine(self.day_datetime.date(), datetime.max.time())
+        
+        elif self.period_type == 'custom' and self.custom_date_start and self.custom_date_end:
+            # Para período personalizado: usar las fechas exactas proporcionadas
+            start_date = self.custom_date_start
+            end_date = self.custom_date_end
+        
         elif self.period_type == 'week' and self.week_month and self.week_year and self.week_number:
             # Para semana: calculamos el primer día del mes
             month = int(self.week_month)
@@ -91,7 +109,7 @@ class PosSalesReportWizard(models.TransientModel):
             # La semana termina 6 días después o el último día del mes, lo que ocurra primero
             end_day = min(start_day + 6, last_day_of_month)
             end_date = datetime.combine(date(year, month, end_day), datetime.max.time())
-            
+        
         elif self.period_type == 'month' and self.month and self.month_year:
             # Para mes: desde el primer día hasta el último día del mes seleccionado
             month = int(self.month)
@@ -102,20 +120,26 @@ class PosSalesReportWizard(models.TransientModel):
             # Último día del mes
             last_day = calendar.monthrange(year, month)[1]
             end_date = datetime.combine(date(year, month, last_day), datetime.max.time())
-            
+        
         elif self.period_type == 'year' and self.year:
             # Para año: desde el 1 de enero hasta el 31 de diciembre del año seleccionado
             year = self.year
             
             start_date = datetime.combine(date(year, 1, 1), datetime.min.time())
             end_date = datetime.combine(date(year, 12, 31), datetime.max.time())
-            
+        
         else:
             # Si no se han completado los campos necesarios, no actualizamos las fechas
             return
         
         self.date_start = start_date
         self.date_end = end_date
+
+    @api.onchange('all_pos_configs')
+    def _onchange_all_pos_configs(self):
+        """Limpia la selección específica cuando se marca 'todos'"""
+        if self.all_pos_configs:
+            self.pos_config_ids = [(5, 0, 0)]  # Limpia la selección
     
     def action_generate_report(self):
         """Genera el reporte de ventas basado en el período seleccionado"""
@@ -124,11 +148,20 @@ class PosSalesReportWizard(models.TransientModel):
         # Aseguramos que las fechas estén actualizadas
         self._onchange_period_fields()
         
+        # Determinamos qué puntos de venta incluir
+        if self.all_pos_configs or not self.pos_config_ids:
+            # Si está marcado "todos" o no hay selección específica, incluimos todos
+            config_ids = False
+        else:
+            # Si hay selección específica, usamos esos IDs
+            config_ids = self.pos_config_ids.ids
+        
         # Preparamos el contexto para el reporte
         data = {
+            'inicio': self.date_start + timedelta(days=1),  # Igual que en el módulo de inventario
             'date_start': self.date_start,
             'date_stop': self.date_end,
-            'config_ids': False,  # Todos los TPV
+            'config_ids': config_ids,
             'session_ids': False  # Todas las sesiones
         }
         

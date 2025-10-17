@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--Vista específica para wizard de firma
+    local desde flujo de trabajo-->
+    <record id="view_firma_documento_wizard_workflow_form" model="ir.ui.view">
+        <field name="name">firma.documento.wizard.workflow.form</field>
+        <field name="model">firma.documento.wizard</field>
+        <field name="inherit_id" ref="asi_pdf_signature.view_firma_documento_wizard_form" />
+        <field name="arch" type="xml">
+            <!--Agregar
+            campos ocultos después del campo status-->
+            <field name="status" position="after">
+                <field name="from_workflow" invisible="1" />
+                <field name="workflow_id" invisible="1" />
+                <field name="readonly_signature_config" invisible="1" />
+            </field>
+            <!--Hacer
+            campos de rol y posición de solo lectura cuando viene de flujo-->
+            <field
+                name="signature_role"
+                position="attributes">
+                <attribute name="attrs">{'readonly': [('from_workflow', '=', True)]}</attribute>
+            </field>
+
+            <field
+                name="signature_position" position="attributes">
+                <attribute name="attrs">{'readonly': [('from_workflow', '=', True)]}</attribute>
+            </field>
+
+            <field
+                name="signature_opaque_background" position="attributes">
+                <attribute name="attrs">{'readonly': [('from_workflow', '=', True)]}</attribute>
+            </field>
+
+            <field
+                name="sign_all_pages" position="attributes">
+                <attribute name="attrs">{'readonly': [('from_workflow', '=', True)]}</attribute>
+            </field>
+
+            <field
+                name="document_ids" position="attributes">
+                <attribute name="attrs">{'readonly': [('from_workflow', '=', True)]}</attribute>
+            </field>
+            <!--Agregar
+            mensaje informativo cuando viene de flujo-->
+            <div
+                class="alert alert-info" position="after">
+                <div class="alert alert-warning" role="alert"
+                    attrs="{'invisible': [('from_workflow', '=', False)]}">
+                    <h5><i class="fa fa-lock" /> Configuración de la Solicitud de Firma</h5>
+                    <p>El rol y posición de firma han sido definidos por el creador de la solicitud
+                        de firma y no pueden ser modificados.</p>
+                    <p>
+                        <strong>Solicitud de Firma:</strong>
+                        <field name="workflow_id" readonly="1"
+                            attrs="{'invisible': [('workflow_id', '=', False)]}" />
+                    </p>
+                </div>
+            </div>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template para la página de descarga de documentos firmados -->
+    <template id="download_signed_documents_page" name="Descargar Documentos Firmados">
+        <t t-call="web.layout">
+            <div id="wrap" class="oe_structure oe_empty">
+                <section class="s_cover parallax s_parallax_is_fixed pt96 pb96" data-vcss="001" data-snippet="s_cover" data-scroll-background-ratio="1" style="background-image: none;">
+                    <span class="s_parallax_bg oe_img_bg" style="background-image: url('/web/image/website.s_cover_default_image'); background-position: 50% 0;"></span>
+                    <div class="o_we_bg_filter bg-black-50"></div>
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-8 offset-lg-2 text-center">
+                                <h1 class="text-white">Documentos Firmados</h1>
+                                <h3 class="text-white-50"><t t-esc="workflow.name" /></h3>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="s_text_block pt32 pb32" data-snippet="s_text_block">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-8 offset-lg-2">
+                                <div class="alert alert-success" role="alert">
+                                    <h4 class="alert-heading"><i class="fa fa-check-circle"></i> Solicitud Completada</h4>
+                                    <p>Todos los documentos han sido firmados exitosamente. Puede descargarlos a continuación.</p>
+                                    <hr />
+                                    <p class="mb-0">
+                                        <strong>Creador:</strong> <t t-esc="workflow.creator_id.name" /><br />
+                                        <strong>Fecha de Finalización:</strong> <t t-esc="workflow.completed_date" />
+                                    </p>
+                                </div>
+
+                                <h3 class="mt-4 mb-3">Documentos Disponibles</h3>
+                                
+                                <div class="list-group">
+                                    <t t-foreach="signed_documents" t-as="document">
+                                        <div class="list-group-item list-group-item-action flex-column align-items-start">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h5 class="mb-1">
+                                                    <i class="fa fa-file-pdf-o text-danger"></i>
+                                                    <t t-esc="document.name" />
+                                                </h5>
+                                                <small><t t-esc="document.file_size" /></small>
+                                            </div>
+                                            <p class="mb-1">
+                                                <small class="text-muted">
+                                                    Firmado el: <t t-esc="document.signed_date" />
+                                                </small>
+                                            </p>
+                                            <div class="mt-2">
+                                                <a t-attf-href="/web/content/#{document.signed_attachment_id.id}?download=true" class="btn btn-primary btn-sm">
+                                                    <i class="fa fa-download"></i> Descargar
+                                                </a>
+                                                <a t-attf-href="/web/content/#{document.signed_attachment_id.id}" target="_blank" class="btn btn-secondary btn-sm">
+                                                    <i class="fa fa-eye"></i> Vista Previa
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <div class="text-center mt-4">
+                                    <a href="/web" class="btn btn-lg btn-primary">
+                                        <i class="fa fa-home"></i> Volver al Inicio
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+</odoo>

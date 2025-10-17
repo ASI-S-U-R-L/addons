@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_inventory_summary_wizard_id" model="ir.actions.act_window">
+        <field name="name">Resumen de Inventario</field>
+        <field name="res_model">inventory.summary.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Añadimos nuestro menú de ventas como submenú -->
+    <menuitem id="menu_inventory_summary_reports"
+        name="Resumen de Inventario"
+        action="action_inventory_summary_wizard_id"
+        parent="point_of_sale.menu_point_rep"
+        sequence="20" />
+</odoo>

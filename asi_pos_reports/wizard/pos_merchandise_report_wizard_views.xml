@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista del wizard para el reporte de mercancías -->
+    <record id="view_pos_merchandise_report_wizard_form" model="ir.ui.view">
+        <field name="name">pos.merchandise.report.wizard.form</field>
+        <field name="model">pos.merchandise.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reporte de Ventas por Mercancías">
+                <group>
+                    <field name="session_id" readonly="1" />
+                    <field name="date_start" />
+                    <field name="date_stop" />
+                </group>
+                <footer>
+                    <button name="action_print_report"
+                        string="Generar Reporte PDF"
+                        type="object"
+                        class="btn-primary" />
+                    <button name="action_generate_excel"
+                        string="Generar Reporte Excel"
+                        type="object"
+                        class="btn-success" />
+                    <button name="action_preview_ticket"
+                        string="Previsualizar Ticket"
+                        type="object"
+                        class="btn-info" />
+                    <button name="action_print_ticket"
+                        string="Imprimir Ticket"
+                        type="object"
+                        class="btn-secondary" />
+                    <button string="Cancelar"
+                        class="btn-secondary"
+                        special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

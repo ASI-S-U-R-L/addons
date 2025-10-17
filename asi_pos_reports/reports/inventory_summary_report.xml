@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reporte PDF principal -->
+    <record id="action_report_inventory_summary" model="ir.actions.report">
+        <field name="name">Resumen de Inventario</field>
+        <field name="model">inventory.summary.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_inventory_summary_template</field>
+        <field name="report_file">asi_pos_reports.report_inventory_summary_template</field>
+        <field name="binding_model_id" ref="model_inventory_summary_wizard" />
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template principal del reporte -->
+    <template id="report_inventory_summary_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="wizard">
+                        <t t-set="data" t-value="wizard._get_inventory_data()" />
+
+                        <div class="text-center">
+                            <h2>Resumen de Inventario</h2>
+                            <h4>Inventario por Artículos y Grupo</h4>
+                            <p>
+                                <strong>Fecha:</strong>
+                                <span t-esc="data['report_date'].strftime('%d/%m/%Y %H:%M')" />
+                            </p>
+                            <p>
+                                <strong>Entidades:</strong>
+                                <span t-esc="', '.join(data['warehouse_names'])" />
+                            </p>
+                        </div>
+
+                        <hr />
+
+                        <div class="alert alert-info">
+                            <p>
+                                <strong>Resumen:</strong>
+                            </p>
+                            <p>Total de productos: <span t-esc="data['total_products']" /></p>
+                            <p>Incluye cantidad 0: <span
+                                    t-esc="'Sí' if data['include_zero_qty'] else 'No'" /></p>
+                        </div>
+
+                        <t t-if="data['categories_data']">
+                            <t t-foreach="data['categories_data'].items()" t-as="category_item">
+                                <t t-set="category_name" t-value="category_item[0]" />
+                                <t t-set="category_products" t-value="category_item[1]" />
+
+                                <div class="mt-4">
+                                    <h3 class="bg-primary text-white p-2" t-esc="category_name" />
+                                    <table class="table table-sm table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Producto</th>
+                                                <th class="text-center">Unidad</th>
+                                                <th class="text-right">Cantidad</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="category_products" t-as="product">
+                                                <tr>
+                                                    <td t-esc="product['product_code']" />
+                                                    <td t-esc="product['product_name']" />
+                                                    <td class="text-center"
+                                                        t-esc="product['uom_symbol']" />
+                                                    <td class="text-right">
+                                                        <strong>
+                                                            <t
+                                                                t-if="product['quantity'] == int(product['quantity'])">
+                                                                <span
+                                                                    t-esc="int(product['quantity'])" />
+                                                            </t>
+                                                            <t t-else="">
+                                                                <span
+                                                                    t-esc="'{:.2f}'.format(product['quantity'])" />
+                                                            </t>
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-info">
+                                                <td colspan="3">
+                                                    <strong>Subtotal <span t-esc="category_name" />:</strong>
+                                                </td>
+                                                <td class="text-right">
+                                                    <strong>
+                                                        <t t-set="category_total"
+                                                            t-value="sum(p['quantity'] for p in category_products)" />
+                                                        <t
+                                                            t-if="category_total == int(category_total)">
+                                                            <span t-esc="int(category_total)" />
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span
+                                                                t-esc="'{:.2f}'.format(category_total)" />
+                                                        </t>
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </t>
+
+                            <hr />
+                            <div class="text-right">
+                                <h2 class="bg-success text-white p-3 d-inline-block">
+                                    <strong>TOTAL PRODUCTOS: <span t-esc="data['total_products']" /></strong>
+                                </h2>
+                            </div>
+                        </t>
+
+                        <t t-else="">
+                            <div class="text-center mt-5">
+                                <h4>No se encontraron productos en inventario</h4>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Template para previsualización de ticket -->
+    <template id="report_inventory_ticket_preview_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="wizard">
+                        <t t-set="data" t-value="wizard._get_inventory_data()" />
+
+                        <div class="text-center">
+                            <h2>Previsualización - Ticket de Inventario</h2>
+                            <p class="text-muted">Vista previa de cómo se vería el ticket impreso</p>
+                        </div>
+
+                        <hr />
+
+                        <div class="mx-auto"
+                            style="max-width: 300px; font-family: 'Courier New', monospace; border: 2px dashed #ccc; padding: 20px; background-color: #f9f9f9;">
+                            <div class="text-center">
+                                <h4 style="margin: 0;">INVENTARIO POR ARTICULOS Y GRUPO</h4>
+                                <p style="margin: 2px 0;"
+                                    t-esc="data['report_date'].strftime('%d/%m/%Y %H:%M')" />
+                                <p style="margin: 2px 0;">Entidad/es: <span
+                                        t-esc="', '.join(data['warehouse_names'])" /></p>
+                                <p style="margin: 5px 0;">============================</p>
+                            </div>
+
+                            <t t-if="data['categories_data']">
+                                <t t-foreach="data['categories_data'].items()" t-as="category_item">
+                                    <t t-set="category_name" t-value="category_item[0]" />
+                                    <t t-set="category_products" t-value="category_item[1]" />
+
+                                    <div style="margin: 10px 0;">
+                                        <p
+                                            style="margin: 5px 0; font-weight: bold; text-decoration: underline;"
+                                            t-esc="category_name.upper()" />
+                                        <t t-foreach="category_products" t-as="product">
+                                            <p style="margin: 2px 0; font-size: 12px;">
+                                                <span t-esc="product['product_name']" /> ( <span
+                                                    t-esc="product['uom_symbol']" /> ) <span
+                                                    style="float:right;">
+                                                    <t
+                                                        t-if="product['quantity'] == int(product['quantity'])">
+                                                        <span t-esc="int(product['quantity'])" />
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span
+                                                            t-esc="'{:.3f}'.format(product['quantity'])" />
+                                                    </t>
+                                                </span>
+                                            </p>
+                                        </t>
+                                    </div>
+                                </t>
+
+                                <div class="text-center" style="margin-top: 15px;">
+                                    <p style="margin: 5px 0;">============================</p>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Reporte para previsualización de ticket -->
+    <record id="action_report_inventory_ticket_preview" model="ir.actions.report">
+        <field name="name">Previsualización Ticket - Inventario</field>
+        <field name="model">inventory.summary.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_inventory_ticket_preview_template</field>
+        <field name="report_file">asi_pos_reports.report_inventory_ticket_preview_template</field>
+        <field name="binding_model_id" ref="model_inventory_summary_wizard" />
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

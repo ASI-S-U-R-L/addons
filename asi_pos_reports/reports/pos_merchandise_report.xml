@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Definición del reporte principal (ahora usa el template simple mejorado) -->
+    <record id="action_report_pos_merchandise_sales" model="ir.actions.report">
+        <field name="name">Ventas por Mercancías</field>
+        <field name="model">pos.session</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_pos_merchandise_sales_improved</field>
+        <field name="report_file">asi_pos_reports.report_pos_merchandise_sales_improved</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_session" />
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template mejorado que agrupa por categorías -->
+    <template id="report_pos_merchandise_sales_improved">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="doc">
+                        <div class="text-center">
+                            <h2>Ventas por Mercancías</h2>
+                            <h4 t-esc="doc.name" />
+                            <p>
+                                <strong>Fecha Apertura:</strong>
+                                <span t-esc="doc.start_at" t-options="{'widget': 'datetime'}" />
+                            </p>
+                            <p t-if="doc.stop_at">
+                                <strong>Fecha Cierre:</strong>
+                                <span t-esc="doc.stop_at" t-options="{'widget': 'datetime'}" />
+                            </p>
+                            <p>
+                                <strong>Usuario:</strong>
+                                <span t-esc="doc.user_id.name" />
+                            </p>
+                        </div>
+
+                        <hr />
+
+                        <!-- Obtener datos usando el método simple -->
+                        <t t-set="report_data" t-value="doc.get_merchandise_report_grouped_data()" />
+
+                        <div class="alert alert-info">
+                            <p>
+                                <strong>Resumen:</strong>
+                            </p>
+                            <p>Total de ventas: $<span
+                                    t-esc="'{:.2f}'.format(report_data['total_amount'])" /></p>
+                            <p>Categorías: <span t-esc="len(report_data['categories_data'])" /></p>
+                            <p>Órdenes procesadas: <span t-esc="report_data['total_orders']" /></p>
+                        </div>
+
+                        <t t-if="report_data['categories_data']">
+                            <!-- Mostrar productos agrupados por categoría -->
+                            <t t-foreach="report_data['categories_data'].items()"
+                                t-as="category_item">
+                                <t t-set="category_name" t-value="category_item[0]" />
+                                <t t-set="category_products" t-value="category_item[1]" />
+
+                                <div class="mt-4">
+                                    <h3 class="bg-primary text-white p-2" t-esc="category_name" />
+                                    <table class="table table-sm table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Producto</th>
+                                                <th class="text-center">Cantidad</th>
+                                                <th class="text-right">Precio Unit.</th>
+                                                <th class="text-right">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="category_products" t-as="product">
+                                                <tr>
+                                                    <td t-esc="product['product_name']" />
+                                                    <td class="text-center">
+                                                        <strong t-esc="int(product['quantity'])" />
+                                                    </td>
+                                                    <td class="text-right"> $<span
+                                                            t-esc="'{:.2f}'.format(product['price_unit'])" />
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <strong>$<span
+                                                                t-esc="'{:.2f}'.format(product['total_amount'])" /></strong>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-info">
+                                                <td colspan="3">
+                                                    <strong>Subtotal <span t-esc="category_name" />:</strong>
+                                                </td>
+                                                <td class="text-right">
+                                                    <strong>$<span
+                                                            t-esc="'{:.2f}'.format(sum(p['total_amount'] for p in category_products))" /></strong>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </t>
+
+                            <hr />
+                            <div class="text-right">
+                                <h2 class="bg-success text-white p-3 d-inline-block">
+                                    <strong>TOTAL GENERAL: $<span
+                                            t-esc="'{:.2f}'.format(report_data['total_amount'])" /></strong>
+                                </h2>
+                            </div>
+                        </t>
+
+                        <t t-else="">
+                            <div class="text-center mt-5">
+                                <h4>No se encontraron ventas en esta sesión</h4>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Template para previsualización de ticket -->
+    <template id="report_pos_merchandise_ticket_preview">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="doc">
+                        <div class="text-center">
+                            <h2>Previsualización - Formato Ticket</h2>
+                            <p class="text-muted">Vista previa de cómo se vería el ticket impreso</p>
+                        </div>
+
+                        <hr />
+
+                        <!-- Simular formato de ticket -->
+                        <div class="mx-auto"
+                            style="max-width: 300px; font-family: 'Courier New', monospace; border: 2px dashed #ccc; padding: 20px; background-color: #f9f9f9;">
+                            <div class="text-center">
+                                <h4 style="margin: 0;">VENTAS POR MERCANCÍAS</h4>
+                                <p style="margin: 5px 0;">============================</p>
+                                <p style="margin: 2px 0;">Sesión: <span t-esc="doc.name" /></p>
+                                <p style="margin: 2px 0;">Fecha: <span
+                                        t-esc="doc.start_at.strftime('%d/%m/%Y %H:%M')" /></p>
+                                <p style="margin: 2px 0;">Usuario: <span t-esc="doc.user_id.name" /></p>
+                                <p style="margin: 5px 0;">============================</p>
+                            </div>
+
+                            <t t-set="report_data"
+                                t-value="doc.get_merchandise_report_grouped_data()" />
+
+                            <t t-if="report_data['categories_data']">
+                                <t t-foreach="report_data['categories_data'].items()"
+                                    t-as="category_item">
+                                    <t t-set="category_name" t-value="category_item[0]" />
+                                    <t t-set="category_products" t-value="category_item[1]" />
+
+                                    <div style="margin: 10px 0;">
+                                        <p
+                                            style="margin: 5px 0; font-weight: bold; text-decoration: underline;"
+                                            t-esc="category_name.upper()" />
+                                        <t t-foreach="category_products" t-as="product">
+                                            <p style="margin: 2px 0; font-size: 12px;">
+                                                <span t-esc="int(product['quantity'])" /> x <span
+                                                    t-esc="product['product_name']" />
+                                                <br />
+                                                <span
+                                                    style="float: right;">$<span
+                                                        t-esc="'{:.2f}'.format(product['total_amount'])" /></span>
+                                            </p>
+                                        </t>
+                                    </div>
+                                </t>
+
+                                <div class="text-center" style="margin-top: 15px;">
+                                    <p style="margin: 5px 0;">============================</p>
+                                    <p style="margin: 5px 0; font-weight: bold; font-size: 14px;">
+                                        TOTAL: $<span
+                                            t-esc="'{:.2f}'.format(report_data['total_amount'])" />
+                                    </p>
+                                    <p style="margin: 5px 0;">============================</p>
+                                    <p style="margin: 10px 0; font-size: 10px;">Gracias por su
+                                        compra</p>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Reporte para previsualización de ticket -->
+    <record id="action_report_pos_merchandise_ticket_preview" model="ir.actions.report">
+        <field name="name">Previsualización Ticket - Ventas por Mercancías</field>
+        <field name="model">pos.session</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_pos_merchandise_ticket_preview</field>
+        <field name="report_file">asi_pos_reports.report_pos_merchandise_ticket_preview</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_session" />
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template para ticket de impresora (mejorado) -->
+    <template id="report_pos_merchandise_ticket">
+        <t t-foreach="docs" t-as="doc">
+            <div class="ticket">
+                <div class="text-center">
+                    <h3>VENTAS POR MERCANCÍAS</h3>
+                    <p>============================</p>
+                    <p>Sesión: <t t-esc="doc.name" /></p>
+                    <p>Fecha: <t t-esc="doc.start_at.strftime('%d/%m/%Y %H:%M')" /></p>
+                    <p t-if="doc.stop_at">Cierre: <t t-esc="doc.stop_at.strftime('%d/%m/%Y %H:%M')" /></p>
+                    <p>Usuario: <t t-esc="doc.user_id.name" /></p>
+                    <p>============================</p>
+                </div>
+
+                <t t-set="report_data" t-value="doc.get_merchandise_report_grouped_data()" />
+
+                <t t-if="report_data['categories_data']">
+                    <t t-foreach="report_data['categories_data'].items()" t-as="category_item">
+                        <t t-set="category_name" t-value="category_item[0]" />
+                        <t t-set="category_products" t-value="category_item[1]" />
+
+                        <div class="category-section">
+                            <p>
+                                <strong t-esc="category_name.upper()" />
+                            </p>
+                            <t t-foreach="category_products" t-as="product">
+                                <p>
+                                    <t t-esc="int(product['quantity'])" /> x <t
+                                        t-esc="product['product_name']" /> $<t
+                                        t-esc="'{:.2f}'.format(product['total_amount'])" />
+                                </p>
+                            </t>
+                        </div>
+                    </t>
+                </t>
+
+                <div class="text-center">
+                    <p>============================</p>
+                    <p>
+                        <strong>TOTAL $<t t-esc="'{:.2f}'.format(report_data['total_amount'])" /></strong>
+                    </p>
+                    <p>============================</p>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>
