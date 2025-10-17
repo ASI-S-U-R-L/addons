@@ -7,9 +7,9 @@
             <field name="code">001</field>
             <field name="concepto">Obligación por Factura Emitida</field>
             <field name="guid">{7DE34F15-C9BA-4FE0-AEE6-B5E85ADB84DC}</field>
-            <field name="cuenta_mc">1350020 300   02   05</field>
-            <field name="concepto_contrapartida">115</field>
-            <field name="cuenta_contrapartida">9020100 02    05   </field> <!-- Nota: espacios al final -->
+            <field name="cuenta_mc">1350020</field>
+            <field name="concepto_contrapartida">128</field>
+            <field name="cuenta_contrapartida">906</field> <!-- Nota: espacios al final -->
             <field name="active">True</field>
         </record>
 
