@@ -19,8 +19,15 @@
         'views/it_asset_backlog_views.xml',
         'views/menus.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            # JS para renderizar gráficas de red
+            'sgichs_red/static/src/js/dashboard_network.js',
+            # QWeb para inyectar KPIs y canvases
+            'sgichs_red/static/src/xml/dashboard_network_templates.xml',
+        ],
+    },
     'installable': True,
     'application': False,
-    
     'auto_install': False,
 }

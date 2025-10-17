@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!--
+        Extiende el dashboard base para mostrar KPIs y gráficas de Red.
+        Se usan anclas estables: kpi_row_2 para tarjetas y el contenedor principal
+        para insertar la fila de gráficas sin depender del placeholder de hardware.
+    -->
+    <t t-inherit="sgichs_core2.Dashboard" t-inherit-mode="extension" name="NetworkDashboardExtension">
+
+        <!-- KPIs de red en la segunda fila -->
+        <xpath expr="//div[@id='kpi_row_2']" position="inside">
+            <!-- Dispositivos Online (ICMP o Agente) -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.hardware" data-domain="[('connection_status','in',['online','online_agent'])]">
+                    <div class="card-content">
+                        <div class="icon-container bg-success-soft"><i class="fa fa-signal text-success"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">HW Online (Red)</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.net_hw_online or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dispositivos Offline o Inalcanzables -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.hardware" data-domain="[('connection_status','in',['offline','unreachable'])]">
+                    <div class="card-content">
+                        <div class="icon-container bg-danger-soft"><i class="fa fa-plug text-danger"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">HW Offline/Inalcanzable</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.net_hw_offline or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Servicios de Red Totales -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.network_service" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container bg-info-soft"><i class="fa fa-server text-info"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Servicios de Red</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.network_services_total or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Fila de gráficas de red: insertada dentro del contenedor principal -->
+        <xpath expr="//div[contains(concat(' ', normalize-space(@class), ' '), ' o_dashboard_main ')]/div[contains(concat(' ', normalize-space(@class), ' '), ' container-fluid ')]" position="inside">
+            <div class="row" id="network_charts_row">
+                <!-- Hardware por Estado de Conexión -->
+                <div class="col-lg-6 mb-4">
+                    <div class="chart-card h-100">
+                        <div class="card-header"><h3><i class="fa fa-wifi mr-2"/>Hardware por Estado de Conexión</h3></div>
+                        <div class="card-body"><canvas id="networkConnectionChart"/></div>
+                    </div>
+                </div>
+
+                <!-- Servicios por Protocolo -->
+                <div class="col-lg-6 mb-4">
+                    <div class="chart-card h-100">
+                        <div class="card-header"><h3><i class="fa fa-exchange mr-2"/>Servicios por Protocolo</h3></div>
+                        <div class="card-body"><canvas id="networkServiceProtocolChart"/></div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+</templates>

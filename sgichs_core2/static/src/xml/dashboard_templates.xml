@@ -5,21 +5,28 @@
             <div class="container-fluid p-4">
                 <div class="row mb-4">
                     <div class="col-12 d-flex justify-content-between align-items-center">
-                        <h1 class="dashboard_title mb-0"><i class="fa fa-tachometer mr-2"/> Panel de Control de TI</h1>
-                        <button class="btn btn-primary" id="refresh_dashboard"><i class="fa fa-refresh mr-1"/> Actualizar</button>
+                        <h1 class="dashboard_title mb-0">
+                            <i class="fa fa-tachometer mr-2"/> Panel de Control de TI
+                        </h1>
+                        <button class="btn btn-primary" id="refresh_dashboard">
+                            <i class="fa fa-refresh mr-1"/> Actualizar
+                        </button>
                     </div>
                 </div>
 
+                <!-- KPIs fila 1: estructura consistente y correctamente cerrada -->
                 <div class="row" id="kpi_row_1">
-                    <div class="col-xl-3 col-md-6 mb-4" id="kpi_total_hardware_placeholder"/>
-                    
+                    <div class="col-xl-3 col-md-6 mb-4" id="kpi_total_hardware_placeholder"></div>
+
                     <div class="col-xl-3 col-md-6 mb-4">
                         <div class="kpi-card h-100" data-model="it.asset.backlog" data-domain="[('status','=','pending')]">
                             <div class="card-content">
                                 <div class="icon-container bg-info-soft"><i class="fa fa-inbox text-info"/></div>
                                 <div class="text-container">
                                     <p class="kpi-title">Activos en Backlog</p>
-                                    <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.backlog_count or 0"/></h2>
+                                    <h2 class="kpi-value">
+                                        <t t-esc="widget.dashboard_data.kpis.backlog_count or 0"/>
+                                    </h2>
                                 </div>
                             </div>
                         </div>
@@ -31,28 +38,34 @@
                                 <div class="icon-container bg-danger-soft"><i class="fa fa-exclamation-triangle text-danger"/></div>
                                 <div class="text-container">
                                     <p class="kpi-title">Incidentes (Alta Severidad)</p>
-                                    <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.high_incidents or 0"/></h2>
+                                    <h2 class="kpi-value">
+                                        <t t-esc="widget.dashboard_data.kpis.high_incidents or 0"/>
+                                    </h2>
                                 </div>
                             </div>
                         </div>
-
-                    <div class="col-xl-3 col-md-6 mb-4" id="kpi_total_software_placeholder"/>
-                </div>
-                <div class="row" id="kpi_row_2">
                     </div>
 
+                    <div class="col-xl-3 col-md-6 mb-4" id="kpi_total_software_placeholder"></div>
+                </div>
+
+                <div class="row" id="kpi_row_2"></div>
 
                 <div class="row">
                     <div class="col-lg-7 mb-4">
                         <div class="chart-card h-100">
-                            <div class="card-header"><h3><i class="fa fa-bar-chart mr-2"/>Incidentes Abiertos por Severidad</h3></div>
+                            <div class="card-header">
+                                <h3><i class="fa fa-bar-chart mr-2"/>Incidentes Abiertos por Severidad</h3>
+                            </div>
                             <div class="card-body"><canvas id="incidentSeverityChart"/></div>
                         </div>
                     </div>
 
                     <div class="col-lg-5 mb-4">
                         <div class="list-card h-100">
-                            <div class="card-header"><h3><i class="fa fa-history mr-2"/>Últimos Incidentes (Alta Severidad)</h3></div>
+                            <div class="card-header">
+                                <h3><i class="fa fa-history mr-2"/>Últimos Incidentes (Alta Severidad)</h3>
+                            </div>
                             <div class="list-group list-group-flush">
                                 <t t-if="(widget.dashboard_data.lists.recent_high_incidents or []).length > 0">
                                     <t t-foreach="widget.dashboard_data.lists.recent_high_incidents" t-as="incident" t-key="incident.id">
@@ -61,7 +74,9 @@
                                                 <h5 class="mb-1" t-esc="incident.title"/>
                                                 <small><t t-esc="new Date(incident.detection_date).toLocaleDateString()"/></small>
                                             </div>
-                                            <p class="mb-1"><span t-attf-class="badge badge-pill" t-esc="incident.status"/></p>
+                                            <p class="mb-1">
+                                                <span t-attf-class="badge badge-pill" t-esc="incident.status"/>
+                                            </p>
                                         </a>
                                     </t>
                                 </t>
@@ -73,7 +88,7 @@
                     </div>
                 </div>
 
-                <div class="row" id="hardware_charts_row_placeholder"/>
+                <div class="row" id="hardware_charts_row_placeholder"></div>
             </div>
         </div>
     </t>

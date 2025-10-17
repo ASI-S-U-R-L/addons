@@ -1,0 +1,7 @@
+__pycache__/
+scan/__pycache__
+scan/core/__pycache__
+scan/hardware/__pycache__
+scan/sistema/__pycache__
+logs/
+.vscode
