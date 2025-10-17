@@ -15,12 +15,6 @@
         'views/hardware.xml',
 	    'data/demo_data_software.xml',
     ],
-    'assets': {
-        'web.assets_backend': [
-            'sgichs_software/static/src/js/dashboard_software.js',
-            'sgichs_software/static/src/xml/dashboard_software_templates.xml',
-        ],
-    },
     'installable': True,
     'application': False,
     'auto_install': False,

@@ -42,7 +42,6 @@ class ResCnaeLine(models.Model):
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    reeup_code = fields.Char(string='REEUP')
     l10n_cu_cnae_ids = fields.One2many('res.cnae.line', 'partner_id',
                                        string='Clase económica a la que pertenece (CNAE)')
 

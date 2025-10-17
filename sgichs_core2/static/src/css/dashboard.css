@@ -1,260 +1,138 @@
 /*
-Dashboard de TI - Estilos base (paleta sobria) y uniformidad de tarjetas
-Objetivo:
-
-Uniformidad de altura/ancho en todas las tarjetas KPI.
-Estética sobria y consistente (misma paleta).
-Scroll vertical del contenedor principal.
-FIX: preservar la fuente de iconos (Font Awesome) para evitar "NO GLYPH".
-===============================================================================
+  Reutilizando el CSS del módulo de prueba, ya que proporciona
+  una base visual sólida y profesional para el dashboard. Este enfoque
+  ahorra tiempo y mantiene una estética consistente.
 */
 
-/*-----------------------------------------
-Base tipográfica y box model
 
-No forzamos font-family en todos los hijos para no pisar iconos.
------------------------------------------*/
+
+
+
+/* ---- Estructura General ---- */
 .o_dashboard_main {
-box-sizing: border-box;
--webkit-font-smoothing: antialiased;
--moz-osx-font-smoothing: grayscale;
-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f0f2f5;
+    font-family: 'Inter', sans-serif;
 }
-/* Asegura box-sizing consistente en descendientes sin afectar fonts de iconos */
-.o_dashboard_main * {
-box-sizing: inherit;
-}
-
-/*-----------------------------------------
-FIX ICONOS: preservar la fuente de Font Awesome
-
-Evita "NO GLYPH" asegurando la familia correcta en los iconos.
------------------------------------------*/
-.o_dashboard_main i.fa,
-.o_dashboard_main .fa,
-.o_dashboard_main .fa::before,
-.o_dashboard_main [class^="fa-"],
-.o_dashboard_main [class=" fa-"] {
-font-family: "FontAwesome","Font Awesome 5 Free","Font Awesome 4.7.0","Font Awesome 6 Free" !important;
-font-style: normal;
-font-weight: 900; /* necesario para íconos sólidos en FA5 (ignorado por FA4) */
-line-height: 1;
-text-rendering: auto;
--webkit-font-smoothing: antialiased;
--moz-osx-font-smoothing: grayscale;
-}
-/* Para marcas (si algún día las usas) */
-.o_dashboard_main .fa-brands {
-font-family: "Font Awesome 5 Brands","Font Awesome 6 Brands","FontAwesome" !important;
-font-weight: 400 !important;
-}
-
-/*-----------------------------------------
-Contenedor principal y scroll
------------------------------------------*/
-.o_dashboard_main {
-background-color: #f0f2f5;
-width: 100%;
-height: 100vh;
-overflow-y: auto;
-overflow-x: hidden;
-position: relative;
-}
-
-/* Scrollbar */
-.o_dashboard_main::-webkit-scrollbar { width: 10px; }
-.o_dashboard_main::-webkit-scrollbar-track { background: #e9ecef; border-radius: 10px; }
-.o_dashboard_main::-webkit-scrollbar-thumb { background: #6c757d; border-radius: 10px; }
-.o_dashboard_main::-webkit-scrollbar-thumb:hover { background: #495057; }
-.o_dashboard_main { scrollbar-width: thin; scrollbar-color: #6c757d #e9ecef; }
-
-/*-----------------------------------------
-Título y acciones (paleta sobria)
------------------------------------------*/
 .dashboard_title {
-font-size: 24px;
-font-weight: 700;
-color: #212529;
-display: flex;
-align-items: center;
-margin: 0;
-}
-.dashboard_title i { color: #667eea; margin-right: 10px; }
-
-#refresh_dashboard {
-background-color: #667eea;
-border: none;
-padding: 10px 20px;
-font-weight: 600;
-color: #fff;
-border-radius: 8px;
-box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-transition: all 0.3s ease;
-}
-#refresh_dashboard:hover { box-shadow: 0 4px 12px rgba(102,126,234,0.5); transform: translateY(-2px); }
-#refresh_dashboard:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-#refresh_dashboard i { margin-right: 5px; }
-
-/*-----------------------------------------
-Grid: uniformidad por fila
------------------------------------------*/
-.o_dashboard_main .row { align-items: stretch; }
-.o_dashboard_main .row > [class*="col-"] {
-display: flex;
-flex-direction: column;
-margin-bottom: 1.5rem;
-}
-.o_dashboard_main .row > [class*="col-"] > * {
-display: flex;
-flex-direction: column;
-flex: 1 1 auto;
-width: 100%;
+    font-size: 24px;
+    font-weight: 600;
+    color: #4c4c4c;
 }
 
-/*-----------------------------------------
-KPI Cards (sobrias + uniformidad total)
------------------------------------------*/
+/* ---- Tarjetas KPI ---- */
 .kpi-card {
-background-color: #ffffff;
-border: 1px solid #e9ecef;
-border-radius: 12px;
-padding: 18px 20px;
-box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-transition: transform 0.3s ease, box-shadow 0.3s ease;
-cursor: pointer;
-
-display: flex;
-flex-direction: column;
-justify-content: center;
-flex: 1 1 auto;
-min-height: 130px; /* evita “tarjetas cortas” */
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
-.kpi-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
 .kpi-card .card-content {
-display: flex;
-align-items: center;
-gap: 15px;
-width: 100%;
+    display: flex;
+    align-items: center;
 }
-
 .kpi-card .icon-container {
-width: 48px; height: 48px;
-min-width: 48px; min-height: 48px;
-border-radius: 12px;
-display: flex; align-items: center; justify-content: center;
-flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
 }
-.kpi-card .icon-container .fa,
-.kpi-card .icon-container i { font-size: 22px; }
-
-/* Colores suaves (sobrios) */
-.bg-primary-soft { background-color: rgba(102, 126, 234, 0.1); }
-.bg-success-soft { background-color: rgba(40, 167, 69, 0.1); }
-.bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
-.bg-info-soft { background-color: rgba(23, 162, 184, 0.1); }
-.bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
-
+.kpi-card .icon-container .fa {
+    font-size: 22px;
+}
 .kpi-card .text-container {
-flex: 1; min-width: 0;
-display: flex; flex-direction: column; justify-content: center;
+    line-height: 1.2;
 }
 .kpi-card .kpi-title {
-font-size: 12px; font-weight: 600; color: #6c757d;
-margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: .3px; line-height: 1.3;
-display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-overflow: hidden; text-overflow: ellipsis; word-break: break-word;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6c757d;
+    margin: 0;
 }
 .kpi-card .kpi-value {
-font-size: 26px; font-weight: 700; color: #212529; margin: 0; line-height: 1.1;
+    font-size: 28px;
+    font-weight: 700;
+    color: #343a40;
+    margin: 0;
 }
 
-/*-----------------------------------------
-Chart & List Cards (sobrias)
------------------------------------------*/
+/* Colores para fondos de iconos */
+.bg-primary-soft { background-color: rgba(110, 103, 237, 0.1); }
+.bg-success-soft { background-color: rgba(40, 167, 69, 0.1); }
+.bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+.bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+.bg-info-soft { background-color: rgba(23, 162, 184, 0.1); }
+
+/* ---- Tarjetas de Gráficos y Listas ---- */
 .chart-card, .list-card {
-background-color: #ffffff;
-border: 1px solid #e9ecef;
-border-radius: 12px;
-box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-overflow: hidden;
-display: flex; flex-direction: column;
-flex: 1 1 auto;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
 }
-
-/* Encabezado sobrio con separador */
 .chart-card .card-header, .list-card .card-header {
-background-color: transparent;
-color: #495057;
-padding: 15px 20px;
-border-bottom: 1px solid #e9ecef;
+    background-color: transparent;
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
 }
 .chart-card .card-header h3, .list-card .card-header h3 {
-font-size: 16px; font-weight: 600; margin: 0; display: flex; align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
 }
-.chart-card .card-header i, .list-card .card-header i { margin-right: 8px; }
-
-/* Cuerpo de tarjetas */
 .chart-card .card-body {
-padding: 20px;
-min-height: 300px;
-position: relative;
-display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    height: 300px;
 }
-.list-card .list-group { margin-bottom: 0; }
 .list-card .list-group-item-action {
-border: none; border-bottom: 1px solid #e9ecef;
-padding: 15px 20px;
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
 }
-.list-card .list-group-item-action:last-child { border-bottom: none; }
-.list-card .list-group-item-action:hover { background-color: #f8f9fa; }
-.list-card h5 { font-size: 15px; font-weight: 500; color: #343a40; }
-.list-card .badge { font-size: 12px; font-weight: 600; }
+.list-card .list-group-item-action:last-child {
+    border-bottom: none;
+}
+.list-card .list-group-item-action:hover {
+    background-color: #f8f9fa;
+}
+.list-card h5 {
+    font-size: 15px;
+    font-weight: 500;
+    color: #343a40;
+}
+.list-card .badge {
+    font-size: 12px;
+    font-weight: 600;
+}
 
-/*-----------------------------------------
-Badges de severidad (consistencia)
------------------------------------------*/
-.severity-high { background-color: #dc3545; color: #fff; }
+/* Insignias de severidad */
+.severity-high { background-color: #dc3545; color: white; }
 .severity-medium { background-color: #ffc107; color: #212529; }
-.severity-low { background-color: #17a2b8; color: #fff; }
-.severity-info { background-color: #6c757d; color: #fff; }
+.severity-low { background-color: #17a2b8; color: white; }
+.severity-info { background-color: #6c757d; color: white; }
 
-/*-----------------------------------------
-Utilidades
------------------------------------------*/
-.p-4 { padding: 1.5rem !important; }
-.mb-4 { margin-bottom: 1.5rem !important; }
-.mr-1 { margin-right: 0.25rem !important; }
-.mr-2 { margin-right: 0.5rem !important; }
-.d-flex { display: flex !important; }
-.justify-content-between { justify-content: space-between !important; }
-.align-items-center { align-items: center !important; }
-.text-muted { color: #6c757d !important; }
-.text-primary{ color: #667eea !important; }
-.text-success{ color: #28a745 !important; }
-.text-danger { color: #dc3545 !important; }
-.text-warning{ color: #ffc107 !important; }
-.text-info { color: #17a2b8 !important; }
 
-/*-----------------------------------------
-Responsive
------------------------------------------*/
-@media (max-width: 992px) {
-.kpi-card .kpi-title { font-size: 11px; }
-.kpi-card .kpi-value { font-size: 24px; }
-}
-@media (max-width: 768px) {
-.o_dashboard_main .container-fluid { padding: 10px !important; }
-.dashboard_title { font-size: 20px; }
-.kpi-card { min-height: 110px; padding: 15px; }
-.kpi-card .icon-container {
-width: 40px; height: 40px; min-width: 40px; min-height: 40px;
-}
-.kpi-card .icon-container .fa,
-.kpi-card .icon-container i { font-size: 18px; }
-.chart-card .card-body { min-height: 260px; }
-}
-@media (max-width: 576px) {
-.kpi-card .card-content { flex-direction: column; text-align: center; gap: 10px; }
-.kpi-card .icon-container { margin-bottom: 4px; }
+
+/*
+ *
+ * Habilita el scroll vertical en el contenedor del dashboard.
+ * - overflow-y: auto → muestra scroll solo cuando hay contenido extra.
+ * - -webkit-overflow-scrolling: touch → scroll suave en iOS.
+ * - overscroll-behavior: contain → evita que el scroll “se escape” al body.
+ * - height: 100% → ocupa todo el alto disponible del área de acción de Odoo.
+ */
+.o-dashboard-scroll {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }

@@ -74,11 +74,6 @@ class ProductMoveReportWizard(models.TransientModel):
     @api.onchange('period_type', 'product_id', 'week_month', 'week_year', 'week_number', 'month', 'month_year', 'year', 'custom_date_from', 'custom_date_to')
     def _onchange_period_fields(self):
         """Actualiza las fechas de inicio y fin basadas en los campos seleccionados"""
-        # Asegurar que las fechas sean objetos datetime
-        if self.custom_date_from and isinstance(self.custom_date_from, str):
-            self.custom_date_from = fields.Datetime.from_string(self.custom_date_from)
-        if self.custom_date_to and isinstance(self.custom_date_to, str):
-            self.custom_date_to = fields.Datetime.from_string(self.custom_date_to)
         if self.period_type == 'week' and self.week_month and self.week_year and self.week_number:
             # Para semana: calculamos el primer día del mes
             month = int(self.week_month)
@@ -180,16 +175,27 @@ class ProductMoveReportWizard(models.TransientModel):
         # Obtener ubicaciones del almacén seleccionado (usando | para unir recordsets)
         warehouse_locations = self.warehouse_id.lot_stock_id.child_ids | self.warehouse_id.lot_stock_id
         
-        # Obtener ubicaciones del almacén seleccionado
-        warehouse_locations = self.warehouse_id.lot_stock_id.child_ids | self.warehouse_id.lot_stock_id
-    
-        # Preparar datos para el reporte (MODIFICADO)
+        # Validar que hay movimientos en el rango de fechas para el producto y almacén
+        moves_count = self.env['stock.move'].search_count([
+            ('date', '>=', self.date_start),
+            ('date', '<=', self.date_end),
+            ('state', '=', 'done'),
+            ('product_id', '=', self.product_id.id),
+            '|',
+            ('location_id', 'in', warehouse_locations.ids),
+            ('location_dest_id', 'in', warehouse_locations.ids),
+        ])
+        
+        if moves_count == 0:
+            raise UserError(f'No se encontraron movimientos para el producto {self.product_id.name} en el período seleccionado para el almacén {self.warehouse_id.name}.')
+        
+        # Preparar datos para el reporte
         data = {
+            'inicio': self.date_start+timedelta(days=1),
             'date_start': self.date_start,
             'date_end': self.date_end,
             'product_id': self.product_id.id,
             'warehouse_id': self.warehouse_id.id,
-            'warehouse_location_ids': warehouse_locations.ids  # AÑADIDO
         }
         
         # Generar el reporte PDF con nombre personalizado

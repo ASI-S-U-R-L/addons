@@ -3,5 +3,3 @@ access_stock_move_report_wizard_user,stock.move.report.wizard.user,model_stock_m
 access_stock_move_report_wizard_manager,stock.move.report.wizard.manager,model_stock_move_report_wizard,stock.group_stock_manager,1,1,1,1
 access_product_move_report_wizard_user,product.move.report.wizard.user,model_product_move_report_wizard,stock.group_stock_user,1,1,1,1
 access_product_move_report_wizard_manager,product.move.report.wizard.manager,model_product_move_report_wizard,stock.group_stock_manager,1,1,1,1
-access_product_wh_qty_history_user,product.warehouse.qty.history.user,model_product_warehouse_qty_history,stock.group_stock_user,1,0,0,0
-access_product_wh_qty_history_manager,product.warehouse.qty.history.manager,model_product_warehouse_qty_history,stock.group_stock_manager,1,1,1,1

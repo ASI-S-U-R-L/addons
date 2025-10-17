@@ -66,36 +66,35 @@ odoo.define('sgichs_hardware.dashboard_hardware', function (require) {
             // Gráfico: Activos de Hardware por Tipo (doughnut)
             // ==============================
             try {
-                var assetCanvasEl = self.$('#assetTypeChart')[0];
-                var assetCtx = assetCanvasEl ? assetCanvasEl.getContext('2d') : null;
+                // Canvas del gráfico (DOM node, no objeto jQuery)
+                var assetCanvas = self.$('#assetTypeChart')[0];
+                // Datos esperados desde backend: { labels: [...], data: [...] }
                 var assetData = self.dashboard_data.charts.asset_type;
 
-                if (assetCtx && assetData && Array.isArray(assetData.labels) && Array.isArray(assetData.data)) {
-                    // Forzar valores numéricos por si vienen como string
-                    var values = assetData.data.map(function (v) {
-                        var n = typeof v === 'string' ? parseFloat(v) : v;
-                        return isNaN(n) ? 0 : n;
-                    });
-
-                    // Destruir gráfico previo si existía
+                // Validamos que existan el canvas y los arrays necesarios
+                if (assetCanvas && assetData && Array.isArray(assetData.labels) && Array.isArray(assetData.data)) {
+                    // Destruimos gráfico previo si existía
                     destroyChart(self.charts.assetType);
 
-                    self.charts.assetType = new Chart(assetCtx, {
+                    // Creamos la nueva instancia
+                    self.charts.assetType = new Chart(assetCanvas, {
                         type: 'doughnut',
                         data: {
                             labels: assetData.labels,
                             datasets: [{
-                                data: values,
+                                data: assetData.data,
                                 backgroundColor: odooColors
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            // Compatibilidad v2 y v3
-                            legend: { position: 'right' },
-                            plugins: { legend: { position: 'right' } },
-                            animation: { animateRotate: true, animateScale: true },
+                            legend: { position: 'right' }, // Chart.js v2.x
+                            animation: {
+                                animateRotate: true,
+                                animateScale: true
+                            },
+                            // Tooltips amigables (Chart.js v2.x)
                             tooltips: {
                                 callbacks: {
                                     label: function (tooltipItem, data) {
@@ -108,9 +107,6 @@ odoo.define('sgichs_hardware.dashboard_hardware', function (require) {
                             }
                         }
                     });
-
-                    // Log de depuración
-                    console.debug('HW Chart - asset_type labels:', assetData.labels, 'data:', values);
                 }
             } catch (e) {
                 console.error('sgichs_hardware: Error creando gráfico de activos por tipo:', e);
@@ -120,32 +116,25 @@ odoo.define('sgichs_hardware.dashboard_hardware', function (require) {
             // Gráfico: Componentes por Subtipo (pie)
             // ==============================
             try {
-                var componentCanvasEl = self.$('#componentSubtypeChart')[0];
-                var componentCtx = componentCanvasEl ? componentCanvasEl.getContext('2d') : null;
+                var componentCanvas = self.$('#componentSubtypeChart')[0];
                 var compData = self.dashboard_data.charts.component_subtype;
 
-                if (componentCtx && compData && Array.isArray(compData.labels) && Array.isArray(compData.data)) {
-                    var values2 = compData.data.map(function (v) {
-                        var n = typeof v === 'string' ? parseFloat(v) : v;
-                        return isNaN(n) ? 0 : n;
-                    });
-
+                if (componentCanvas && compData && Array.isArray(compData.labels) && Array.isArray(compData.data)) {
                     destroyChart(self.charts.componentSubtype);
 
-                    self.charts.componentSubtype = new Chart(componentCtx, {
+                    self.charts.componentSubtype = new Chart(componentCanvas, {
                         type: 'pie',
                         data: {
                             labels: compData.labels,
                             datasets: [{
-                                data: values2,
-                                backgroundColor: odooColors.slice().reverse()
+                                data: compData.data,
+                                backgroundColor: odooColors.slice().reverse() // Otra paleta (mismo set invertido)
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             legend: { position: 'right' },
-                            plugins: { legend: { position: 'right' } },
                             tooltips: {
                                 callbacks: {
                                     label: function (tooltipItem, data) {
@@ -158,14 +147,12 @@ odoo.define('sgichs_hardware.dashboard_hardware', function (require) {
                             }
                         }
                     });
-
-                    console.debug('HW Chart - component_subtype labels:', compData.labels, 'data:', values2);
                 }
             } catch (e) {
                 console.error('sgichs_hardware: Error creando gráfico de componentes por subtipo:', e);
-            }                                                                                                                                                                                                                           
+            }
 
-            // Nota: Si no se ven datos en los gráficos (quedan en 0),
+            // Nota: Si no ves datos en los gráficos (quedan en 0),
             // revisa la llamada RPC y el log del servidor:
             // - Network → /web/dataset/call_kw/it.dashboard/get_dashboard_data
             // - Log de Odoo → traceback de Python en el método heredado de hardware
