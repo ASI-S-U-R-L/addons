@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de configuración principal -->
+    <record id="view_versat_finanzas_config_form" model="ir.ui.view">
+        <field name="name">versat.finanzas.config.form</field>
+        <field name="model">versat.finanzas.config</field>
+        <field name="arch" type="xml">
+            <form string="Configuración VERSAT Finanzas">
+                <sheet>
+                    <group>
+                        <group string="Configuración General">
+                            <field name="unidad_default"/>
+                            <field name="entidad_default"/>
+                            <field name="company_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                        </group>
+                        <group string="Cuentas por Defecto">
+                            <field name="cuenta_ingreso_efectivo"/>
+                            <field name="cuenta_caja_efectivo"/>
+                            <field name="cuenta_caja_banco"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Configuración de Aportes">
+                        <group string="Aporte 10% Ventas">
+                            <field name="cuenta_aporte_10_ventas"/>
+                            <field name="cuenta_costo_aporte_10"/>
+                        </group>
+                        <group string="Aporte 1% Desarrollo Local">
+                            <field name="cuenta_aporte_1_desarrollo"/>
+                            <field name="cuenta_costo_aporte_1"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Tipos de Obligación">
+                            <field name="obligacion_type_ids" mode="tree,form">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="concepto"/>
+                                    <field name="guid"/>
+                                    <field name="cuenta_mc"/>
+                                    <field name="concepto_contrapartida"/>
+                                    <field name="cuenta_contrapartida"/>
+                                    <field name="active"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <page string="Tipos de Cobro">
+                            <field name="cobro_type_ids" mode="tree,form">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="guid"/>
+                                    <field name="concepto_contrapartida"/>
+                                    <field name="cuenta_contrapartida"/>
+                                    <field name="tipo_deposito"/>
+                                    <field name="active"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista árbol para configuración (si es necesaria) -->
+    <record id="view_versat_finanzas_config_tree" model="ir.ui.view">
+        <field name="name">versat.finanzas.config.tree</field>
+        <field name="model">versat.finanzas.config</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Acción para configuración -->
+    <record id="action_versat_finanzas_config" model="ir.actions.act_window">
+        <field name="name">Configuración VERSAT Finanzas</field>
+        <field name="res_model">versat.finanzas.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'form_view_initial_mode': 'edit'}</field>
+    </record>
+</odoo>
