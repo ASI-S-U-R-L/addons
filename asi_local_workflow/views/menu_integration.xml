@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Integración con el menú de Firma Digital existente -->
+
+    <!-- Separador visual en el menú -->
+    <menuitem id="menu_separator_local_workflow"
+        name="─── Solicitudes de Firma ───"
+        parent="asi_pdf_signature.menu_firma_digital_root"
+        sequence="12" />
+
+    <!-- Dashboard/Resumen de Solicitudes -->
+    <record id="action_local_workflow_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard de Solicitudes de Firma</field>
+        <field name="res_model">local.workflow</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{
+            'search_default_my_created': 1,
+            'search_default_assigned_to_me': 1
+            }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Bienvenido al Dashboard de Solicitudes de Firma!
+            </p>
+            <p>
+                Desde aquí puede ver todas sus solicitudes de firma, tanto las que ha creado
+                como las que le han sido asignadas para firmar.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_dashboard_local_workflow"
+        name="Dashboard"
+        parent="asi_pdf_signature.menu_firma_digital_root"
+        action="action_local_workflow_dashboard"
+        sequence="9" />
+
+    <!-- Submenú para Iniciar Solicitud -->
+    <menuitem id="menu_iniciar_solicitud"
+        name="Iniciar Solicitud de Firma"
+        parent="asi_pdf_signature.menu_firma_digital_root"
+        action="action_local_workflow_wizard"
+        sequence="15" />
+
+    <!-- Submenú para Solicitudes Pendientes (solo las asignadas al usuario actual) -->
+    <record id="action_local_workflow_pending" model="ir.actions.act_window">
+        <field name="name">Solicitudes Pendientes de Firma</field>
+        <field name="res_model">local.workflow</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">['|','|','|',('target_user_id_1', '=', uid),('target_user_id_2', '=',
+            uid),('target_user_id_3', '=', uid),('target_user_id_4', '=', uid), ('state', '=',
+            'sent')]</field>
+        <field name="context">{'search_default_assigned_to_me': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No tiene solicitudes pendientes de firma
+            </p>
+            <p>
+                Aquí aparecerán las solicitudes de firma que otros usuarios le hayan enviado
+                y que estén esperando su firma digital.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_solicitudes_pendientes"
+        name="Solicitudes Pendientes"
+        parent="asi_pdf_signature.menu_firma_digital_root"
+        action="action_local_workflow_pending"
+        sequence="25" />
+
+    <!-- Submenú para Mis Solicitudes Creadas -->
+    <record id="action_local_workflow_created" model="ir.actions.act_window">
+        <field name="name">Mis Solicitudes Creadas</field>
+        <field name="res_model">local.workflow</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('creator_id', '=', uid)]</field>
+        <field name="context">{'search_default_my_created': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No ha creado ninguna solicitud de firma aún
+            </p>
+            <p>
+                Aquí aparecerán todas las solicitudes de firma que usted haya creado
+                y enviado a otros usuarios para su firma.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_mis_solicitudes_creadas"
+        name="Mis Solicitudes Creadas"
+        parent="asi_pdf_signature.menu_firma_digital_root"
+        action="action_local_workflow_created"
+        sequence="30" />
+</odoo>
