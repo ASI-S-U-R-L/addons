@@ -1,6 +1,6 @@
 {
     'name': 'ASI - Reporte de Movimientos de Inventario',
-    'version': '1.5',
+    'version': '1.6',
     'summary': 'Genera reportes consolidados de movimientos de inventario por producto',
     
     'description': "Genera reportes PDF de movimientos de inventario consolidados por producto con rango de fechas.",

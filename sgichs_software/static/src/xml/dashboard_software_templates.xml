@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="sgichs_core2.Dashboard" t-inherit-mode="extension" name="SoftwareDashboardExtension">
+
+        <!-- KPI: Total de Software -->
+        <xpath expr="//div[@id='kpi_total_software_placeholder']" position="replace">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.software" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container bg-info-soft"><i class="fa fa-rocket text-info"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Total de Software</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.total_software or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- KPIs de compliance (segunda fila del core, ancla estable) -->
+        <xpath expr="//div[@id='kpi_row_2']" position="inside">
+            <!-- Software Autorizado -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.software" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container bg-success-soft"><i class="fa fa-check-circle text-success"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Software Autorizado</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.software_authorized_count or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Software Prohibido -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.software" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container bg-danger-soft"><i class="fa fa-ban text-danger"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Software Prohibido</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.software_prohibited_count or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zona Gris -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="kpi-card h-100" data-model="it.asset.software" data-domain="[]">
+                    <div class="card-content">
+                        <div class="icon-container bg-warning-soft"><i class="fa fa-exclamation-triangle text-warning"/></div>
+                        <div class="text-container">
+                            <p class="kpi-title">Zona Gris</p>
+                            <h2 class="kpi-value"><t t-esc="widget.dashboard_data.kpis.software_gray_count or 0"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Fila de gráficas de software:
+            Inserción dentro del contenedor principal del dashboard
+            (evita depender del placeholder de hardware, que fue reemplazado). -->
+        <xpath expr="//div[contains(concat(' ', normalize-space(@class), ' '), ' o_dashboard_main ')]/div[contains(concat(' ', normalize-space(@class), ' '), ' container-fluid ')]" position="inside">
+            <div class="row" id="software_charts_row">
+                <!-- Software por Subtipo -->
+                <div class="col-lg-7 mb-4">
+                    <div class="chart-card h-100">
+                        <div class="card-header"><h3><i class="fa fa-pie-chart mr-2"/>Software por Subtipo</h3></div>
+                        <div class="card-body"><canvas id="softwareSubtypeChart"/></div>
+                    </div>
+                </div>
+
+                <!-- Software por SO -->
+                <div class="col-lg-5 mb-4">
+                    <div class="chart-card h-100">
+                        <div class="card-header"><h3><i class="fa fa-desktop mr-2"/>Software por SO</h3></div>
+                        <div class="card-body"><canvas id="softwareOsChart"/></div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+</templates>
