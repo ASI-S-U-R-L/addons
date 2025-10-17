@@ -22,8 +22,7 @@
                 * Cuban general chart of accounts for Unidades Presupuestadas de Tratamiento Especial 
                 * Cuban general chart of accounts for Sector Cooperativo Agropecuario y no Agropecuario"
     """,
-    'depends': ['base','sale_management'
-        'account',
+    'depends': ['base','sale_management','account',
     ],
     'data': [
         'data/account_chart_data.xml',        
