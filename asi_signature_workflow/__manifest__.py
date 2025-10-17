@@ -1,6 +1,6 @@
 {
     'name': 'ASI Signature Workflow',
-    'version': '2.0',
+    'version': '2.3',
     'summary': 'Flujo de trabajo de firma digital entre usuarios',
     'description': """
         Módulo para crear flujos de trabajo de firma digital que permite:
@@ -36,4 +36,5 @@
     'installable': True,
     'application': False,
     'auto_install': False,
+    'post_init_hook': 'uninstall_conflicting_module',
 }

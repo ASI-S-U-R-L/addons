@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_local_workflow_user,local.workflow.user,model_local_workflow,base.group_user,1,1,1,1
+access_local_workflow_document_user,local.workflow.document.user,model_local_workflow_document,base.group_user,1,1,1,0
+access_local_workflow_wizard_user,local.workflow.wizard.user,model_local_workflow_wizard,base.group_user,1,1,1,1
+access_local_workflow_wizard_document_user,local.workflow.wizard.document.user,model_local_workflow_wizard_document,base.group_user,1,1,1,1
+access_local_workflow_reject_wizard_user,local.workflow.reject.wizard.user,model_local_workflow_reject_wizard,base.group_user,1,1,1,1
