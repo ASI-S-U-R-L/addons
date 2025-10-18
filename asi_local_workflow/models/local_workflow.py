@@ -212,7 +212,7 @@ class LocalWorkflow(models.Model):
                 'res_model_id': self.env['ir.model']._get(self._name).id,
                 'res_id': self.id,
                 'user_id': recipient_data['user'].id,
-                'date_deadline': fields.Date.today() + timedelta(days=7),
+                'date_deadline': fields.Date.today(),
             })
             _logger.info(f"Actividad de firma creada para usuario {recipient_data['user'].name} (destinatario {recipient_data['index']}) en solicitud {self.id}")
         except Exception as e:
@@ -302,7 +302,7 @@ class LocalWorkflow(models.Model):
             if doc.attachment_id:
                 documents_to_sign.append((0, 0, {
                     'document_name': doc.name,
-                    'pdf_content': doc.attachment_id.datas,
+                    'pdf_document': doc.attachment_id.datas,
                 }))
         
         if not documents_to_sign:
@@ -343,34 +343,125 @@ class LocalWorkflow(models.Model):
             _logger.warning(f"Usuario {self.env.user.name} intentó marcar como firmado pero no es destinatario")
             return
         
-        # Marcar como firmado
         setattr(self, f'signed_by_user_{recipient_data["index"]}', True)
         setattr(self, f'signed_date_{recipient_data["index"]}', fields.Datetime.now())
         
-        self.message_post(
-            body=_('Documentos firmados por %s') % self.env.user.name,
-            subject=_('Documentos Firmados')
-        )
+        _logger.info(f"[SIGN] Usuario {recipient_data['user'].name} (destinatario {recipient_data['index']}) marcó como firmado la solicitud {self.id}")
         
-        # Verificar si todos los destinatarios han firmado
+        try:
+            activities = self.env['mail.activity'].sudo().search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('user_id', '=', recipient_data['user'].id),
+                ('state', '!=', 'done')
+            ])
+            
+            if activities:
+                activities.unlink()
+                _logger.info(f"[SIGN] Actividad eliminada para usuario {recipient_data['user'].name}")
+            else:
+                _logger.warning(f"[SIGN] No se encontró actividad pendiente para usuario {recipient_data['user'].name}")
+        except Exception as e:
+            _logger.error(f"[SIGN] Error eliminando actividad: {e}")
+            # No fallar si hay error con actividades
+        
+        try:
+            self.message_post(
+                body=_('Documentos firmados por %s') % self.env.user.name,
+                subject=_('Documentos Firmados')
+            )
+        except Exception as e:
+            _logger.error(f"[SIGN] Error enviando mensaje de firma: {e}")
+            # No fallar si hay error con mensajes
+        
         all_signed = all([
             getattr(self, f'signed_by_user_{r["index"]}')
             for r in self._get_active_recipients()
         ])
         
         if all_signed:
-            self.write({
-                'state': 'signed',
-                'signed_date': fields.Datetime.now()
-            })
+            _logger.info(f"[SIGN] Todos los destinatarios han firmado la solicitud {self.id}")
             
-            # Notificar al creador
-            self.message_post(
-                body=_('Todos los destinatarios han firmado los documentos.'),
-                subject=_('Firma Completada'),
-                partner_ids=[self.creator_id.partner_id.id],
-                message_type='notification',
-            )
+            try:
+                self.write({
+                    'state': 'signed',
+                    'signed_date': fields.Datetime.now()
+                })
+                _logger.info(f"[SIGN] Estado cambiado a 'signed' para solicitud {self.id}")
+            except Exception as e:
+                _logger.error(f"[SIGN] Error cambiando estado: {e}")
+                raise  # Este error sí debe propagarse
+            
+            try:
+                activities = self.env['mail.activity'].search([
+                    ('res_model', '=', self._name),
+                    ('res_id', '=', self.id),
+                    ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id)
+                ])
+                
+                if activities:
+                    activities.action_done()
+                    _logger.info(f"[SIGN] Actividades completadas después de que todos firmaron")
+            except Exception as e:
+                _logger.error(f"[SIGN] Error completando actividades: {e}")
+                # No fallar - el flujo ya está marcado como 'signed'
+            
+            try:
+                signed_users = ', '.join([r['user'].name for r in self._get_active_recipients()])
+                
+                self.env['mail.activity'].create({
+                    'activity_type_id': self.env.ref('mail.mail_activity_data_call').id,
+                    'summary': f'Documentos firmados disponibles: {self.name}',
+                    'note': f'''
+                    <p>Los documentos de la solicitud han sido firmados por todos los destinatarios y están listos para descarga.</p>
+                    <p><strong>Firmantes:</strong> {signed_users}</p>
+                    <p><strong>Documentos:</strong> {self.document_count} archivo(s)</p>
+                    <p>Acceda a la solicitud para descargar los documentos firmados individualmente.</p>
+                    ''',
+                    'res_model_id': self.env['ir.model']._get(self._name).id,
+                    'res_id': self.id,
+                    'user_id': self.creator_id.id,
+                    'date_deadline': fields.Date.today(),
+                })
+                _logger.info(f"[SIGN] Actividad creada para el creador {self.creator_id.name}")
+            except Exception as e:
+                _logger.error(f"[SIGN] Error creando actividad para el creador: {e}")
+                # No fallar - el flujo ya está marcado como 'signed'
+            
+            try:
+                self.message_post(
+                    body=_('Todos los destinatarios han firmado los documentos.'),
+                    subject=_('Firma Completada'),
+                    partner_ids=[self.creator_id.partner_id.id],
+                    message_type='notification',
+                )
+                _logger.info(f"[SIGN] Notificación enviada al creador {self.creator_id.name}")
+            except Exception as e:
+                _logger.error(f"[SIGN] Error enviando notificación al creador: {e}")
+                # No fallar - el flujo ya está marcado como 'signed'
+            
+            try:
+                all_docs_signed = all(doc.is_signed for doc in self.document_ids)
+                
+                if all_docs_signed:
+                    self.write({
+                        'state': 'completed',
+                        'completed_date': fields.Datetime.now()
+                    })
+                    _logger.info(f"[SIGN] Estado cambiado a 'completed' para solicitud {self.id} - todos los documentos firmados")
+                    
+                    try:
+                        self.message_post(
+                            body=_('Solicitud de firma completada exitosamente. Todos los documentos han sido firmados.'),
+                            subject=_('Solicitud Completada')
+                        )
+                    except Exception as e:
+                        _logger.error(f"[SIGN] Error enviando mensaje de completado: {e}")
+                else:
+                    _logger.warning(f"[SIGN] No todos los documentos están firmados aún para solicitud {self.id}")
+            except Exception as e:
+                _logger.error(f"[SIGN] Error verificando documentos firmados: {e}")
+                # No fallar - el flujo ya está en 'signed'
         
         _logger.info(f"Solicitud {self.id} marcada como firmada por usuario {recipient_data['index']}")
 
@@ -429,24 +520,73 @@ class LocalWorkflow(models.Model):
         """Procesa el rechazo de la solicitud"""
         self.ensure_one()
         
-        self.write({
-            'state': 'rejected',
-            'rejection_date': fields.Datetime.now(),
-            'rejection_notes': rejection_notes
-        })
+        rejecting_user = self.env.user
         
-        # Notificar al creador
-        self.message_post(
-            body=_(
-                'Solicitud rechazada por %s<br/>'
-                '<b>Motivo:</b> %s'
-            ) % (self.env.user.name, rejection_notes),
-            subject=_('Solicitud Rechazada'),
-            partner_ids=[self.creator_id.partner_id.id],
-            message_type='notification',
-        )
+        try:
+            self.write({
+                'state': 'rejected',
+                'rejection_date': fields.Datetime.now(),
+                'rejection_notes': rejection_notes
+            })
+            _logger.info(f"Estado cambiado a 'rejected' para solicitud {self.id}")
+        except Exception as e:
+            _logger.error(f"Error cambiando estado a rechazado: {e}")
+            raise  # Este error sí debe propagarse
         
-        _logger.info(f"Solicitud {self.id} rechazada por {self.env.user.name}")
+        try:
+            activities = self.env['mail.activity'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
+                ('state', '!=', 'done')
+            ])
+            
+            if activities:
+                activities.action_done()
+                _logger.info(f"Actividades completadas después del rechazo de la solicitud {self.id}")
+        except Exception as e:
+            _logger.error(f"Error completando actividades después del rechazo: {e}")
+            # No fallar - el flujo ya está rechazado
+        
+        try:
+            self.env['mail.activity'].create({
+                'activity_type_id': self.env.ref('mail.mail_activity_data_warning').id,
+                'summary': f'Solicitud rechazada: {self.name}',
+                'note': f'''
+                <p>Su solicitud de firma ha sido rechazada por <strong>{rejecting_user.name}</strong></p>
+                <p><strong>Motivo del rechazo:</strong></p>
+                <div style="background-color: #ffebee; padding: 10px; border-radius: 5px; border-left: 4px solid #f44336; margin: 10px 0;">
+                    <p>{rejection_notes}</p>
+                </div>
+                <p><strong>Documentos:</strong> {self.document_count} archivo(s)</p>
+                <p>Puede revisar la solicitud rechazada para más detalles.</p>
+                ''',
+                'res_model_id': self.env['ir.model']._get(self._name).id,
+                'res_id': self.id,
+                'user_id': self.creator_id.id,
+                'date_deadline': fields.Date.today(),
+            })
+            _logger.info(f"Actividad de rechazo creada para el creador {self.creator_id.name}")
+        except Exception as e:
+            _logger.error(f"Error creando actividad de rechazo: {e}")
+            # No fallar - el flujo ya está rechazado
+        
+        try:
+            self.message_post(
+                body=_(
+                    'Solicitud rechazada por %s<br/>'
+                    '<b>Motivo:</b> %s'
+                ) % (rejecting_user.name, rejection_notes),
+                subject=_('Solicitud Rechazada'),
+                partner_ids=[self.creator_id.partner_id.id],
+                message_type='notification',
+            )
+            _logger.info(f"Notificación de rechazo enviada al creador {self.creator_id.name}")
+        except Exception as e:
+            _logger.error(f"Error enviando notificación de rechazo: {e}")
+            # No fallar - el flujo ya está rechazado
+        
+        _logger.info(f"Solicitud {self.id} rechazada por {rejecting_user.name}")
 
     def action_send_reminder(self):
         """Envía recordatorio a los destinatarios que no han firmado"""
@@ -503,10 +643,9 @@ class LocalWorkflow(models.Model):
         
         return {
             'type': 'ir.actions.act_url',
-            'url': f'/local_workflow/download_signed/{self.id}',
-            'target': 'self',
+            'url': f'/local_workflow/descargar_multiples?workflow_id={self.id}',
+            'target': 'new',
         }
-
 
 class LocalWorkflowDocument(models.Model):
     _name = 'local.workflow.document'
@@ -515,11 +654,8 @@ class LocalWorkflowDocument(models.Model):
     workflow_id = fields.Many2one('local.workflow', string='Flujo', required=True, ondelete='cascade')
     name = fields.Char(string='Nombre del Documento', required=True)
     
-    # Attachment original
-    attachment_id = fields.Many2one('ir.attachment', string='Documento Original', ondelete='restrict')
-    
-    # Attachment firmado
-    signed_attachment_id = fields.Many2one('ir.attachment', string='Documento Firmado', ondelete='restrict')
+    attachment_id = fields.Many2one('ir.attachment', string='Documento', ondelete='restrict',
+                                   help='Documento original que se actualiza con cada firma')
     
     # Estado del documento
     is_signed = fields.Boolean(string='Firmado', default=False, readonly=True)
@@ -529,12 +665,11 @@ class LocalWorkflowDocument(models.Model):
     file_size = fields.Char(string='Tamaño', compute='_compute_file_info')
     mimetype = fields.Char(string='Tipo MIME', related='attachment_id.mimetype', readonly=True)
 
-    @api.depends('attachment_id', 'signed_attachment_id')
+    @api.depends('attachment_id')
     def _compute_file_info(self):
         for record in self:
-            attachment = record.signed_attachment_id or record.attachment_id
-            if attachment and attachment.file_size:
-                size_bytes = attachment.file_size
+            if record.attachment_id and record.attachment_id.file_size:
+                size_bytes = record.attachment_id.file_size
                 if size_bytes < 1024:
                     record.file_size = f"{size_bytes} B"
                 elif size_bytes < 1024 * 1024:
@@ -545,15 +680,15 @@ class LocalWorkflowDocument(models.Model):
                 record.file_size = "N/A"
 
     def action_download_document(self):
-        """Descarga el documento firmado"""
+        """Descarga el documento"""
         self.ensure_one()
         
-        if not self.is_signed or not self.signed_attachment_id:
-            raise UserError(_('El documento no está firmado aún.'))
+        if not self.attachment_id:
+            raise UserError(_('No hay documento disponible para descargar.'))
         
         return {
             'type': 'ir.actions.act_url',
-            'url': f'/web/content/{self.signed_attachment_id.id}?download=true',
+            'url': f'/web/content/{self.attachment_id.id}?download=true',
             'target': 'self',
         }
 
@@ -561,12 +696,11 @@ class LocalWorkflowDocument(models.Model):
         """Previsualiza el documento"""
         self.ensure_one()
         
-        attachment = self.signed_attachment_id or self.attachment_id
-        if not attachment:
+        if not self.attachment_id:
             raise UserError(_('No hay documento disponible para previsualizar.'))
         
         return {
             'type': 'ir.actions.act_url',
-            'url': f'/web/content/{attachment.id}',
+            'url': f'/web/content/{self.attachment_id.id}',
             'target': 'new',
         }

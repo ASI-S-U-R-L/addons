@@ -58,42 +58,83 @@
                                 attrs="{'invisible': [('rejection_date', '=', False)]}" />
                         </group>
                     </group>
+
                     <!--Nueva
                     sección para mostrar destinatarios de forma clara-->
-                    <group string="Destinatarios de la Solicitud">
-                        <group string="Destinatario 1"
-                            attrs="{'invisible': [('target_user_id_1', '=', False)]}">
+                    <h3>Destinatarios de la Solicitud</h3>
+                    <hr></hr>
+                    <group string="Destinatario 1"
+                        attrs="{'invisible': [('target_user_id_1', '=', False)]}">
+                        <group>
                             <field name="target_user_id_1" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signature_role_id_1" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signature_position_1" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signed_by_user_1" widget="boolean_toggle" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signed_date_1" readonly="1"
                                 attrs="{'invisible': [('signed_date_1', '=', False)]}" />
                         </group>
-                        <group string="Destinatario 2"
-                            attrs="{'invisible': [('target_user_id_2', '=', False)]}">
+                    </group>
+                    <group string="Destinatario 2"
+                        attrs="{'invisible': [('target_user_id_2', '=', False)]}">
+                        <group>
                             <field name="target_user_id_2" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signature_role_id_2" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signature_position_2" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signed_by_user_2" widget="boolean_toggle" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signed_date_2" readonly="1"
                                 attrs="{'invisible': [('signed_date_2', '=', False)]}" />
                         </group>
-                        <group string="Destinatario 3"
-                            attrs="{'invisible': [('target_user_id_3', '=', False)]}">
+                    </group>
+                    <group string="Destinatario 3"
+                        attrs="{'invisible': [('target_user_id_3', '=', False)]}">
+                        <group>
                             <field name="target_user_id_3" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signature_role_id_3" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signature_position_3" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signed_by_user_3" widget="boolean_toggle" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signed_date_3" readonly="1"
                                 attrs="{'invisible': [('signed_date_3', '=', False)]}" />
                         </group>
-                        <group string="Destinatario 4"
-                            attrs="{'invisible': [('target_user_id_4', '=', False)]}">
+                    </group>
+                    <group string="Destinatario 4"
+                        attrs="{'invisible': [('target_user_id_4', '=', False)]}">
+                        <group>
                             <field name="target_user_id_4" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signature_role_id_4" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signature_position_4" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signed_by_user_4" widget="boolean_toggle" readonly="1" />
+                        </group>
+                        <group>
                             <field name="signed_date_4" readonly="1"
                                 attrs="{'invisible': [('signed_date_4', '=', False)]}" />
                         </group>

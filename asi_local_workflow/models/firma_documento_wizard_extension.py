@@ -76,7 +76,7 @@ class FirmaDocumentoWizardExtension(models.TransientModel):
             raise
 
     def _save_signed_documents_to_workflow(self):
-        """Guarda los documentos firmados como attachments en el flujo"""
+        """Actualiza los documentos originales con las versiones firmadas"""
         if not self.from_workflow or not self.workflow_id:
             return
         
@@ -106,28 +106,35 @@ class FirmaDocumentoWizardExtension(models.TransientModel):
                 
                 workflow_doc = workflow_doc[0]
                 
-                # Crear attachment con el documento firmado
-                signed_filename = f"{workflow_doc.name.replace('.pdf', '')}_firmado.pdf"
+                if workflow_doc.attachment_id:
+                    # Actualizar el contenido del adjunto original con la versión firmada
+                    workflow_doc.attachment_id.write({
+                        'datas': doc_line.pdf_signed,
+                    })
+                    _logger.info(f"Adjunto original {workflow_doc.attachment_id.id} actualizado con versión firmada")
+                else:
+                    # Si no existe adjunto original, crear uno nuevo
+                    new_attachment = self.env['ir.attachment'].create({
+                        'name': workflow_doc.name,
+                        'datas': doc_line.pdf_signed,
+                        'res_model': 'local.workflow.document',
+                        'res_id': workflow_doc.id,
+                        'mimetype': 'application/pdf',
+                        'description': f'Documento firmado de la solicitud {self.workflow_id.name}',
+                    })
+                    workflow_doc.write({
+                        'attachment_id': new_attachment.id,
+                    })
+                    _logger.info(f"Nuevo adjunto {new_attachment.id} creado para documento sin adjunto original")
                 
-                signed_attachment = self.env['ir.attachment'].create({
-                    'name': signed_filename,
-                    'datas': doc_line.pdf_signed,
-                    'res_model': 'local.workflow.document',
-                    'res_id': workflow_doc.id,
-                    'mimetype': 'application/pdf',
-                    'description': f'Documento firmado de la solicitud {self.workflow_id.name}',
-                })
-                
-                # Actualizar el documento del flujo
                 workflow_doc.write({
-                    'signed_attachment_id': signed_attachment.id,
                     'is_signed': True,
                     'signed_date': fields.Datetime.now(),
                 })
                 
                 _logger.info(
-                    f"Documento {doc_line.document_name} guardado exitosamente "
-                    f"como attachment {signed_attachment.id}"
+                    f"Documento {doc_line.document_name} actualizado exitosamente "
+                    f"y marcado como firmado"
                 )
                 
             except Exception as e:

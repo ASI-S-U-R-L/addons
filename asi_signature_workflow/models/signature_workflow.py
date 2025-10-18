@@ -587,7 +587,7 @@ class SignatureWorkflow(models.Model):
                 'res_model_id': self.env['ir.model']._get(self._name).id,
                 'res_id': self.id,
                 'user_id': recipient_data['user'].id,
-                'date_deadline': fields.Date.today() + timedelta(days=7),  # 7 días para firmar
+                'date_deadline': fields.Date.today(),  # 1 día para firmar
             })
             _logger.info(f"Actividad de firma creada para usuario {recipient_data['user'].name} (destinatario {recipient_data['index']}) en solicitud {self.id}")
         except Exception as e:

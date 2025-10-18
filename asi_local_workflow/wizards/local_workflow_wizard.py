@@ -227,58 +227,78 @@ class LocalWorkflowWizard(models.TransientModel):
         if not self.document_ids:
             raise UserError(_('Debe agregar al menos un documento.'))
         
-        # Crear el flujo de trabajo
-        workflow_vals = {
-            'name': self.name,
-            'creator_id': self.env.user.id,
-            'notes': self.notes,
-            'signature_opaque_background': self.signature_opaque_background,
-            'sign_all_pages': self.sign_all_pages,
-        }
-        
-        # Agregar destinatarios
         for i in range(1, 5):
             user = getattr(self, f'target_user_id_{i}')
             if user:
-                workflow_vals[f'target_user_id_{i}'] = user.id
-                workflow_vals[f'signature_role_id_{i}'] = getattr(self, f'signature_role_id_{i}').id
-                workflow_vals[f'signature_position_{i}'] = getattr(self, f'signature_position_{i}')
+                role = getattr(self, f'signature_role_id_{i}')
+                position = getattr(self, f'signature_position_{i}')
+                
+                if not role:
+                    raise UserError(_(f'Debe seleccionar un rol de firma para el destinatario {i}.'))
+                if not position:
+                    raise UserError(_(f'Debe seleccionar una posición de firma para el destinatario {i}.'))
         
-        workflow = self.env['local.workflow'].create(workflow_vals)
-        
-        # Crear documentos del flujo
-        for doc_line in self.document_ids:
-            # Crear attachment para el documento original
-            attachment = self.env['ir.attachment'].create({
-                'name': doc_line.name,
-                'datas': doc_line.pdf_content,
+        try:
+            # Crear el flujo de trabajo
+            workflow_vals = {
+                'name': self.name,
+                'creator_id': self.env.user.id,
+                'notes': self.notes,
+                'signature_opaque_background': self.signature_opaque_background,
+                'sign_all_pages': self.sign_all_pages,
+            }
+            
+            # Agregar destinatarios
+            for i in range(1, 5):
+                user = getattr(self, f'target_user_id_{i}')
+                if user:
+                    workflow_vals[f'target_user_id_{i}'] = user.id
+                    workflow_vals[f'signature_role_id_{i}'] = getattr(self, f'signature_role_id_{i}').id
+                    workflow_vals[f'signature_position_{i}'] = getattr(self, f'signature_position_{i}')
+            
+            workflow = self.env['local.workflow'].create(workflow_vals)
+            
+            # Crear documentos del flujo
+            for doc_line in self.document_ids:
+                # Crear attachment para el documento original
+                attachment = self.env['ir.attachment'].create({
+                    'name': doc_line.name,
+                    'datas': doc_line.pdf_content,
+                    'res_model': 'local.workflow',
+                    'res_id': workflow.id,
+                    'mimetype': 'application/pdf',
+                    'description': f'Documento original de la solicitud {workflow.name}',
+                })
+                
+                # Crear documento del flujo
+                self.env['local.workflow.document'].create({
+                    'workflow_id': workflow.id,
+                    'name': doc_line.name,
+                    'attachment_id': attachment.id,
+                })
+            
+            _logger.info(
+                f"Flujo de trabajo local {workflow.id} creado con {len(self.document_ids)} documentos "
+                f"y {len(active_users)} destinatarios"
+            )
+            
+            workflow.action_send_for_signature()
+            
+            # Abrir el flujo creado
+            return {
+                'type': 'ir.actions.act_window',
+                'name': _('Solicitud Creada Exitosamente'),
                 'res_model': 'local.workflow',
                 'res_id': workflow.id,
-                'mimetype': 'application/pdf',
-                'description': f'Documento original de la solicitud {workflow.name}',
-            })
-            
-            # Crear documento del flujo
-            self.env['local.workflow.document'].create({
-                'workflow_id': workflow.id,
-                'name': doc_line.name,
-                'attachment_id': attachment.id,
-            })
+                'view_mode': 'form',
+                'target': 'current',
+            }
         
-        _logger.info(
-            f"Flujo de trabajo local {workflow.id} creado con {len(self.document_ids)} documentos "
-            f"y {len(active_users)} destinatarios"
-        )
-        
-        # Abrir el flujo creado
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Solicitud de Firma'),
-            'res_model': 'local.workflow',
-            'res_id': workflow.id,
-            'view_mode': 'form',
-            'target': 'current',
-        }
+        except UserError:
+            raise
+        except Exception as e:
+            _logger.error(f"Error inesperado creando la solicitud: {e}")
+            raise UserError(_('Error inesperado al crear la solicitud: %s') % str(e))
 
 
 class LocalWorkflowWizardDocument(models.TransientModel):
