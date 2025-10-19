@@ -13,4 +13,18 @@
         action="action_inventory_summary_wizard_id"
         parent="point_of_sale.menu_point_rep"
         sequence="20" />
+
+    <!-- Added new menu item for merchandise sales by date -->
+    <menuitem id="menu_pos_merchandise_by_date_reports"
+        name="Ventas por Mercancías"
+        action="asi_pos_reports.action_pos_merchandise_report_by_date_wizard"
+        parent="point_of_sale.menu_point_rep"
+        sequence="21" />
+
+    <!-- Added new menu item for shift balance report -->
+    <menuitem id="menu_pos_shift_balance_reports"
+        name="Balance de Turno"
+        action="asi_pos_reports.action_pos_shift_balance_wizard"
+        parent="point_of_sale.menu_point_rep"
+        sequence="22" />
 </odoo>

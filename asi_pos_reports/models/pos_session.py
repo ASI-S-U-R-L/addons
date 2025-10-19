@@ -296,3 +296,88 @@ class PosSession(models.Model):
         content.append("================================")
         
         return "\n".join(content)
+
+    def _get_shift_balance_data(self):
+        """Prepara los datos para el reporte de Balance de Turno"""
+        self.ensure_one()
+        
+        # Obtener órdenes pagadas de la sesión
+        orders = self.order_ids.filtered(lambda o: o.state in ['paid', 'done', 'invoiced'])
+        
+        # Calcular montos por método de pago
+        payment_methods = {}
+        total_payments = 0.0
+        cash_total = 0.0
+        
+        for order in orders:
+            for payment in order.payment_ids:
+                method_name = payment.payment_method_id.name
+                amount = payment.amount
+                
+                if method_name not in payment_methods:
+                    payment_methods[method_name] = 0.0
+                
+                payment_methods[method_name] += amount
+                total_payments += amount
+                
+                # Identificar pagos en efectivo
+                if payment.payment_method_id.is_cash_count:
+                    cash_total += amount
+        
+        # Convertir payment_methods a lista para el template
+        payment_methods_list = [
+            {'name': name, 'amount': amount} 
+            for name, amount in payment_methods.items()
+        ]
+        
+        # Calcular balance de apertura y cierre
+        opening_balance = self.cash_register_balance_start or 0.0
+        closing_balance = self.cash_register_balance_end_real or 0.0
+        
+        # Calcular efectivo (diferencia entre cierre e inicio)
+        cash_amount = cash_total
+        
+        # Otros cálculos (por ahora en 0, se pueden implementar según necesidad)
+        other_income = 0.0
+        expenses = 0.0
+        debts = 0.0
+        service = 0.0
+        discount = sum(order.amount_total - order.amount_paid for order in orders if order.amount_total > order.amount_paid)
+        returns = sum(abs(order.amount_total) for order in self.order_ids.filtered(lambda o: o.amount_total < 0))
+        
+        # Calcular balance
+        balance = cash_amount + other_income - expenses
+        
+        # Calcular balance final y restante
+        final_balance = opening_balance  # El efectivo que queda después del retiro (igual al inicial)
+        remaining = balance - cash_amount  # Balance - Retiro
+        
+        company = self.company_id
+        company_address = f"{company.street or ''} {company.street2 or ''}, {company.city or ''}, {company.state_id.name or ''} {company.zip or ''}".strip()
+        company_phone = company.phone or ''
+        pos_name = self.config_id.name  # Nombre del punto de venta
+        
+        return {
+            'session_name': self.name,
+            'date': self.start_at.strftime('%d/%m/%Y') if self.start_at else '',
+            'user_name': self.user_id.name,
+            'empresa_name': company.name,
+            'company_name': pos_name,
+            'company_address': company_address,
+            'company_phone': company_phone,
+            'start_date': self.start_at.strftime('%d/%m/%Y %H:%M') if self.start_at else '',
+            'end_date': self.stop_at.strftime('%d/%m/%Y %H:%M') if self.stop_at else 'En curso',
+            'opening_balance': opening_balance,
+            'cash_amount': cash_amount,
+            'other_income': other_income,
+            'expenses': expenses,
+            'balance': balance,
+            'payment_methods': payment_methods_list,
+            'debts': debts,
+            'service': service,
+            'discount': discount,
+            'returns': returns,
+            'final_balance': final_balance,
+            'remaining': remaining,
+            'total': total_payments,
+        }

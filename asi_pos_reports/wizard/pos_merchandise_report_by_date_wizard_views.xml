@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista del wizard para el reporte de mercancías por fecha -->
+    <record id="view_pos_merchandise_report_by_date_wizard_form" model="ir.ui.view">
+        <field name="name">pos.merchandise.report.by.date.wizard.form</field>
+        <field name="model">pos.merchandise.report.by.date.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Ventas por Mercancías">
+                <group>
+                    <group>
+                        <field name="pos_config_id"
+                            options="{'no_create': True, 'no_open': True}"
+                            placeholder="Seleccione un punto de venta..." />
+                        <field name="report_date" />
+                    </group>
+                    <group>
+                        <field name="session_count" invisible="1" />
+                        <field name="available_session_ids" invisible="1" />
+                        <field name="session_id"
+                            domain="[('id', 'in', available_session_ids)]"
+                            options="{'no_create': True, 'no_open': True}"
+                            attrs="{'invisible': [('session_count', '=', 0)], 'required': [('session_count', '>', 0)]}"
+                            placeholder="Seleccione una sesión..." />
+                        <div attrs="{'invisible': [('session_count', '!=', 0)]}" class="text-muted">
+                            <p>No hay sesiones disponibles para el punto de venta y fecha
+                                seleccionados.</p>
+                        </div>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_print_report"
+                        string="Generar Reporte PDF"
+                        type="object"
+                        class="btn-primary"
+                        attrs="{'invisible': [('session_id', '=', False)]}" />
+                    <button name="action_generate_excel"
+                        string="Generar Reporte Excel"
+                        type="object"
+                        class="btn-success"
+                        attrs="{'invisible': [('session_id', '=', False)]}" />
+                    <button name="action_preview_ticket"
+                        string="Previsualizar Ticket"
+                        type="object"
+                        class="btn-info"
+                        attrs="{'invisible': [('session_id', '=', False)]}" />
+                    <button name="action_print_ticket"
+                        string="Imprimir Ticket"
+                        type="object"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('session_id', '=', False)]}" />
+                    <button string="Cancelar"
+                        class="btn-secondary"
+                        special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para abrir el wizard -->
+    <record id="action_pos_merchandise_report_by_date_wizard" model="ir.actions.act_window">
+        <field name="name">Ventas por Mercancías</field>
+        <field name="res_model">pos.merchandise.report.by.date.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

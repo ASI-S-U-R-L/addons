@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'ASI POS Reports - Ventas por Mercancías',
-    'version': '1.0',
+    'version': '2.0',
     'category': 'Sales/Point of Sale',
     'summary': 'Reportes de ventas por mercancías para Point of Sale',
     'description': """
@@ -20,8 +20,11 @@
         'views/pos_session_views.xml',
         'reports/pos_merchandise_report.xml',
         'reports/inventory_summary_report.xml',
+        'reports/shift_balance_report.xml',
         'wizard/pos_merchandise_report_wizard_views.xml',
         'wizard/inventory_summary_wizard_views.xml',
+        'wizard/pos_merchandise_report_by_date_wizard_views.xml',
+        'wizard/pos_shift_balance_wizard_views.xml',
         'views/pos_reports_menu.xml',
     ],
     'assets': {
