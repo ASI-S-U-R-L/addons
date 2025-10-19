@@ -30,17 +30,6 @@ class PosSession(models.Model):
             'target': 'new',
         }
 
-    def action_pos_session_closing_control(self, balancing_account=False, amount_to_balance=0, bank_payment_method_diffs=None):
-        """Override para generar automáticamente el reporte al cerrar sesión"""
-        result = super().action_pos_session_closing_control(balancing_account, amount_to_balance, bank_payment_method_diffs)
-        
-        # Generar y descargar el reporte automáticamente
-        try:
-            self._generate_merchandise_report_on_close()
-        except Exception as e:
-            _logger.warning(f"Error al generar reporte de mercancías: {str(e)}")
-        
-        return result
 
     def _generate_merchandise_report_on_close(self):
         """Genera el reporte de mercancías al cerrar la sesión"""

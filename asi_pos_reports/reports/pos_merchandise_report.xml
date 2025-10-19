@@ -11,87 +11,95 @@
         <field name="binding_type">report</field>
     </record>
 
-    <!-- Template mejorado que agrupa por categorías -->
+    <!-- Minimalist template with right-aligned numbers and thousand separators -->
     <template id="report_pos_merchandise_sales_improved">
         <t t-call="web.html_container">
             <t t-call="web.external_layout">
-                <div class="page">
+                <div class="page" style="font-size: 11pt;">
                     <t t-foreach="docs" t-as="doc">
-                        <div class="text-center">
-                            <h2>Ventas por Mercancías</h2>
-                            <h4 t-esc="doc.name" />
-                            <p>
-                                <strong>Fecha Apertura:</strong>
-                                <span t-esc="doc.start_at" t-options="{'widget': 'datetime'}" />
-                            </p>
-                            <p t-if="doc.stop_at">
-                                <strong>Fecha Cierre:</strong>
-                                <span t-esc="doc.stop_at" t-options="{'widget': 'datetime'}" />
-                            </p>
-                            <p>
-                                <strong>Usuario:</strong>
-                                <span t-esc="doc.user_id.name" />
-                            </p>
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="margin: 0 0 5px 0; font-weight: 600;">Ventas por Mercancías</h3>
+                            <div style="font-size: 10pt; color: #666;">
+                                <div>
+                                    <strong>Sesión:</strong>
+                                    <span t-esc="doc.name" />
+                                </div>
+                                <div>
+                                    <strong>Apertura:</strong>
+                                    <span t-esc="doc.start_at" t-options="{'widget': 'datetime'}" />
+                                </div>
+                                <div t-if="doc.stop_at">
+                                    <strong>Cierre:</strong>
+                                    <span t-esc="doc.stop_at" t-options="{'widget': 'datetime'}" />
+                                </div>
+                                <div>
+                                    <strong>Usuario:</strong>
+                                    <span t-esc="doc.user_id.name" />
+                                </div>
+                            </div>
                         </div>
 
-                        <hr />
-
-                        <!-- Obtener datos usando el método simple -->
                         <t t-set="report_data" t-value="doc.get_merchandise_report_grouped_data()" />
 
-                        <div class="alert alert-info">
-                            <p>
-                                <strong>Resumen:</strong>
-                            </p>
-                            <p>Total de ventas: $<span
-                                    t-esc="'{:.2f}'.format(report_data['total_amount'])" /></p>
-                            <p>Categorías: <span t-esc="len(report_data['categories_data'])" /></p>
-                            <p>Órdenes procesadas: <span t-esc="report_data['total_orders']" /></p>
-                        </div>
-
                         <t t-if="report_data['categories_data']">
-                            <!-- Mostrar productos agrupados por categoría -->
                             <t t-foreach="report_data['categories_data'].items()"
                                 t-as="category_item">
                                 <t t-set="category_name" t-value="category_item[0]" />
                                 <t t-set="category_products" t-value="category_item[1]" />
 
-                                <div class="mt-4">
-                                    <h3 class="bg-primary text-white p-2" t-esc="category_name" />
-                                    <table class="table table-sm table-striped">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>Producto</th>
-                                                <th class="text-center">Cantidad</th>
-                                                <th class="text-right">Precio Unit.</th>
-                                                <th class="text-right">Total</th>
+                                <div style="margin-top: 15px;">
+                                    <div
+                                        style="background: #f5f5f5; padding: 5px 8px; font-weight: 600; font-size: 10pt; margin-bottom: 5px;"
+                                        t-esc="category_name" />
+                                    <table
+                                        style="width: 100%; border-collapse: collapse; font-size: 10pt;">
+                                        <thead>
+                                            <tr style="border-bottom: 1px solid #ddd;">
+                                                <th
+                                                    style="padding: 5px; text-align: left; font-weight: 600;">
+                                                    Producto</th>
+                                                <th
+                                                    style="padding: 5px; text-align: right; font-weight: 600; width: 80px;">
+                                                    Cantidad</th>
+                                                <th
+                                                    style="padding: 5px; text-align: right; font-weight: 600; width: 100px;">Precio
+                                                    Unit.</th>
+                                                <th
+                                                    style="padding: 5px; text-align: right; font-weight: 600; width: 100px;">
+                                                    Total</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <t t-foreach="category_products" t-as="product">
-                                                <tr>
-                                                    <td t-esc="product['product_name']" />
-                                                    <td class="text-center">
-                                                        <strong t-esc="int(product['quantity'])" />
+                                                <tr style="border-bottom: 1px solid #eee;">
+                                                    <td style="padding: 5px;"
+                                                        t-esc="product['product_name']" />
+                                                    <td style="padding: 5px; text-align: right;">
+                                                        <span t-esc="product['quantity']"
+                                                            t-options="{'widget': 'float', 'precision': 0}" />
                                                     </td>
-                                                    <td class="text-right"> $<span
-                                                            t-esc="'{:.2f}'.format(product['price_unit'])" />
+                                                    <td style="padding: 5px; text-align: right;">
+                                                        <span t-esc="product['price_unit']"
+                                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
                                                     </td>
-                                                    <td class="text-right">
-                                                        <strong>$<span
-                                                                t-esc="'{:.2f}'.format(product['total_amount'])" /></strong>
+                                                    <td
+                                                        style="padding: 5px; text-align: right; font-weight: 600;">
+                                                        <span t-esc="product['total_amount']"
+                                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
                                                     </td>
                                                 </tr>
                                             </t>
                                         </tbody>
                                         <tfoot>
-                                            <tr class="table-info">
-                                                <td colspan="3">
-                                                    <strong>Subtotal <span t-esc="category_name" />:</strong>
-                                                </td>
-                                                <td class="text-right">
-                                                    <strong>$<span
-                                                            t-esc="'{:.2f}'.format(sum(p['total_amount'] for p in category_products))" /></strong>
+                                            <tr style="background: #f9f9f9;">
+                                                <td colspan="3"
+                                                    style="padding: 5px; font-weight: 600;">Subtotal <span
+                                                        t-esc="category_name" /></td>
+                                                <td
+                                                    style="padding: 5px; text-align: right; font-weight: 600;">
+                                                    <span
+                                                        t-esc="sum(p['total_amount'] for p in category_products)"
+                                                        t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
                                                 </td>
                                             </tr>
                                         </tfoot>
@@ -99,18 +107,18 @@
                                 </div>
                             </t>
 
-                            <hr />
-                            <div class="text-right">
-                                <h2 class="bg-success text-white p-3 d-inline-block">
-                                    <strong>TOTAL GENERAL: $<span
-                                            t-esc="'{:.2f}'.format(report_data['total_amount'])" /></strong>
-                                </h2>
+                            <div
+                                style="margin-top: 20px; padding: 10px; background: #f5f5f5; text-align: right;">
+                                <span style="font-size: 12pt; font-weight: 600;"> TOTAL GENERAL: <span
+                                        t-esc="report_data['total_amount']"
+                                        t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                </span>
                             </div>
                         </t>
 
                         <t t-else="">
-                            <div class="text-center mt-5">
-                                <h4>No se encontraron ventas en esta sesión</h4>
+                            <div style="text-align: center; margin-top: 40px; color: #999;">
+                                <p>No se encontraron ventas en esta sesión</p>
                             </div>
                         </t>
                     </t>
@@ -119,30 +127,49 @@
         </t>
     </template>
 
-    <!-- Template para previsualización de ticket -->
+    <!-- Layout completamente en blanco sin iteraciones -->
+    <template id="report_blank_layout">
+        <html>
+            <head>
+                <meta charset="utf-8" />
+                <style>
+                    body {
+                    margin: 0;
+                    padding: 0;
+                    font-family: sans-serif;
+                    background: white;
+                    }
+                    .article {
+                    padding: 20px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="article">
+                    <t t-raw="0" />
+                </div>
+            </body>
+        </html>
+    </template>
+
+
+    <!-- Template de ticket preview usando t-call para heredar configuración -->
     <template id="report_pos_merchandise_ticket_preview">
         <t t-call="web.html_container">
-            <t t-call="web.external_layout">
+            <t t-call="asi_pos_reports.report_blank_layout">
                 <div class="page">
                     <t t-foreach="docs" t-as="doc">
-                        <div class="text-center">
-                            <h2>Previsualización - Formato Ticket</h2>
-                            <p class="text-muted">Vista previa de cómo se vería el ticket impreso</p>
-                        </div>
-
-                        <hr />
-
-                        <!-- Simular formato de ticket -->
-                        <div class="mx-auto"
-                            style="max-width: 300px; font-family: 'Courier New', monospace; border: 2px dashed #ccc; padding: 20px; background-color: #f9f9f9;">
-                            <div class="text-center">
-                                <h4 style="margin: 0;">VENTAS POR MERCANCÍAS</h4>
-                                <p style="margin: 5px 0;">============================</p>
-                                <p style="margin: 2px 0;">Sesión: <span t-esc="doc.name" /></p>
-                                <p style="margin: 2px 0;">Fecha: <span
-                                        t-esc="doc.start_at.strftime('%d/%m/%Y %H:%M')" /></p>
-                                <p style="margin: 2px 0;">Usuario: <span t-esc="doc.user_id.name" /></p>
-                                <p style="margin: 5px 0;">============================</p>
+                        <div
+                            style="max-width: 300px; margin: 0 auto; font-family: 'Courier New', monospace; border: 2px dashed #ccc; padding: 20px; background-color: #f9f9f9;">
+                            <div style="text-align: center;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">VENTAS POR
+                                    MERCANCÍAS</div>
+                                <div style="margin: 2px 0;">============================</div>
+                                <div style="margin: 2px 0;">Sesión: <span t-esc="doc.name" /></div>
+                                <div style="margin: 2px 0;">Fecha: <span
+                                        t-esc="doc.start_at.strftime('%d/%m/%Y %H:%M')" /></div>
+                                <div style="margin: 2px 0;">Usuario: <span t-esc="doc.user_id.name" /></div>
+                                <div style="margin: 5px 0;">============================</div>
                             </div>
 
                             <t t-set="report_data"
@@ -155,31 +182,38 @@
                                     <t t-set="category_products" t-value="category_item[1]" />
 
                                     <div style="margin: 10px 0;">
-                                        <p
+                                        <div
                                             style="margin: 5px 0; font-weight: bold; text-decoration: underline;"
                                             t-esc="category_name.upper()" />
                                         <t t-foreach="category_products" t-as="product">
-                                            <p style="margin: 2px 0; font-size: 12px;">
-                                                <span t-esc="int(product['quantity'])" /> x <span
-                                                    t-esc="product['product_name']" />
-                                                <br />
-                                                <span
-                                                    style="float: right;">$<span
-                                                        t-esc="'{:.2f}'.format(product['total_amount'])" /></span>
-                                            </p>
+                                            <div
+                                                style="margin: 2px 0; font-size: 12px; display: table; width: 100%;">
+                                                <div style="display: table-cell;">
+                                                    <span t-esc="int(product['quantity'])" /> x <span
+                                                        t-esc="product['product_name']" />
+                                                </div>
+                                                <div
+                                                    style="display: table-cell; text-align: right; white-space: nowrap; padding-left: 10px;">
+                                                    <span t-esc="product['total_amount']"
+                                                        t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                                </div>
+                                            </div>
                                         </t>
                                     </div>
                                 </t>
 
-                                <div class="text-center" style="margin-top: 15px;">
-                                    <p style="margin: 5px 0;">============================</p>
-                                    <p style="margin: 5px 0; font-weight: bold; font-size: 14px;">
-                                        TOTAL: $<span
-                                            t-esc="'{:.2f}'.format(report_data['total_amount'])" />
-                                    </p>
-                                    <p style="margin: 5px 0;">============================</p>
-                                    <p style="margin: 10px 0; font-size: 10px;">Gracias por su
-                                        compra</p>
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <div style="margin: 5px 0;">============================</div>
+                                    <div style="margin: 5px 0; font-weight: bold; font-size: 14px;">
+                                        TOTAL: <span t-esc="report_data['total_amount']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                    </div>
+                                    <div style="margin: 5px 0;">============================</div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div style="text-align: center; margin-top: 20px; color: #999;">
+                                    <p>No se encontraron ventas en esta sesión</p>
                                 </div>
                             </t>
                         </div>
@@ -228,18 +262,25 @@
                             <t t-foreach="category_products" t-as="product">
                                 <p>
                                     <t t-esc="int(product['quantity'])" /> x <t
-                                        t-esc="product['product_name']" /> $<t
-                                        t-esc="'{:.2f}'.format(product['total_amount'])" />
+                                        t-esc="product['product_name']" /> <t
+                                        t-esc="product['total_amount']"
+                                        t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
                                 </p>
                             </t>
                         </div>
                     </t>
                 </t>
+                <t t-else="">
+                    <div style="text-align: center; margin-top: 20px;">
+                        <p>No se encontraron ventas en esta sesión</p>
+                    </div>
+                </t>
 
                 <div class="text-center">
                     <p>============================</p>
                     <p>
-                        <strong>TOTAL $<t t-esc="'{:.2f}'.format(report_data['total_amount'])" /></strong>
+                        <strong>TOTAL <t t-esc="report_data.get('total_amount', 0)"
+                                t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" /></strong>
                     </p>
                     <p>============================</p>
                 </div>
