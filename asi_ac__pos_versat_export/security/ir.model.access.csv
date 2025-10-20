@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_versat_finanzas_config,versat.finanzas.config,model_versat_finanzas_config,base.group_user,1,1,1,1
+access_versat_obligacion_type,versat.obligacion.type,model_versat_obligacion_type,base.group_user,1,1,1,1
+access_versat_cobro_type,versat.cobro.type,model_versat_cobro_type,base.group_user,1,1,1,1
+access_versat_unified_export_wizard,versat.unified.export.wizard,model_versat_unified_export_wizard,base.group_user,1,0,1,0
+access_account_move_versat_export,account.move.versat.export,model_account_move_versat_export,base.group_user,1,0,0,0
+access_pos_order_versat_export,pos.order.versat.export,model_pos_order_versat_export,base.group_user,1,0,0,0

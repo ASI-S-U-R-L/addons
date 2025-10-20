@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Integrar Configuración en Contabilidad/Configuración -->
+    <menuitem id="menu_versat_finanzas_config" name="Configuración VERSAT" 
+              parent="account.menu_account_config" sequence="100"
+              action="action_versat_finanzas_config"/>
+              
+    <!-- Menú para exportación POS (opcional, si se quiere acceso directo) -->
+    <menuitem id="menu_versat_pos_export" name="Exportar POS a VERSAT"
+              parent="point_of_sale.menu_point_of_sale"
+              action="action_export_unified_versat_pos_server"
+              sequence="100"/>
+</odoo>
