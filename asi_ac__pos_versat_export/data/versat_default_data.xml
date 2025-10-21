@@ -19,7 +19,7 @@
         <record id="obligacion_type_cuentas_cobrar" model="versat.obligacion.type">
             <field name="name">Cuentas por Cobrar</field>
             <field name="code">001</field>
-            <field name="concepto">Obligación por Factura Emitida</field>
+            <field name="concepto">Obligacion por Factura Emitida</field>
             <field name="guid">{7DE34F15-C9BA-4FE0-AEE6-B5E85ADB84DC}</field>
             <field name="cuenta_mc">1350020</field>
             <field name="concepto_contrapartida">128</field>

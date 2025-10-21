@@ -16,15 +16,15 @@ class AccountMoveVersatExport(models.Model):
         
         ref = move.ref.strip()
         
-        # Formato 1: PVCAM/POS/73257 - Refresco Frutti
+        
         if '/POS/' in ref:
             return True
         
-        # Formato 2: POS/00013 (preproducción)
+        
         if ref.startswith('POS/'):
             return True
             
-        # Formato 3: POS00013 (sin barra)
+        
         if ref.startswith('POS') and any(c.isdigit() for c in ref[3:]):
             return True
             
@@ -37,21 +37,21 @@ class AccountMoveVersatExport(models.Model):
             
         ref = move.ref.strip()
         
-        # Formato 1: PVCAM/POS/73257 - Refresco Frutti -> "PV-73257"
+        
         if '/POS/' in ref:
             ref_parts = ref.split('/')
             if len(ref_parts) >= 3:
                 pos_number = ref_parts[2].split()[0]
                 return f"PV-{pos_number}"
         
-        # Formato 2: POS/00013 -> "PV-00013"  
+         
         elif ref.startswith('POS/'):
             pos_number = ref.split('/')[1].split()[0]
             return f"PV-{pos_number}"
             
-        # Formato 3: POS00013 -> "PV-00013"
+        
         elif ref.startswith('POS') and any(c.isdigit() for c in ref[3:]):
-            # Extraer solo los números después de "POS"
+            
             numbers = ''.join(filter(str.isdigit, ref[3:]))
             if numbers:
                 return f"PV-{numbers}"
@@ -75,7 +75,7 @@ class AccountMoveVersatExport(models.Model):
     def _format_cuenta_line(self, cuenta, importe):
         """Formatea la línea de cuenta con espacio EXACTO como VERSAT"""
         cuenta_limpia = cuenta.rstrip()
-        # SOLO UN ESPACIO después de la cuenta (no tres)
+        
         cuenta_con_espacio = cuenta_limpia + ' '
         formatted_importe = self._format_importe(importe)
         return f"{cuenta_con_espacio}|CUP|{formatted_importe}"
@@ -91,10 +91,7 @@ class AccountMoveVersatExport(models.Model):
         _logger.info(f"   🏦 Cuenta caja configurada: {config.cuenta_caja_efectivo}")
         _logger.info(f"   🏦 Cuenta banco configurada: {config.cuenta_caja_banco}")
     
-        # Estrategia MEJORADA: Buscar el patrón real de POS
-        # Los POS normalmente tienen:
-        # - CRÉDITO en cuenta de ingreso (906 Ventas)
-        # - DÉBITO en cuentas de caja/banco
+        
     
         lineas_credito = []
         lineas_debito = []
@@ -113,7 +110,7 @@ class AccountMoveVersatExport(models.Model):
                 lineas_debito.append(line)
                 _logger.info(f"   📉 Línea de DÉBITO: {account_code} - {line.debit}")
     
-        # Buscar la línea de ingreso (normalmente 906 en crédito)
+        
         linea_ingreso = None
         for line in lineas_credito:
             if line.account_id.code == '906':
@@ -121,7 +118,7 @@ class AccountMoveVersatExport(models.Model):
                 _logger.info(f"   ✅ LÍNEA DE INGRESO 906 ENCONTRADA: {line.credit}")
                 break
     
-        # Si no encontramos 906, buscar cualquier línea de crédito como ingreso
+        
         if not linea_ingreso and lineas_credito:
             linea_ingreso = lineas_credito[0]
             _logger.info(f"   ℹ️  Usando primera línea de crédito como ingreso: {linea_ingreso.account_id.code} - {linea_ingreso.credit}")
@@ -131,7 +128,7 @@ class AccountMoveVersatExport(models.Model):
             account_code = line.account_id.code or ''
             account_name = (line.account_id.name or '').lower()
         
-            # ESTRATEGIA 1: Buscar por códigos de cuenta EXACTOS de la configuración
+            
             if account_code == config.cuenta_caja_efectivo.strip():
                 cash_amount += line.debit
                 _logger.info(f"   ✅✅✅ EFECTIVO DETECTADO por código exacto configurado: {line.debit}")
@@ -142,7 +139,7 @@ class AccountMoveVersatExport(models.Model):
                 _logger.info(f"   ✅✅✅ BANCO DETECTADO por código exacto configurado: {line.debit}")
                 continue
         
-            # ESTRATEGIA 2: Buscar por nombres de cuenta
+            
             if any(word in account_name for word in ['caja', 'efectivo', 'cash']):
                 cash_amount += line.debit
                 _logger.info(f"   ✅ EFECTIVO DETECTADO por nombre de cuenta: {line.debit}")
@@ -153,14 +150,14 @@ class AccountMoveVersatExport(models.Model):
                 _logger.info(f"   ✅ BANCO DETECTADO por nombre de cuenta: {line.debit}")
                 continue
         
-            # ESTRATEGIA 3: Si no tenemos configuración clara, usar lógica basada en el diario
+            
             if move.journal_id and 'pos' in move.journal_id.name.lower():
                 # En POS, las líneas de débito que no son impuestos suelen ser pagos
                 if 'tax' not in account_name and 'impuesto' not in account_name:
                     cash_amount += line.debit
                     _logger.info(f"   ℹ️  EFECTIVO ASUMIDO por débito en POS: {line.debit}")
     
-        # ESTRATEGIA 4: Si no detectamos nada pero tenemos un ingreso, dividir
+        
         if cash_amount == 0 and bank_amount == 0 and linea_ingreso:
             total_ingreso = linea_ingreso.credit
             _logger.info(f"   ⚠️  No se detectaron pagos específicos, usando ingreso como efectivo: {total_ingreso}")
@@ -194,7 +191,7 @@ class AccountMoveVersatExport(models.Model):
             document_types.append('obligacion_factura')
             _logger.info(f"   ✅ Añadido obligacion_factura para factura")
     
-        # Para POS: SIEMPRE buscar cobros (incluso si no detecta pagos específicos)
+        # Para POS: SIEMPRE buscar cobros
         if is_pos and move.state == 'posted':
             _logger.info(f"   🔍 BUSCANDO PAGOS POS (BÚSQUEDA AGRESIVA)...")
             payment_amounts = self._get_pos_payment_amounts_improved(move, config)
@@ -212,7 +209,7 @@ class AccountMoveVersatExport(models.Model):
             else:
                 _logger.info(f"   ❌ No se añadió cobro_banco (banco: 0)")
             
-            # Si NO se detectaron cobros pero es un POS, FORZAR al menos un cobro en efectivo
+            
             if not any(doc in document_types for doc in ['cobro_caja', 'cobro_banco']) and move.amount_total > 0:
                 _logger.info(f"   ⚠️  FORZANDO cobro_caja porque es POS con total > 0")
                 document_types.append('cobro_caja')
@@ -283,7 +280,7 @@ Importe={self._format_importe(importe_mc)}
     
         # Para POS, obtener monto de las líneas del asiento
         if self._is_pos_move(move):
-            # ✅ CORREGIDO: Pasar el parámetro config que faltaba
+            
             payment_amounts = self._get_pos_payment_amounts_improved(move, config)
             amount = payment_amounts['efectivo']
             if amount <= 0:
@@ -293,7 +290,7 @@ Importe={self._format_importe(importe_mc)}
             fecha_emi = move.date.strftime('%d/%m/%Y') if move.date else ''
             pos_number = self._extract_pos_number(move) or f"PV-{move.id}"
         
-            # FORMATO EXACTO PARA POS - Según ejemplos
+            # FORMATO EXACTO PARA POS
             content = f"""Tipo={cobro_type.guid}
 Unidad={config.unidad_default}
 Numero={pos_number}
@@ -327,7 +324,7 @@ Importe={self._format_importe(amount)}
 Unidad={config.unidad_default}
 Numero={numero_corto}
 Fechaemi={fecha_emi}
-Descripcion=INGRESO DE VENTAS X EFECTIVO
+Descripcion=Documento creado desde Punto de Venta
 Deposito={config.cuenta_caja_efectivo}
 Importe={self._format_importe(payment.amount)}
 EntregadoA=
@@ -357,7 +354,7 @@ Importe={self._format_importe(payment.amount)}
             fecha_emi = move.date.strftime('%d/%m/%Y') if move.date else ''
             pos_number = self._extract_pos_number(move) or f"PV-{move.id}"
             
-            # FORMATO EXACTO PARA POS - Según ejemplos
+            # FORMATO EXACTO PARA POS
             content = f"""Tipo={cobro_type.guid}
 Unidad={config.unidad_default}
 Entidad={config.entidad_default}
@@ -393,7 +390,7 @@ Unidad={config.unidad_default}
 Entidad={config.entidad_default}
 Numero={numero_corto}
 Fechaemi={fecha_emi}
-Descripcion=INGRESO DE VENTAS X TRANSFER MOVIL
+Descripcion=Documento creado desde Punto de Venta
 Deposito={config.cuenta_caja_banco}
 Importe={self._format_importe(payment.amount)}
 EntregadoA=
