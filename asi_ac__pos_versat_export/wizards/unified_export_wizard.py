@@ -77,7 +77,7 @@ class VersatUnifiedExportWizard(models.TransientModel):
         return f"Asiento-{self._sanitize_filename(move.name or f'ID-{move.id}')}"
     
     def action_export_unified(self):
-        """Acción principal de exportación unificada - VERSIÓN FINAL CORREGIDA"""
+        """Acción principal de exportación unificada"""
         self.ensure_one()
         
         # Obtener TODOS los asientos contables seleccionados del contexto
