@@ -21,17 +21,19 @@
     'depends': [
         'base',
         'account',
-        'stock',
         'fleet',
-        'purchase',
         'mail',
+        'base_transporte',
+        'fleet_vehicle_log_fuel',
+        'web', # Añadido por el uso de componentes de interfaz de usuario
     ],
     'data': [
        
         'security/security.xml',
         'security/ir.model.access.csv',
         'data/sequence.xml',
-        'data/mail_template.xml',
+        'data/cron_data.xml',
+
         
       
         'views/magnetic_card_views.xml',
@@ -39,10 +41,11 @@
         'views/unassigned_fuel_views.xml',
         'views/fuel_invoice_views.xml',
         'views/card_load_views.xml',
-        'views/fuel_ticket_views.xml',
         'views/balance_adjustment_views.xml',
         'views/balance_transfer_views.xml',
         'views/fuel_plan_views.xml',
+        'views/fleet_vehicle_log_fuel_views_inherit.xml',
+     
         'views/fuel_card_balance_report_wizard_views.xml',
         'views/dashboard_views.xml',
         
@@ -56,7 +59,6 @@
      
         'views/magnetic_card_views_action.xml',
         'views/card_load_views_action.xml',
-        'views/fuel_ticket_views_action.xml',
         'views/fuel_invoice_views_action.xml',
         'views/unassigned_fuel_views_action.xml',
         'views/balance_adjustment_views_action.xml',
@@ -64,10 +66,6 @@
         'views/fuel_plan_views_action.xml',
         
         # Cargar vistas que referencian acciones
-        'views/card_holder_views.xml',
-        'views/supplier_views.xml',
-        'views/power_generator_views.xml',
-        'views/driver_views.xml',
         'views/vehicle_views.xml',
         'views/card_delivery_views.xml',
         
@@ -80,6 +78,7 @@
     'assets': {
         'web.assets_backend': [
             'fuel_card_management/static/src/js/dashboard.js',
+            'fuel_card_management/static/src/css/dashboard.css',
         ],
     },
     'qweb': [

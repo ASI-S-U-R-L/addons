@@ -18,26 +18,42 @@ class FuelCardDelivery(models.Model):
         ('return', 'Devolución')
     ], string='Tipo', required=True, default='delivery', tracking=True)
     
-    holder_id = fields.Many2one('fuel.card.holder', string='Titular', tracking=True)
-    driver_id = fields.Many2one('fuel.driver', string='Conductor', tracking=True)
+    # Cambiado a res.partner con dominio para conductores
+    driver_id = fields.Many2one(
+        'res.partner', 
+        string='Conductor', 
+        tracking=True, 
+        domain="[('is_driver', '=', True)]"
+    )
     
-    vehicle_id = fields.Many2one('fleet.vehicle', string='Vehículo', tracking=True)
-    generator_id = fields.Many2one('fuel.power.generator', string='Generador', tracking=True)
+    # MODIFICADO: Vehículo ahora es obligatorio
+    vehicle_id = fields.Many2one(
+        'fleet.vehicle', 
+        string='Vehículo', 
+        tracking=True,
+        required=True
+    )
+    
+    # Campo para especificar el motor en vehículos tecnológicos
+    engine_type = fields.Selection([
+        ('main', 'Motor Principal'),
+        ('secondary', 'Motor Secundario')
+    ], string='Tipo de Motor', tracking=True,
+       help="Para vehículos tecnológicos, especifica a qué motor se asigna la tarjeta")
     
     balance = fields.Float(string='Saldo Actual', related='card_id.current_balance', readonly=True)
     
     # Campos relacionados para mostrar información de la tarjeta
     card_type = fields.Selection(related='card_id.card_type', string='Tipo de Tarjeta', readonly=True)
-    card_supplier_id = fields.Many2one(related='card_id.supplier_id', string='Proveedor', readonly=True)
     card_operational_state = fields.Selection(related='card_id.operational_state', string='Estado Operativo', readonly=True)
     card_expiry_date = fields.Date(related='card_id.expiry_date', string='Fecha de Vencimiento', readonly=True)
-    card_carrier_id = fields.Many2one(related='card_id.carrier_id', string='Portador de la Tarjeta', readonly=True)
     
     # Campos para mostrar asignación actual (para devoluciones)
-    card_current_holder_id = fields.Many2one(related='card_id.holder_id', string='Titular Actual', readonly=True)
     card_current_driver_id = fields.Many2one(related='card_id.driver_id', string='Conductor Actual', readonly=True)
     card_current_vehicle_id = fields.Many2one(related='card_id.vehicle_id', string='Vehículo Actual', readonly=True)
-    card_current_generator_id = fields.Many2one(related='card_id.generator_id', string='Generador Actual', readonly=True)
+    
+    # Campos relacionados del vehículo
+    vehicle_custom_type = fields.Selection(related='vehicle_id.vehicle_custom_type', string='Tipo de Vehículo', readonly=True)
     
     state = fields.Selection([
         ('draft', 'Borrador'),
@@ -47,36 +63,34 @@ class FuelCardDelivery(models.Model):
     
     notes = fields.Text(string='Notas')
     
+    def _get_sequence_code(self):
+        """Obtener el código de secuencia según el tipo de operación"""
+        if self.delivery_type == 'delivery':
+            return 'fuel.card.delivery'
+        else:  # return
+            return 'fuel.card.return'
+    
     @api.model
     def create(self, vals):
         if vals.get('name', _('Nuevo')) == _('Nuevo'):
-            vals['name'] = self.env['ir.sequence'].next_by_code('fuel.card.delivery') or _('Nuevo')
+            # Crear registro temporal para determinar la secuencia
+            temp_record = self.new(vals)
+            sequence_code = temp_record._get_sequence_code()
+            vals['name'] = self.env['ir.sequence'].next_by_code(sequence_code) or _('Nuevo')
         return super(FuelCardDelivery, self).create(vals)
-    
-    @api.onchange('card_id')
-    def _onchange_card_id(self):
-        if self.card_id:
-            # Si es devolución, llenar con los datos actuales de la tarjeta
-            if self.delivery_type == 'return':
-                self.holder_id = self.card_id.holder_id
-                self.driver_id = self.card_id.driver_id
-                self.vehicle_id = self.card_id.vehicle_id
-                self.generator_id = self.card_id.generator_id
-            else:
-                # Si es entrega, limpiar los campos para permitir asignación nueva
-                self.holder_id = False
-                self.driver_id = False
-                self.vehicle_id = False
-                self.generator_id = False
     
     @api.onchange('delivery_type')
     def _onchange_delivery_type(self):
         # Limpiar la tarjeta seleccionada al cambiar el tipo
         self.card_id = False
-        self.holder_id = False
         self.driver_id = False
         self.vehicle_id = False
-        self.generator_id = False
+        self.engine_type = False
+        
+        # Regenerar secuencia si es necesario
+        if self.name == _('Nuevo') or not self.name:
+            sequence_code = self._get_sequence_code()
+            self.name = self.env['ir.sequence'].next_by_code(sequence_code) or _('Nuevo')
         
         if self.delivery_type == 'delivery':
             # Para entrega, mostrar solo tarjetas disponibles
@@ -85,13 +99,50 @@ class FuelCardDelivery(models.Model):
             # Para devolución, mostrar solo tarjetas asignadas
             return {'domain': {'card_id': [('operational_state', '=', 'assigned'), ('active', '=', True)]}}
     
-    @api.onchange('card_type')
-    def _onchange_card_type(self):
-        """Limpiar campos incompatibles al cambiar el tipo de tarjeta"""
-        if self.card_type == 'vehicle':
-            self.generator_id = False
-        elif self.card_type == 'generator':
-            self.vehicle_id = False
+    @api.onchange('card_id')
+    def _onchange_card_id(self):
+        if self.card_id:
+            # Si es devolución, llenar con los datos actuales de la tarjeta
+            if self.delivery_type == 'return':
+                self.driver_id = self.card_id.driver_id
+                self.vehicle_id = self.card_id.vehicle_id
+                # AUTO-COMPLETAR: Obtener el tipo de motor de la tarjeta si está asignada
+                if self.card_id.engine_type:
+                    self.engine_type = self.card_id.engine_type
+            else:
+                # Si es entrega, limpiar los campos para permitir asignación nueva
+                self.driver_id = False
+                self.vehicle_id = False
+                self.engine_type = False
+    
+    @api.onchange('vehicle_id')
+    def _onchange_vehicle_id(self):
+        """Lógica específica según el tipo de vehículo"""
+        if self.vehicle_id:
+            # Solo limpiar engine_type al cambiar vehículo si es una entrega
+            # En devoluciones, mantener el engine_type que viene de la tarjeta
+            if self.delivery_type == 'delivery':
+                self.engine_type = False
+            
+            # Si el vehículo tiene conductor asignado, sugerirlo
+            if hasattr(self.vehicle_id, 'driver_id') and self.vehicle_id.driver_id:
+                self.driver_id = self.vehicle_id.driver_id
+            
+            # Mostrar/ocultar campo engine_type según el tipo de vehículo
+            if self.vehicle_id.vehicle_custom_type == 'tecnologico':
+                # Para vehículos tecnológicos en entregas, el campo engine_type es requerido
+                if self.delivery_type == 'delivery':
+                    return {
+                        'warning': {
+                            'title': _('Vehículo Tecnológico'),
+                            'message': _('Este vehículo tecnológico puede tener hasta 2 tarjetas. '
+                                       'Debe especificar el tipo de motor para la asignación.')
+                        }
+                    }
+        else:
+            # Solo limpiar engine_type si es una entrega
+            if self.delivery_type == 'delivery':
+                self.engine_type = False
     
     @api.constrains('card_id', 'delivery_type')
     def _check_card_state(self):
@@ -102,112 +153,121 @@ class FuelCardDelivery(models.Model):
                 elif delivery.delivery_type == 'return' and not delivery.card_id.can_be_returned():
                     raise ValidationError(_("Solo puede recibir tarjetas que estén asignadas."))
     
-    @api.constrains('card_id', 'vehicle_id', 'delivery_type')
-    def _check_carrier_compatibility(self):
-        """Validar que el portador de la tarjeta coincida con el del vehículo"""
-        for delivery in self:
-            if (delivery.delivery_type == 'delivery' and 
-                delivery.card_id and 
-                delivery.vehicle_id and 
-                delivery.card_id.carrier_id and 
-                delivery.vehicle_id.fuel_type):
-                
-                if delivery.card_id.carrier_id != delivery.vehicle_id.fuel_type:
-                    raise ValidationError(_(
-                        "El portador de combustible de la tarjeta (%s) no coincide con el del vehículo (%s).\n"
-                        "La tarjeta debe ser del mismo tipo de combustible que el vehículo."
-                    ) % (delivery.card_id.carrier_id.name, delivery.vehicle_id.fuel_type.name))
-    
-    @api.constrains('card_type', 'vehicle_id', 'generator_id', 'delivery_type')
+    @api.constrains('card_type', 'vehicle_id', 'delivery_type', 'engine_type')
     def _check_card_type_assignment(self):
-        """Validar que la asignación sea compatible con el tipo de tarjeta"""
+        """Validar que la asignación sea compatible con el tipo de tarjeta y vehículo"""
         for delivery in self:
             if delivery.delivery_type == 'delivery' and delivery.card_id:
+                # OBLIGATORIO: Verificar que siempre haya un vehículo en entregas
+                if not delivery.vehicle_id:
+                    raise ValidationError(_("Es obligatorio seleccionar un vehículo para realizar entregas de tarjetas."))
+                
                 card_type = delivery.card_type
                 
                 # Validaciones específicas por tipo de tarjeta
                 if card_type == 'vehicle':
-                    if delivery.generator_id:
-                        raise ValidationError(_("Las tarjetas de vehículo no pueden asignarse a generadores."))
                     if not delivery.vehicle_id:
                         raise ValidationError(_("Las tarjetas de vehículo requieren un vehículo asignado."))
                 
-                elif card_type == 'generator':
-                    if delivery.vehicle_id:
-                        raise ValidationError(_("Las tarjetas de generador no pueden asignarse a vehículos."))
-                    if not delivery.generator_id:
-                        raise ValidationError(_("Las tarjetas de generador requieren un generador asignado."))
-                
-                elif card_type == 'other':
-                    # Las tarjetas tipo 'other' pueden asignarse a cualquiera, pero solo a uno
-                    if delivery.vehicle_id and delivery.generator_id:
-                        raise ValidationError(_("Una tarjeta no puede asignarse simultáneamente a un vehículo y un generador."))
-                    if not delivery.vehicle_id and not delivery.generator_id:
-                        raise ValidationError(_("Debe asignar la tarjeta a un vehículo o generador."))
+                # Validaciones específicas por tipo de vehículo SOLO para entregas
+                if delivery.vehicle_id:
+                    vehicle_type = delivery.vehicle_id.vehicle_custom_type
+                    
+                    if vehicle_type == 'tecnologico':
+                        if not delivery.engine_type:
+                            raise ValidationError(_(
+                                "Para vehículos tecnológicos debe especificar el tipo de motor "
+                                "(Principal o Secundario) al asignar la tarjeta."
+                            ))
+                    elif vehicle_type in ['movil', 'estacionario']:
+                        if delivery.engine_type:
+                            raise ValidationError(_(
+                                "Los vehículos móviles y estacionarios no requieren especificar tipo de motor."
+                            ))
     
-    @api.constrains('holder_id', 'delivery_type')
-    def _check_holder_required(self):
-        """Validar que el titular sea obligatorio para entregas"""
-        for delivery in self:
-            if delivery.delivery_type == 'delivery' and not delivery.holder_id:
-                raise ValidationError(_("El titular es obligatorio para las entregas de tarjetas."))
-    
-    @api.constrains('vehicle_id', 'generator_id', 'delivery_type', 'state')
+    @api.constrains('vehicle_id', 'delivery_type', 'state', 'engine_type')
     def _check_unique_assignment(self):
-        """Validar que un vehículo o generador solo tenga una tarjeta asignada"""
+        """Validar asignación única según el tipo de vehículo"""
         for delivery in self:
             if delivery.delivery_type == 'delivery' and delivery.state in ['draft', 'confirmed']:
                 
-                # Validar asignación única para vehículos
                 if delivery.vehicle_id:
-                    # Buscar otras tarjetas asignadas al mismo vehículo
-                    existing_cards = self.env['fuel.magnetic.card'].search([
-                        ('vehicle_id', '=', delivery.vehicle_id.id),
-                        ('operational_state', '=', 'assigned'),
-                        ('active', '=', True),
-                        ('id', '!=', delivery.card_id.id)  # Excluir la tarjeta actual
-                    ])
+                    vehicle_type = delivery.vehicle_id.vehicle_custom_type
                     
-                    if existing_cards:
-                        card_names = ', '.join(existing_cards.mapped('name'))
-                        raise ValidationError(_(
-                            "El vehículo '%s' ya tiene asignada(s) la(s) tarjeta(s): %s.\n"
-                            "Un vehículo solo puede tener una tarjeta asignada a la vez."
-                        ) % (delivery.vehicle_id.name, card_names))
-                
-                # Validar asignación única para generadores
-                if delivery.generator_id:
-                    # Buscar otras tarjetas asignadas al mismo generador
-                    existing_cards = self.env['fuel.magnetic.card'].search([
-                        ('generator_id', '=', delivery.generator_id.id),
-                        ('operational_state', '=', 'assigned'),
-                        ('active', '=', True),
-                        ('id', '!=', delivery.card_id.id)  # Excluir la tarjeta actual
-                    ])
+                    if vehicle_type == 'tecnologico':
+                        # Para vehículos tecnológicos, validar por tipo de motor
+                        if delivery.engine_type:
+                            existing_cards = self.env['fuel.magnetic.card'].search([
+                                ('vehicle_id', '=', delivery.vehicle_id.id),
+                                ('engine_type', '=', delivery.engine_type),
+                                ('operational_state', '=', 'assigned'),
+                                ('active', '=', True),
+                                ('id', '!=', delivery.card_id.id)
+                            ])
+                            
+                            if existing_cards:
+                                engine_label = dict(self._fields['engine_type'].selection)[delivery.engine_type]
+                                card_names = ', '.join(existing_cards.mapped('name'))
+                                raise ValidationError(_(
+                                    "El vehículo tecnológico '%s' ya tiene asignada una tarjeta al %s: %s.\n"
+                                    "Cada motor solo puede tener una tarjeta asignada."
+                                ) % (delivery.vehicle_id.name, engine_label.lower(), card_names))
+                        
+                        # Validar que no exceda el límite de 2 tarjetas por vehículo tecnológico
+                        total_cards = self.env['fuel.magnetic.card'].search_count([
+                            ('vehicle_id', '=', delivery.vehicle_id.id),
+                            ('operational_state', '=', 'assigned'),
+                            ('active', '=', True),
+                            ('id', '!=', delivery.card_id.id)
+                        ])
+                        
+                        if total_cards >= 2:
+                            raise ValidationError(_(
+                                "El vehículo tecnológico '%s' ya tiene el máximo de 2 tarjetas asignadas.\n"
+                                "Debe devolver una tarjeta antes de asignar otra."
+                            ) % delivery.vehicle_id.name)
                     
-                    if existing_cards:
-                        card_names = ', '.join(existing_cards.mapped('name'))
-                        raise ValidationError(_(
-                            "El generador '%s' ya tiene asignada(s) la(s) tarjeta(s): %s.\n"
-                            "Un generador solo puede tener una tarjeta asignada a la vez."
-                        ) % (delivery.generator_id.name, card_names))
+                    elif vehicle_type in ['movil', 'estacionario']:
+                        # Para vehículos móviles y estacionarios, solo una tarjeta
+                        existing_cards = self.env['fuel.magnetic.card'].search([
+                            ('vehicle_id', '=', delivery.vehicle_id.id),
+                            ('operational_state', '=', 'assigned'),
+                            ('active', '=', True),
+                            ('id', '!=', delivery.card_id.id)
+                        ])
+                        
+                        if existing_cards:
+                            vehicle_type_label = dict(delivery.vehicle_id._fields['vehicle_custom_type'].selection)[vehicle_type]
+                            card_names = ', '.join(existing_cards.mapped('name'))
+                            raise ValidationError(_(
+                                "El vehículo %s '%s' ya tiene asignada la tarjeta: %s.\n"
+                                "Los vehículos %s solo pueden tener una tarjeta asignada."
+                            ) % (vehicle_type_label.lower(), delivery.vehicle_id.name, 
+                                card_names, vehicle_type_label.lower()))
     
     def _validate_delivery_requirements(self):
         """Validar todos los requisitos antes de confirmar una entrega"""
         self.ensure_one()
         
         if self.delivery_type == 'delivery':
-            # Validar titular obligatorio
-            if not self.holder_id:
-                raise ValidationError(_("El titular es obligatorio para las entregas."))
+            # OBLIGATORIO: Debe tener un vehículo asignado para todas las entregas
+            if not self.vehicle_id:
+                raise ValidationError(_("Debe asignar un vehículo para realizar la entrega de la tarjeta."))
             
             # Validar asignación según tipo de tarjeta
             if self.card_type == 'vehicle' and not self.vehicle_id:
                 raise ValidationError(_("Debe asignar un vehículo para tarjetas de tipo vehículo."))
-            elif self.card_type == 'generator' and not self.generator_id:
-                raise ValidationError(_("Debe asignar un generador para tarjetas de tipo generador."))
-            elif self.card_type == 'other' and not self.vehicle_id and not self.generator_id:
-                raise ValidationError(_("Debe asignar un vehículo o generador para esta tarjeta."))
+            
+            # Validar requisitos específicos por tipo de vehículo SOLO para entregas
+            if self.vehicle_id:
+                vehicle_type = self.vehicle_id.vehicle_custom_type
+                
+                if vehicle_type == 'tecnologico' and not self.engine_type:
+                    raise ValidationError(_(
+                        "Para vehículos tecnológicos debe especificar el tipo de motor."
+                    ))
+        
+        # Para devoluciones, no validar engine_type ya que se auto-completa
     
     def action_confirm(self):
         for delivery in self:
@@ -222,42 +282,53 @@ class FuelCardDelivery(models.Model):
                     
                     # Verificación final de asignación única justo antes de confirmar
                     if delivery.vehicle_id:
-                        existing_cards = self.env['fuel.magnetic.card'].search([
-                            ('vehicle_id', '=', delivery.vehicle_id.id),
-                            ('operational_state', '=', 'assigned'),
-                            ('active', '=', True)
-                        ])
-                        if existing_cards:
-                            card_names = ', '.join(existing_cards.mapped('name'))
-                            raise ValidationError(_(
-                                "No se puede confirmar la entrega. El vehículo '%s' ya tiene asignada(s) "
-                                "la(s) tarjeta(s): %s.\nPrimero debe devolver la(s) tarjeta(s) existente(s)."
-                            ) % (delivery.vehicle_id.name, card_names))
-                    
-                    if delivery.generator_id:
-                        existing_cards = self.env['fuel.magnetic.card'].search([
-                            ('generator_id', '=', delivery.generator_id.id),
-                            ('operational_state', '=', 'assigned'),
-                            ('active', '=', True)
-                        ])
-                        if existing_cards:
-                            card_names = ', '.join(existing_cards.mapped('name'))
-                            raise ValidationError(_(
-                                "No se puede confirmar la entrega. El generador '%s' ya tiene asignada(s) "
-                                "la(s) tarjeta(s): %s.\nPrimero debe devolver la(s) tarjeta(s) existente(s)."
-                            ) % (delivery.generator_id.name, card_names))
+                        vehicle_type = delivery.vehicle_id.vehicle_custom_type
+                        
+                        if vehicle_type == 'tecnologico':
+                            # Para tecnológicos, verificar por tipo de motor
+                            if delivery.engine_type:
+                                existing_cards = self.env['fuel.magnetic.card'].search([
+                                    ('vehicle_id', '=', delivery.vehicle_id.id),
+                                    ('engine_type', '=', delivery.engine_type),
+                                    ('operational_state', '=', 'assigned'),
+                                    ('active', '=', True)
+                                ])
+                                if existing_cards:
+                                    engine_label = dict(delivery._fields['engine_type'].selection)[delivery.engine_type]
+                                    card_names = ', '.join(existing_cards.mapped('name'))
+                                    raise ValidationError(_(
+                                        "No se puede confirmar la entrega. El %s del vehículo '%s' "
+                                        "ya tiene asignada la tarjeta: %s."
+                                    ) % (engine_label.lower(), delivery.vehicle_id.name, card_names))
+                        else:
+                            # Para móviles y estacionarios, verificar asignación única
+                            existing_cards = self.env['fuel.magnetic.card'].search([
+                                ('vehicle_id', '=', delivery.vehicle_id.id),
+                                ('operational_state', '=', 'assigned'),
+                                ('active', '=', True)
+                            ])
+                            if existing_cards:
+                                card_names = ', '.join(existing_cards.mapped('name'))
+                                raise ValidationError(_(
+                                    "No se puede confirmar la entrega. El vehículo '%s' ya tiene asignada "
+                                    "la tarjeta: %s.\nPrimero debe devolver la tarjeta existente."
+                                ) % (delivery.vehicle_id.name, card_names))
                     
                     # Entregar tarjeta
                     delivery.card_id._set_delivered(
-                        holder_id=delivery.holder_id.id if delivery.holder_id else False,
                         driver_id=delivery.driver_id.id if delivery.driver_id else False,
                         vehicle_id=delivery.vehicle_id.id if delivery.vehicle_id else False,
-                        generator_id=delivery.generator_id.id if delivery.generator_id else False
+                        engine_type=delivery.engine_type if delivery.engine_type else False
                     )
                     
                     # Mensaje de seguimiento
+                    engine_info = ""
+                    if delivery.engine_type and delivery.vehicle_id.vehicle_custom_type == 'tecnologico':
+                        engine_label = dict(delivery._fields['engine_type'].selection)[delivery.engine_type]
+                        engine_info = f" ({engine_label})"
+                    
                     delivery.card_id.message_post(
-                        body=_("Tarjeta entregada mediante: %s") % delivery.name,
+                        body=_("Tarjeta entregada mediante: %s%s") % (delivery.name, engine_info),
                         message_type='notification'
                     )
                     
@@ -303,10 +374,9 @@ class FuelCardDelivery(models.Model):
                 else:  
                     # Si fue una devolución, volver a asignar la tarjeta
                     delivery.card_id._set_delivered(
-                        holder_id=delivery.holder_id.id if delivery.holder_id else False,
                         driver_id=delivery.driver_id.id if delivery.driver_id else False,
                         vehicle_id=delivery.vehicle_id.id if delivery.vehicle_id else False,
-                        generator_id=delivery.generator_id.id if delivery.generator_id else False
+                        engine_type=delivery.engine_type if delivery.engine_type else False
                     )
                     
                     # Mensaje de seguimiento
@@ -345,6 +415,10 @@ class FuelCardDelivery(models.Model):
             name = delivery.name
             if delivery.card_id:
                 operation = _('Entrega') if delivery.delivery_type == 'delivery' else _('Devolución')
-                name = f"{name} - {operation} {delivery.card_id.name}"
+                engine_info = ""
+                if delivery.engine_type and delivery.vehicle_id and delivery.vehicle_id.vehicle_custom_type == 'tecnologico':
+                    engine_label = dict(delivery._fields['engine_type'].selection)[delivery.engine_type]
+                    engine_info = f" - {engine_label}"
+                name = f"{name} - {operation} {delivery.card_id.name}{engine_info}"
             result.append((delivery.id, name))
         return result

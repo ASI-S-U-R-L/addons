@@ -20,9 +20,8 @@
                     </div>
                     <group>
                         <group>
-                            <field name="invoice_number" placeholder="Ingrese 9 dígitos exactos" maxlength="9"/>
+                            <field name="invoice_number"/>
                             <field name="date"/>
-                            <field name="supplier_id"/>
                             <field name="carrier_id" options="{'no_create': True, 'no_open': True}"/>
                         </group>
                         <group>
@@ -33,7 +32,6 @@
                         </group>
                     </group>
                     <notebook>
-                     
                         <page string="Combustible No Asignado" attrs="{'invisible': [('state', '!=', 'confirmed')]}">
                             <field name="unassigned_ids" readonly="1">
                                 <tree>
@@ -70,7 +68,6 @@
                 <field name="name"/>
                 <field name="invoice_number"/>
                 <field name="date"/>
-                <field name="supplier_id"/>
                 <field name="carrier_id"/>
                 <field name="amount"/>
                 <field name="unit_price"/>
@@ -89,7 +86,6 @@
             <search string="Buscar Facturas de Combustible">
                 <field name="name"/>
                 <field name="invoice_number"/>
-                <field name="supplier_id"/>
                 <field name="carrier_id"/>
                 <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Confirmado" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
@@ -97,13 +93,10 @@
                 <filter string="Con Combustible No Asignado" name="with_unassigned" domain="[('unassigned_amount', '>', 0)]"/>
                 <group expand="0" string="Agrupar Por">
                     <filter string="Estado" name="state" context="{'group_by': 'state'}"/>
-                    <filter string="Proveedor" name="supplier_id" context="{'group_by': 'supplier_id'}"/>
                     <filter string="Portador" name="carrier_id" context="{'group_by': 'carrier_id'}"/>
                     <filter string="Fecha" name="date" context="{'group_by': 'date'}"/>
                 </group>
             </search>
         </field>
     </record>
-
-    
 </odoo>

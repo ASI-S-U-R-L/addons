@@ -6,8 +6,11 @@
         <field name="arch" type="xml">
             <kanban class="o_kanban_dashboard">
                 <field name="name"/>
-                <field name="state"/>
-                <field name="holder_id"/>
+                <field name="operational_state"/>
+                <field name="card_type"/>
+                <field name="carrier_id"/>
+                <field name="vehicle_id"/>
+                <field name="current_balance"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
@@ -16,12 +19,24 @@
                                     <field name="name"/>
                                 </strong>
                                 <div class="o_kanban_tags_section">
-                                    <span class="badge rounded-pill text-bg-info">
-                                        <field name="state"/>
+                                    <span class="badge rounded-pill text-bg-info" 
+                                          t-attf-class="badge rounded-pill text-bg-#{record.operational_state.raw_value == 'assigned' ? 'success' : record.operational_state.raw_value == 'available' ? 'info' : record.operational_state.raw_value == 'blocked' ? 'warning' : 'danger'}">
+                                        <field name="operational_state"/>
+                                    </span>
+                                    <span class="badge rounded-pill text-bg-secondary">
+                                        <field name="card_type"/>
                                     </span>
                                 </div>
                                 <ul>
-                                    <li>Titular: <field name="holder_id"/></li>
+                                    <li t-if="record.carrier_id.raw_value">
+                                        <i class="fa fa-gas-pump"/> <field name="carrier_id"/>
+                                    </li>
+                                    <li t-if="record.vehicle_id.raw_value">
+                                        <i class="fa fa-car"/> <field name="vehicle_id"/>
+                                    </li>
+                                    <li>
+                                        <i class="fa fa-money"/> Saldo: <field name="current_balance" widget="monetary"/>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -30,6 +45,5 @@
             </kanban>
         </field>
     </record>
-
-   
 </odoo>
+

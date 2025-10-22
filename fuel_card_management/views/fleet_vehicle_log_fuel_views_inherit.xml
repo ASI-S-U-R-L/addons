@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <!-- Vista formulario heredada -->
+  <record id="fleet_vehicle_log_fuel_view_form_inherit" model="ir.ui.view">
+      <field name="name">fleet.vehicle.log.fuel.form.inherit</field>
+      <field name="model">fleet.vehicle.log.fuel</field>
+      <field name="inherit_id" ref="fleet_vehicle_log_fuel.fleet_vehicle_log_fuel_view_form"/>
+      <field name="priority">20</field>
+      <field name="arch" type="xml">
+          
+          <!-- Agregar campos invisibles necesarios -->
+          <field name="currency_id" position="after">
+              <field name="balance_deducted" invisible="1"/>
+              <!-- NUEVO CAMPO INVISIBLE: Para el dominio de selected_carrier_id -->
+              <field name="card_carrier_ids" invisible="1"/>
+          </field>
+          
+          <!-- Agregar campo número de ticket después de la fecha -->
+          <field name="date" position="after">
+              <field name="ticket_number" placeholder="Ej: 12345"/>
+          </field>
+
+          <!-- CAMBIO PRINCIPAL: Agregar campo tarjeta ANTES de vehicle_id -->
+          <field name="vehicle_id" position="before">
+              <field name="card_main_id" 
+                     string="Tarjeta"
+                     options="{'no_create': True, 'no_create_edit': True}"
+                     attrs="{'required': [('liter', '>', 0)]}"
+                     help="Selecciona la tarjeta - el vehículo se asignará automáticamente"/>
+              
+              <!-- NEW FIELD: Selected Fuel Carrier for the Log -->
+              <field name="selected_carrier_id"
+                     string="Portador de Combustible"
+                     attrs="{'invisible': [('card_main_id', '=', False)],
+                             'required': [('card_main_id', '!=', False), ('liter', '>', 0)],
+                             'readonly': [('state', 'in', ['done', 'cancelled'])]}"
+                     domain="[('id', 'in', card_carrier_ids)]"
+                     options="{'no_create': True, 'no_create_edit': True}"
+                     help="Selecciona el portador de combustible específico para esta recarga"/>
+          </field>
+
+          <!-- Hacer el campo vehículo de solo lectura cuando hay tarjeta -->
+          <field name="vehicle_id" position="attributes">
+              <attribute name="attrs">{'readonly': [('card_main_id', '!=', False)]}</attribute>
+              <attribute name="help">Vehículo asignado automáticamente según la tarjeta seleccionada</attribute>
+          </field>
+
+          <!-- Hacer el campo precio por litro de solo lectura -->
+          <field name="price_per_liter" position="attributes">
+              <attribute name="readonly">1</attribute>
+              <attribute name="help">Precio automático según el portador seleccionado</attribute>
+          </field>
+
+          <!-- Agregar información de saldo de tarjeta -->
+          <field name="price_per_liter" position="after">
+              <field name="card_current_balance" 
+                     string="Saldo Tarjeta" 
+                     readonly="1"
+                     widget="monetary"
+                     attrs="{'invisible': [('card_main_id', '=', False)]}"/>
+          </field>
+
+          <!-- Agregar indicador visual de descuento -->
+          <xpath expr="//sheet" position="inside">
+              <div class="alert alert-success" 
+                   attrs="{'invisible': ['|', ('balance_deducted', '=', False), ('state', '!=', 'done')]}">
+                  <i class="fa fa-check-circle"/> Saldo descontado de la tarjeta
+              </div>
+              
+              <!-- Agregar indicador cuando la tarjeta asigna el vehículo -->
+              <div class="alert alert-info" 
+                   attrs="{'invisible': [('card_main_id', '=', False)]}">
+                  <i class="fa fa-info-circle"/> El vehículo se asigna automáticamente según la tarjeta seleccionada
+              </div>
+          </xpath>
+
+      </field>
+  </record>
+
+  <!-- Vista árbol heredada -->
+  <record id="fleet_vehicle_log_fuel_view_tree_inherit" model="ir.ui.view">
+      <field name="name">fleet.vehicle.log.fuel.tree.inherit</field>
+      <field name="model">fleet.vehicle.log.fuel</field>
+      <field name="inherit_id" ref="fleet_vehicle_log_fuel.fleet_vehicle_log_fuel_view_tree"/>
+      <field name="priority">20</field>
+      <field name="arch" type="xml">
+          
+          <!-- Agregar campos invisibles necesarios para dominios -->
+          <field name="currency_id" position="after">
+              <field name="card_carrier_ids" invisible="1"/>
+          </field>
+
+          <!-- Agregar número de ticket después de la fecha -->
+          <field name="date" position="after">
+              <field name="ticket_number" optional="show"/>
+          </field>
+
+          <!-- CAMBIO: Agregar tarjeta ANTES de vehicle_id -->
+          <field name="vehicle_id" position="before">
+              <field name="card_main_id" string="Tarjeta" optional="show"/>
+              <field name="selected_carrier_id" string="Portador" optional="show"/>
+          </field>
+
+          <!-- Agregar indicador de descuento después del estado -->
+          <field name="state" position="after">
+              <field name="balance_deducted" 
+                     string="Saldo Descontado"
+                     widget="boolean_toggle"
+                     readonly="1"
+                     optional="hide"/>
+          </field>
+
+      </field>
+  </record>
+
+  <!-- Vista kanban heredada -->
+  <record id="fleet_vehicle_log_fuel_view_kanban_inherit" model="ir.ui.view">
+      <field name="name">fleet.vehicle.log.fuel.kanban.inherit</field>
+      <field name="model">fleet.vehicle.log.fuel</field>
+      <field name="inherit_id" ref="fleet_vehicle_log_fuel.fleet_vehicle_log_fuel_view_kanban"/>
+      <field name="priority">20</field>
+      <field name="arch" type="xml">
+          
+          <!-- Agregar campos necesarios después de currency_id -->
+          <field name="currency_id" position="after">
+              <field name="card_main_id"/>
+              <field name="selected_carrier_id"/> <!-- Add new field here -->
+              <field name="ticket_number"/>
+              <field name="balance_deducted"/>
+          </field>
+          
+          <!-- Agregar información de tarjeta ANTES de purchaser_id para darle más prominencia -->
+          <xpath expr="//div[field[@name='purchaser_id']]" position="before">
+              <div t-if="record.card_main_id.raw_value" class="text-primary">
+                  <i class="fa fa-credit-card"/> <strong><field name="card_main_id"/></strong>
+              </div>
+              <div t-if="record.selected_carrier_id.raw_value">
+                  <i class="fa fa-gas-pump"/> <field name="selected_carrier_id"/>
+              </div>
+          </xpath>
+          
+          <!-- Agregar información de ticket después de purchaser_id -->
+          <xpath expr="//div[field[@name='purchaser_id']]" position="after">
+              <div t-if="record.ticket_number.raw_value">
+                  <i class="fa fa-ticket"/> Ticket: <field name="ticket_number"/>
+              </div>
+          </xpath>
+
+          <!-- Agregar indicador de descuento después del monto -->
+          <xpath expr="//div[span[field[@name='amount']]]" position="after">
+              <div t-if="record.balance_deducted.raw_value" class="text-success">
+                  <i class="fa fa-check-circle"/> Saldo descontado
+              </div>
+          </xpath>
+
+      </field>
+  </record>
+
+  <!-- Vista de búsqueda heredada -->
+  <record id="fleet_vehicle_log_fuel_view_search_inherit" model="ir.ui.view">
+      <field name="name">fleet.vehicle.log.fuel.search.inherit</field>
+      <field name="model">fleet.vehicle.log.fuel</field>
+      <field name="inherit_id" ref="fleet_vehicle_log_fuel.fleet_vehicle_log_fuel_view_search"/>
+      <field name="priority">20</field>
+      <field name="arch" type="xml">
+          
+          <!-- Agregar búsqueda por número de ticket y tarjeta -->
+          <field name="service_type_id" position="after">
+              <field name="ticket_number" string="Número de Ticket"/>
+              <field name="card_main_id" string="Tarjeta"/>
+              <field name="selected_carrier_id" string="Portador"/> <!-- Add search for new field -->
+          </field>
+
+          <!-- Agregar filtros después del filtro "Archived" -->
+          <filter name="inactive" position="after">
+              <separator/>
+              <filter string="Con Tarjeta" name="with_card" domain="[('card_main_id', '!=', False)]"/>
+              <filter string="Sin Tarjeta" name="without_card" domain="[('card_main_id', '=', False)]"/>
+              <filter string="Saldo Descontado" name="balance_deducted" domain="[('balance_deducted', '=', True)]"/>
+              <filter string="Saldo Pendiente" name="balance_pending" domain="[('balance_deducted', '=', False), ('state', '=', 'done')]"/>
+              <separator/>
+              <group expand="0" string="Agrupar Por">
+                  <filter string="Tarjeta" name="group_by_card" context="{'group_by': 'card_main_id'}"/>
+                  <filter string="Portador" name="group_by_selected_carrier" context="{'group_by': 'selected_carrier_id'}"/> <!-- Group by new field -->
+                  <filter string="Vehículo" name="group_by_vehicle" context="{'group_by': 'vehicle_id'}"/>
+                  <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}"/>
+              </group>
+          </filter>
+
+      </field>
+  </record>
+</odoo>
+

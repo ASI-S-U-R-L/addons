@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Informe PDF -->
+    <!-- Acción para el informe de balance contable de combustible (PDF) -->
     <record id="action_report_fuel_card_balance" model="ir.actions.report">
-        <field name="name">Balance Contable de Combustible (PDF)</field>
+        <field name="name">Balance Contable de Combustible</field>
         <field name="model">fuel.card.balance.report.wizard</field>
         <field name="report_type">qweb-pdf</field>
+        <field name="report_name">fuel_card_management.report_fuel_card_balance</field>
+        <field name="report_file">fuel_card_management.report_fuel_card_balance</field>
+        <field name="print_report_name">'Balance Contable de Combustible - %s' % (object.date_to)</field>
+        <field name="binding_model_id" ref="model_fuel_card_balance_report_wizard"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Acción para el informe de balance contable de combustible (HTML Preview) -->
+    <record id="action_report_fuel_card_balance_html" model="ir.actions.report">
+        <field name="name">Balance Contable de Combustible (HTML)</field>
+        <field name="model">fuel.card.balance.report.wizard</field>
+        <field name="report_type">qweb-html</field>
         <field name="report_name">fuel_card_management.report_fuel_card_balance</field>
         <field name="report_file">fuel_card_management.report_fuel_card_balance</field>
         <field name="binding_model_id" ref="model_fuel_card_balance_report_wizard"/>
         <field name="binding_type">report</field>
     </record>
-    
-    <!-- Informe HTML (Vista previa) -->
-    <record id="action_report_fuel_card_balance_html" model="ir.actions.report">
-        <field name="name">Balance Contable de Combustible (Vista Previa)</field>
-        <field name="model">fuel.card.balance.report.wizard</field>
-        <field name="report_type">qweb-html</field>
-        <field name="report_name">fuel_card_management.report_fuel_card_balance</field>
-        <field name="report_file">fuel_card_management.report_fuel_card_balance</field>
-    </record>
 </odoo>
+

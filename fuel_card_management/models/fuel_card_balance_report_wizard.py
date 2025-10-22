@@ -17,27 +17,47 @@ class FuelCardBalanceReportWizard(models.TransientModel):
     include_inactive = fields.Boolean(string='Incluir Tarjetas Inactivas', default=False)
     
     def _get_initial_balance(self, card, date_from):
-        """Obtiene el saldo inicial de la tarjeta a la fecha inicial"""
-      
-        domain = [
+        """Obtiene el saldo inicial de la tarjeta a la fecha inicial (en litros y valor monetario)"""
+        initial_liters = 0.0
+        initial_value = 0.0
+        
+        # Obtener el precio actual del portador principal de la tarjeta para conversiones
+        # Si la tarjeta tiene múltiples portadores, se usa el primero para esta conversión
+        card_price = card.carrier_id.current_price if card.carrier_id else 0.0
+
+        # Cargas antes de la fecha inicial
+        loads = self.env['fuel.card.load'].search([
             ('card_id', '=', card.id),
             ('date', '<', date_from),
             ('state', '=', 'confirmed')
-        ]
-        
-        # Obtener cargas antes de la fecha inicial
-        loads = self.env['fuel.card.load'].search(domain)
-        load_amount = sum(loads.mapped('amount'))
-        
-        # Obtener consumos antes de la fecha inicial
-        tickets = self.env['fuel.ticket'].search(domain)
-        consumption_amount = sum(tickets.mapped('amount'))
-        
-        # Obtener ajustes antes de la fecha inicial
-        adjustments = self.env['fuel.balance.adjustment'].search(domain)
-        adjustment_amount = sum(adjustments.mapped('amount'))
-        
-        # Obtener transferencias antes de la fecha inicial
+        ])
+        for load in loads:
+            initial_liters += load.amount # Litros cargados
+            initial_value += load.amount * load.carrier_id.current_price # Valor monetario de la carga
+
+        # Consumos (fleet.vehicle.log.fuel) antes de la fecha inicial
+        consumptions = self.env['fleet.vehicle.log.fuel'].search([
+            ('card_main_id', '=', card.id), # Usar card_main_id para el modelo de consumo
+            ('date', '<', date_from),
+            ('state', '=', 'done') # Usar estado 'done' para consumos confirmados
+        ])
+        for consumption in consumptions:
+            initial_liters -= consumption.liter # Litros consumidos
+            initial_value -= consumption.amount # Valor monetario consumido
+
+        # Ajustes antes de la fecha inicial
+        adjustments = self.env['fuel.balance.adjustment'].search([
+            ('card_id', '=', card.id),
+            ('date', '<', date_from),
+            ('state', '=', 'confirmed')
+        ])
+        for adj in adjustments:
+            adj_value = adj.amount if adj.adjustment_type == 'increase' else -adj.amount
+            initial_value += adj_value
+            if card_price > 0: # Convertir ajuste monetario a litros si el precio está disponible
+                initial_liters += adj_value / card_price
+
+        # Transferencias antes de la fecha inicial
         transfers_in = self.env['fuel.balance.transfer'].search([
             ('target_card_id', '=', card.id),
             ('date', '<', date_from),
@@ -48,19 +68,19 @@ class FuelCardBalanceReportWizard(models.TransientModel):
             ('date', '<', date_from),
             ('state', '=', 'confirmed')
         ])
-        transfer_amount = sum(transfers_in.mapped('amount')) - sum(transfers_out.mapped('amount'))
+        for transfer in transfers_in:
+            initial_value += transfer.amount
+            if card_price > 0:
+                initial_liters += transfer.amount / card_price
+        for transfer in transfers_out:
+            initial_value -= transfer.amount
+            if card_price > 0:
+                initial_liters -= transfer.amount / card_price
         
-        # Calcular saldo inicial
-        initial_balance = load_amount - consumption_amount + adjustment_amount + transfer_amount
-        
-        # Calcular valor monetario
-        price = card.carrier_id.current_price if card.carrier_id else 0
-        initial_value = initial_balance * price
-        
-        return initial_balance, initial_value
+        return initial_liters, initial_value
     
     def _get_loaded_amount(self, card, date_from, date_to):
-        """Obtiene el monto cargado en el período"""
+        """Obtiene el monto cargado en el período (en litros y valor monetario)"""
         domain = [
             ('card_id', '=', card.id),
             ('date', '>=', date_from),
@@ -69,34 +89,35 @@ class FuelCardBalanceReportWizard(models.TransientModel):
         ]
         
         loads = self.env['fuel.card.load'].search(domain)
-        load_amount = sum(loads.mapped('amount'))
+        load_liters = sum(loads.mapped('amount'))
+        # Calcular el valor monetario sumando el valor de cada carga individualmente
+        load_value = sum(load.amount * load.carrier_id.current_price for load in loads)
         
-        # Calcular valor monetario
-        price = card.carrier_id.current_price if card.carrier_id else 0
-        load_value = load_amount * price
-        
-        return load_amount, load_value
+        return load_liters, load_value
     
     def _get_consumption_amount(self, card, date_from, date_to):
-        """Obtiene el monto consumido en el período"""
+        """Obtiene el monto consumido en el período (en litros y valor monetario)"""
         domain = [
-            ('card_id', '=', card.id),
+            ('card_main_id', '=', card.id), # Usar card_main_id para el modelo de consumo
             ('date', '>=', date_from),
             ('date', '<=', date_to),
-            ('state', '=', 'confirmed')
+            ('state', '=', 'done') # Usar estado 'done' para consumos confirmados
         ]
         
-        tickets = self.env['fuel.ticket'].search(domain)
-        consumption_amount = sum(tickets.mapped('amount'))
+        consumptions = self.env['fleet.vehicle.log.fuel'].search(domain) # Usar el modelo correcto
+        consumption_liters = sum(consumptions.mapped('liter')) # Litros consumidos
+        consumption_value = sum(consumptions.mapped('amount')) # Valor monetario consumido
         
-        # Calcular valor monetario
-        price = card.carrier_id.current_price if card.carrier_id else 0
-        consumption_value = consumption_amount * price
-        
-        return consumption_amount, consumption_value
+        return consumption_liters, consumption_value
     
     def _get_adjustment_amount(self, card, date_from, date_to):
-        """Obtiene el monto de ajustes y transferencias en el período"""
+        """Obtiene el monto de ajustes y transferencias en el período (en litros y valor monetario)"""
+        total_liters = 0.0
+        total_value = 0.0
+        
+        # Obtener el precio actual del portador principal de la tarjeta para conversiones
+        card_price = card.carrier_id.current_price if card.carrier_id else 0.0
+
         # Ajustes
         adjustment_domain = [
             ('card_id', '=', card.id),
@@ -106,8 +127,12 @@ class FuelCardBalanceReportWizard(models.TransientModel):
         ]
         
         adjustments = self.env['fuel.balance.adjustment'].search(adjustment_domain)
-        adjustment_amount = sum(adjustments.mapped('amount'))
-        
+        for adj in adjustments:
+            adj_value = adj.amount if adj.adjustment_type == 'increase' else -adj.amount
+            total_value += adj_value
+            if card_price > 0:
+                total_liters += adj_value / card_price
+
         # Transferencias entrantes
         transfers_in = self.env['fuel.balance.transfer'].search([
             ('target_card_id', '=', card.id),
@@ -115,6 +140,10 @@ class FuelCardBalanceReportWizard(models.TransientModel):
             ('date', '<=', date_to),
             ('state', '=', 'confirmed')
         ])
+        for transfer in transfers_in:
+            total_value += transfer.amount
+            if card_price > 0:
+                total_liters += transfer.amount / card_price
         
         # Transferencias salientes
         transfers_out = self.env['fuel.balance.transfer'].search([
@@ -123,22 +152,17 @@ class FuelCardBalanceReportWizard(models.TransientModel):
             ('date', '<=', date_to),
             ('state', '=', 'confirmed')
         ])
+        for transfer in transfers_out:
+            total_value -= transfer.amount
+            if card_price > 0:
+                total_liters -= transfer.amount / card_price
         
-        transfer_amount = sum(transfers_in.mapped('amount')) - sum(transfers_out.mapped('amount'))
-        
-        # Total de ajustes y transferencias
-        total_adjustment = adjustment_amount + transfer_amount
-        
-        # Calcular valor monetario
-        price = card.carrier_id.current_price if card.carrier_id else 0
-        total_adjustment_value = total_adjustment * price
-        
-        return total_adjustment, total_adjustment_value
+        return total_liters, total_value
     
-    def _get_final_balance(self, initial_balance, loaded_amount, consumption_amount, adjustment_amount):
-        """Calcula el saldo final"""
-        final_balance = initial_balance + loaded_amount - consumption_amount + adjustment_amount
-        return final_balance
+    def _get_final_balance(self, initial_liters, loaded_liters, consumption_liters, adjustment_liters):
+        """Calcula el saldo final en litros"""
+        final_liters = initial_liters + loaded_liters - consumption_liters + adjustment_liters
+        return final_liters
     
     def _prepare_report_data(self):
         """Prepara los datos para el informe"""
@@ -158,7 +182,7 @@ class FuelCardBalanceReportWizard(models.TransientModel):
         # Agrupar tarjetas por portador
         cards_by_carrier = {}
         for card in cards:
-            carrier = card.carrier_id
+            carrier = card.carrier_id # Usar el portador principal de la tarjeta para agrupar
             if carrier not in cards_by_carrier:
                 cards_by_carrier[carrier] = []
             cards_by_carrier[carrier].append(card)
@@ -170,58 +194,58 @@ class FuelCardBalanceReportWizard(models.TransientModel):
         for carrier, carrier_cards in cards_by_carrier.items():
             carrier_name = carrier.name if carrier else _('Sin Portador')
             carrier_total = {
-                'initial_balance': 0,
-                'initial_value': 0,
-                'loaded_amount': 0,
-                'loaded_value': 0,
-                'consumption_amount': 0,
-                'consumption_value': 0,
-                'adjustment_amount': 0,
-                'adjustment_value': 0,
-                'final_balance': 0,
-                'final_value': 0,
+                'initial_balance': 0.0, # Litros
+                'initial_value': 0.0,
+                'loaded_amount': 0.0, # Litros
+                'loaded_value': 0.0,
+                'consumption_amount': 0.0, # Litros
+                'consumption_value': 0.0,
+                'adjustment_amount': 0.0, # Litros
+                'adjustment_value': 0.0,
+                'final_balance': 0.0, # Litros
+                'final_value': 0.0,
             }
             
             for card in carrier_cards:
-                # Obtener datos para cada tarjeta
-                initial_balance, initial_value = self._get_initial_balance(card, self.date_from)
-                loaded_amount, loaded_value = self._get_loaded_amount(card, self.date_from, self.date_to)
-                consumption_amount, consumption_value = self._get_consumption_amount(card, self.date_from, self.date_to)
-                adjustment_amount, adjustment_value = self._get_adjustment_amount(card, self.date_from, self.date_to)
+                # Obtener datos para cada tarjeta (litros y valor monetario)
+                initial_liters, initial_value = self._get_initial_balance(card, self.date_from)
+                loaded_liters, loaded_value = self._get_loaded_amount(card, self.date_from, self.date_to)
+                consumption_liters, consumption_value = self._get_consumption_amount(card, self.date_from, self.date_to)
+                adjustment_liters, adjustment_value = self._get_adjustment_amount(card, self.date_from, self.date_to)
                 
-                # Calcular saldo final
-                final_balance = self._get_final_balance(initial_balance, loaded_amount, consumption_amount, adjustment_amount)
-                price = carrier.current_price if carrier else 0
-                final_value = final_balance * price
-                
+                # Calcular saldo final en litros
+                final_liters = self._get_final_balance(initial_liters, loaded_liters, consumption_liters, adjustment_liters)
+                price = carrier.current_price if carrier else 0.0
+                final_value = final_liters * price # Calcular valor final basado en litros finales y precio actual del portador
+
                 # Añadir datos de la tarjeta como valores planos
                 card_data = {
                     'card_name': card.name,
-                    'card_number': card.number if hasattr(card, 'number') else '',
+                    'card_number': card.name, # Usar name para number, ya que es el campo de 16 dígitos
                     'carrier_name': carrier_name,
-                    'initial_balance': initial_balance,
+                    'initial_balance': initial_liters,
                     'initial_value': initial_value,
-                    'loaded_amount': loaded_amount,
+                    'loaded_amount': loaded_liters,
                     'loaded_value': loaded_value,
-                    'consumption_amount': consumption_amount,
+                    'consumption_amount': consumption_liters,
                     'consumption_value': consumption_value,
-                    'adjustment_amount': adjustment_amount,
+                    'adjustment_amount': adjustment_liters,
                     'adjustment_value': adjustment_value,
-                    'final_balance': final_balance,
+                    'final_balance': final_liters,
                     'final_value': final_value,
                 }
                 report_data.append(card_data)
                 
                 # Actualizar totales del portador
-                carrier_total['initial_balance'] += initial_balance
+                carrier_total['initial_balance'] += initial_liters
                 carrier_total['initial_value'] += initial_value
-                carrier_total['loaded_amount'] += loaded_amount
+                carrier_total['loaded_amount'] += loaded_liters
                 carrier_total['loaded_value'] += loaded_value
-                carrier_total['consumption_amount'] += consumption_amount
+                carrier_total['consumption_amount'] += consumption_liters
                 carrier_total['consumption_value'] += consumption_value
-                carrier_total['adjustment_amount'] += adjustment_amount
+                carrier_total['adjustment_amount'] += adjustment_liters
                 carrier_total['adjustment_value'] += adjustment_value
-                carrier_total['final_balance'] += final_balance
+                carrier_total['final_balance'] += final_liters
                 carrier_total['final_value'] += final_value
             
             carrier_totals[carrier_name] = carrier_total
@@ -301,3 +325,4 @@ class FuelCardBalanceReportWizard(models.TransientModel):
                 'sticky': False,
             }
         }
+

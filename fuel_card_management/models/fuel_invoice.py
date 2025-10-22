@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-import re
 
 class FuelInvoice(models.Model):
     _name = 'fuel.invoice'
@@ -10,12 +9,9 @@ class FuelInvoice(models.Model):
     _order = 'date desc, id desc'
     
     name = fields.Char(string='Referencia', required=True, copy=False, default=lambda self: _('Nuevo'), tracking=True)
-    invoice_number = fields.Char(string='Número de Factura', required=True, tracking=True, size=9)
+    invoice_number = fields.Char(string='Número de Factura', required=True, tracking=True)
     date = fields.Date(string='Fecha', default=fields.Date.context_today, required=True, tracking=True)
     
-    supplier_id = fields.Many2one('fuel.supplier', string='Proveedor', required=True, tracking=True)
-    
-   
     carrier_id = fields.Many2one('fuel.carrier', string='Portador de Combustible', required=True, tracking=True)
     
     amount = fields.Float(string='Cantidad (L)', required=True, tracking=True)
@@ -79,30 +75,6 @@ class FuelInvoice(models.Model):
             if not invoice.carrier_id:
                 raise ValidationError(_("Debe seleccionar un portador de combustible."))
     
-    @api.constrains('invoice_number')
-    def _check_invoice_number(self):
-        """Valida que el número de factura tenga exactamente 9 dígitos"""
-        for invoice in self:
-            if not invoice.invoice_number:
-                raise ValidationError(_("El número de factura es obligatorio."))
-            
-            # Verificar que solo contenga dígitos
-            if not re.match(r'^\d+$', invoice.invoice_number):
-                raise ValidationError(_("El número de factura debe contener solo dígitos numéricos."))
-            
-            # Verificar que tenga exactamente 9 dígitos
-            if len(invoice.invoice_number) != 9:
-                raise ValidationError(_("El número de factura debe tener exactamente 9 dígitos. Actualmente tiene %d dígitos.") % len(invoice.invoice_number))
-            
-            # Verificar que sea único (excluyendo el registro actual)
-            domain = [('invoice_number', '=', invoice.invoice_number)]
-            if invoice.id:
-                domain.append(('id', '!=', invoice.id))
-            
-            existing = self.search(domain, limit=1)
-            if existing:
-                raise ValidationError(_("Ya existe una factura con el número %s. El número de factura debe ser único.") % invoice.invoice_number)
-    
     def action_confirm(self):
         for invoice in self:
             if invoice.state == 'draft':
@@ -112,9 +84,7 @@ class FuelInvoice(models.Model):
                 invoice.state = 'confirmed'
                 
                 # Crear automáticamente un registro de combustible no asignado
-               
                 self.env['fuel.unassigned'].with_context(from_invoice_confirmation=True).create({
-                    'supplier_id': invoice.supplier_id.id,
                     'invoice_id': invoice.id,
                     'carrier_id': invoice.carrier_id.id,
                     'date': invoice.date,

@@ -1,45 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Acción para el informe de consumo de combustible -->
     <record id="action_fuel_consumption_report" model="ir.actions.act_window">
         <field name="name">Informe de Consumo de Combustible</field>
-        <field name="res_model">fuel.ticket</field>
+        <field name="res_model">fleet.vehicle.log.fuel</field>
         <field name="view_mode">pivot,graph,tree,form</field>
-        <field name="context">{'search_default_confirmed': 1}</field>
+        <field name="context">{'search_default_done': 1}</field>
+        <field name="domain">[('state', '=', 'done')]</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No hay datos de consumo de combustible disponibles
             </p>
             <p>
-                Cree tickets de combustible para ver el informe de consumo.
+                Cree registros de combustible para ver el informe de consumo.
             </p>
         </field>
     </record>
 
-    <record id="view_fuel_ticket_pivot" model="ir.ui.view">
-        <field name="name">fuel.ticket.pivot</field>
-        <field name="model">fuel.ticket</field>
+    <!-- Vista pivot para análisis de consumo -->
+    <record id="view_fleet_vehicle_log_fuel_pivot_report" model="ir.ui.view">
+        <field name="name">fleet.vehicle.log.fuel.pivot.report</field>
+        <field name="model">fleet.vehicle.log.fuel</field>
         <field name="arch" type="xml">
             <pivot string="Consumo de Combustible" display_quantity="true">
                 <field name="date" interval="month" type="row"/>
                 <field name="vehicle_id" type="row"/>
-                <field name="driver_id" type="row"/>
-                <field name="liters" type="measure"/>
+                <field name="card_main_id" type="row"/>
+                <field name="liter" type="measure"/>
+                <field name="amount" type="measure"/>
+                <field name="price_per_liter" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vista gráfica para análisis de consumo -->
+    <record id="view_fleet_vehicle_log_fuel_graph_report" model="ir.ui.view">
+        <field name="name">fleet.vehicle.log.fuel.graph.report</field>
+        <field name="model">fleet.vehicle.log.fuel</field>
+        <field name="arch" type="xml">
+            <graph string="Consumo de Combustible" type="bar">
+                <field name="date" interval="month"/>
+                <field name="liter" type="measure"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vista árbol específica para reportes -->
+    <record id="view_fleet_vehicle_log_fuel_tree_report" model="ir.ui.view">
+        <field name="name">fleet.vehicle.log.fuel.tree.report</field>
+        <field name="model">fleet.vehicle.log.fuel</field>
+        <field name="arch" type="xml">
+            <tree string="Registros de Combustible" 
+                  decoration-success="state == 'done'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="date"/>
+                <field name="vehicle_id"/>
+                <field name="card_main_id" string="Tarjeta"/>
+                <field name="ticket_number" string="Ticket"/>
+                <field name="liter" sum="Total Litros"/>
+                <field name="price_per_liter"/>
+                <field name="amount" sum="Total Monto" widget="monetary"/>
+                <field name="state" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Menú para acceder al reporte -->
+    <menuitem id="menu_fuel_consumption_report"
+              name="Informe de Consumo"
+              parent="fleet.menu_fleet_reporting"
+              action="action_fuel_consumption_report"
+              sequence="10"/>
+
+    <!-- Acción adicional para análisis por tarjeta -->
+    <record id="action_fuel_consumption_by_card" model="ir.actions.act_window">
+        <field name="name">Consumo por Tarjeta</field>
+        <field name="res_model">fleet.vehicle.log.fuel</field>
+        <field name="view_mode">pivot,graph,tree</field>
+        <field name="context">{'search_default_done': 1, 'group_by': ['card_main_id']}</field>
+        <field name="domain">[('state', '=', 'done'), ('card_main_id', '!=', False)]</field>
+    </record>
+
+    <!-- Vista pivot específica para análisis por tarjeta -->
+    <record id="view_fuel_consumption_by_card_pivot" model="ir.ui.view">
+        <field name="name">fuel.consumption.by.card.pivot</field>
+        <field name="model">fleet.vehicle.log.fuel</field>
+        <field name="arch" type="xml">
+            <pivot string="Consumo por Tarjeta">
+                <field name="card_main_id" type="row"/>
+                <field name="vehicle_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="liter" type="measure"/>
                 <field name="amount" type="measure"/>
             </pivot>
         </field>
     </record>
 
-    <record id="view_fuel_ticket_graph" model="ir.ui.view">
-        <field name="name">fuel.ticket.graph</field>
-        <field name="model">fuel.ticket</field>
-        <field name="arch" type="xml">
-            <graph string="Consumo de Combustible" type="bar">
-                <field name="date" interval="month"/>
-                <field name="liters" type="measure"/>
-            </graph>
-        </field>
-    </record>
-
+    <!-- Menú para análisis por tarjeta -->
+    <menuitem id="menu_fuel_consumption_by_card"
+              name="Consumo por Tarjeta"
+              parent="fleet.menu_fleet_reporting"
+              action="action_fuel_consumption_by_card"
+              sequence="11"/>
 
 </odoo>
 

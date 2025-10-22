@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Acción para planes de combustible - CORREGIDA -->
+    <!-- Acción para planes de combustible -->
     <record id="action_fuel_plan" model="ir.actions.act_window">
         <field name="name">Planes de Combustible</field>
         <field name="res_model">fuel.plan</field>
         <field name="view_mode">tree,form</field>
-        <field name="view_id" ref="view_fuel_plan_tree"/>
         <field name="search_view_id" ref="view_fuel_plan_search"/>
-        <field name="context">{}</field>
-        <field name="domain">[]</field>
-        <field name="limit">80</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Crear un nuevo plan de combustible
@@ -19,13 +15,5 @@
             </p>
         </field>
     </record>
-
-    <!-- Acción específica para el formulario de plan de combustible -->
-    <record id="action_fuel_plan_form" model="ir.actions.act_window">
-        <field name="name">Plan de Combustible</field>
-        <field name="res_model">fuel.plan</field>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="view_fuel_plan_form"/>
-        <field name="target">current</field>
-    </record>
 </odoo>
+

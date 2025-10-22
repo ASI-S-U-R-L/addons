@@ -20,7 +20,9 @@ class FleetVehicle(models.Model):
     # Relaciones con el módulo de tarjetas de combustible
     fuel_card_ids = fields.One2many('fuel.magnetic.card', 'vehicle_id', string='Tarjetas de Combustible')
     fuel_card_count = fields.Integer(compute='_compute_fuel_card_count', string='Número de Tarjetas')
-    fuel_consumption_ids = fields.One2many('fuel.ticket', 'vehicle_id', string='Consumo de Combustible')
+    
+    # CORREGIDO: Cambiar fuel.ticket por fleet.vehicle.log.fuel
+    fuel_consumption_ids = fields.One2many('fleet.vehicle.log.fuel', 'vehicle_id', string='Consumo de Combustible')
     total_fuel_consumed = fields.Float(compute='_compute_total_fuel_consumed', string='Total Combustible Consumido (L)')
     
     @api.depends('fuel_card_ids')
@@ -31,7 +33,8 @@ class FleetVehicle(models.Model):
     @api.depends('fuel_consumption_ids')
     def _compute_total_fuel_consumed(self):
         for vehicle in self:
-            vehicle.total_fuel_consumed = sum(vehicle.fuel_consumption_ids.filtered(lambda t: t.state == 'confirmed').mapped('liters'))
+            # CORREGIDO: Cambiar 'confirmed' por 'done' y 'liters' por 'liter'
+            vehicle.total_fuel_consumed = sum(vehicle.fuel_consumption_ids.filtered(lambda t: t.state == 'done').mapped('liter'))
     
     def action_view_fuel_cards(self):
         self.ensure_one()
@@ -49,7 +52,7 @@ class FleetVehicle(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Consumo de Combustible',
-            'res_model': 'fuel.ticket',
+            'res_model': 'fleet.vehicle.log.fuel',  # CORREGIDO: Cambiar fuel.ticket por fleet.vehicle.log.fuel
             'view_mode': 'tree,form',
             'domain': [('vehicle_id', '=', self.id)],
             'context': {'default_vehicle_id': self.id}
@@ -75,7 +78,7 @@ class FleetVehicle(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Registrar Consumo de Combustible',
-            'res_model': 'fuel.ticket',
+            'res_model': 'fleet.vehicle.log.fuel',  # CORREGIDO: Cambiar fuel.ticket por fleet.vehicle.log.fuel
             'view_mode': 'form',
             'target': 'new',
             'context': {
@@ -89,17 +92,17 @@ class FleetVehicle(models.Model):
         """Calcular eficiencia de combustible basada en tickets recientes"""
         self.ensure_one()
         
-        # Obtener los últimos 5 tickets confirmados
-        recent_tickets = self.env['fuel.ticket'].search([
+        # CORREGIDO: Cambiar fuel.ticket por fleet.vehicle.log.fuel
+        recent_tickets = self.env['fleet.vehicle.log.fuel'].search([
             ('vehicle_id', '=', self.id),
-            ('state', '=', 'confirmed')
+            ('state', '=', 'done')  # CORREGIDO: Cambiar 'confirmed' por 'done'
         ], order='date desc, id desc', limit=5)
         
         if len(recent_tickets) < 2:
             return 0.0
         
-        # Calcular consumo promedio
-        total_liters = sum(recent_tickets.mapped('liters'))
+        # CORREGIDO: Cambiar 'liters' por 'liter'
+        total_liters = sum(recent_tickets.mapped('liter'))
         
         # Obtener odómetros inicial y final
         sorted_tickets = recent_tickets.sorted(key=lambda r: r.odometer)

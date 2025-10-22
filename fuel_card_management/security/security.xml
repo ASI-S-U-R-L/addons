@@ -1,37 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="module_fuel_card_management_category" model="ir.module.category">
-        <field name="name">Gestión de Tarjetas de Combustible</field>
-        <field name="description">Categoría para la gestión de tarjetas de combustible</field>
-        <field name="sequence">20</field>
-    </record>
+<record id="module_fuel_card_management_category" model="ir.module.category">
+    <field name="name">Gestión de Tarjetas de Combustible</field>
+    <field name="description">Categoría para la gestión de tarjetas de combustible</field>
+    <field name="sequence">20</field>
+</record>
 
-    <!-- Administrador - Acceso completo -->
-    <record id="group_fuel_card_admin" model="res.groups">
-        <field name="name">Administrador</field>
-        <field name="category_id" ref="module_fuel_card_management_category"/>
-        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
-    </record>
+<!-- Director - Solo lectura + permisos completos en planes -->
+<record id="group_fuel_card_director" model="res.groups">
+    <field name="name">Director</field>
+    <field name="category_id" ref="module_fuel_card_management_category"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+</record>
 
-    <!-- Director - Solo lectura + permisos completos en planes -->
-    <record id="group_fuel_card_director" model="res.groups">
-        <field name="name">Director</field>
-        <field name="category_id" ref="module_fuel_card_management_category"/>
-        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-    </record>
+<!-- Logístico - Permisos específicos -->
+<record id="group_fuel_card_logistic" model="res.groups">
+    <field name="name">Logístico</field>
+    <field name="category_id" ref="module_fuel_card_management_category"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+</record>
 
-    <!-- Logístico - Permisos específicos -->
-    <record id="group_fuel_card_logistic" model="res.groups">
-        <field name="name">Logístico</field>
-        <field name="category_id" ref="module_fuel_card_management_category"/>
-        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-    </record>
+<!-- Cajero - Solo entrega/devolución -->
+<record id="group_fuel_card_cashier" model="res.groups">
+    <field name="name">Cajero</field>
+    <field name="category_id" ref="module_fuel_card_management_category"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+</record>
 
-    <!-- Cajero - Solo entrega/devolución -->
-    <record id="group_fuel_card_cashier" model="res.groups">
-        <field name="name">Cajero</field>
-        <field name="category_id" ref="module_fuel_card_management_category"/>
-        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-    </record>
+<!-- Administrador - Acceso completo -->
+<record id="group_fuel_card_admin" model="res.groups">
+    <field name="name">Administrador</field>
+    <field name="category_id" ref="module_fuel_card_management_category"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user')), (4, ref('fuel_card_management.group_fuel_card_director')), (4, ref('fuel_card_management.group_fuel_card_logistic')), (4, ref('fuel_card_management.group_fuel_card_cashier'))]"/>
+    <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+</record>
 </odoo>
+

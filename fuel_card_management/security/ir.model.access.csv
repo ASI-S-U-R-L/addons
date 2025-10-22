@@ -1,31 +1,11 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_fuel_card_holder_admin,fuel.card.holder.admin,model_fuel_card_holder,group_fuel_card_admin,1,1,1,1
-access_fuel_card_holder_director,fuel.card.holder.director,model_fuel_card_holder,group_fuel_card_director,1,0,0,0
-access_fuel_card_holder_logistic,fuel.card.holder.logistic,model_fuel_card_holder,group_fuel_card_logistic,1,1,1,1
-access_fuel_card_holder_cashier,fuel.card.holder.cashier,model_fuel_card_holder,group_fuel_card_cashier,0,0,0,0
-
-access_fuel_supplier_admin,fuel.supplier.admin,model_fuel_supplier,group_fuel_card_admin,1,1,1,1
-access_fuel_supplier_director,fuel.supplier.director,model_fuel_supplier,group_fuel_card_director,1,0,0,0
-access_fuel_supplier_logistic,fuel.supplier.logistic,model_fuel_supplier,group_fuel_card_logistic,1,1,1,1
-access_fuel_supplier_cashier,fuel.supplier.cashier,model_fuel_supplier,group_fuel_card_cashier,0,0,0,0
-
-access_fuel_power_generator_admin,fuel.power.generator.admin,model_fuel_power_generator,group_fuel_card_admin,1,1,1,1
-access_fuel_power_generator_director,fuel.power.generator.director,model_fuel_power_generator,group_fuel_card_director,1,0,0,0
-access_fuel_power_generator_logistic,fuel.power.generator.logistic,model_fuel_power_generator,group_fuel_card_logistic,1,1,1,0
-access_fuel_power_generator_cashier,fuel.power.generator.cashier,model_fuel_power_generator,group_fuel_card_cashier,0,0,0,0
-
-access_fuel_driver_admin,fuel.driver.admin,model_fuel_driver,group_fuel_card_admin,1,1,1,1
-access_fuel_driver_director,fuel.driver.director,model_fuel_driver,group_fuel_card_director,1,0,0,0
-access_fuel_driver_logistic,fuel.driver.logistic,model_fuel_driver,group_fuel_card_logistic,1,1,1,0
-access_fuel_driver_cashier,fuel.driver.cashier,model_fuel_driver,group_fuel_card_cashier,0,0,0,0
-
 access_fuel_magnetic_card_admin,fuel.magnetic.card.admin,model_fuel_magnetic_card,group_fuel_card_admin,1,1,1,1
-access_fuel_magnetic_card_director,fuel.magnetic.card.director,model_fuel_magnetic_card,group_fuel_card_director,1,1,0,0
+access_fuel_magnetic_card_director,fuel.magnetic.card.director,model_fuel_magnetic_card,group_fuel_card_director,1,0,0,0
 access_fuel_magnetic_card_logistic,fuel.magnetic.card.logistic,model_fuel_magnetic_card,group_fuel_card_logistic,1,1,1,1
-access_fuel_magnetic_card_cashier,fuel.magnetic.card.cashier,model_fuel_magnetic_card,group_fuel_card_cashier,0,0,0,0
+access_fuel_magnetic_card_cashier,fuel.magnetic.card.cashier,model_fuel_magnetic_card,group_fuel_card_cashier,1,1,0,0
 
 access_fuel_unassigned_admin,fuel.unassigned.admin,model_fuel_unassigned,group_fuel_card_admin,1,1,1,1
-access_fuel_unassigned_director,fuel.unassigned.director,model_fuel_unassigned,group_fuel_card_director,1,1,0,0
+access_fuel_unassigned_director,fuel.unassigned.director,model_fuel_unassigned,group_fuel_card_director,1,0,0,0
 access_fuel_unassigned_logistic,fuel.unassigned.logistic,model_fuel_unassigned,group_fuel_card_logistic,1,1,1,0
 access_fuel_unassigned_cashier,fuel.unassigned.cashier,model_fuel_unassigned,group_fuel_card_cashier,0,0,0,0
 
@@ -35,7 +15,7 @@ access_fuel_invoice_logistic,fuel.invoice.logistic,model_fuel_invoice,group_fuel
 access_fuel_invoice_cashier,fuel.invoice.cashier,model_fuel_invoice,group_fuel_card_cashier,0,0,0,0
 
 access_fuel_card_load_admin,fuel.card.load.admin,model_fuel_card_load,group_fuel_card_admin,1,1,1,1
-access_fuel_card_load_director,fuel.card.load.director,model_fuel_card_load,group_fuel_card_director,1,1,1,0
+access_fuel_card_load_director,fuel.card.load.director,model_fuel_card_load,group_fuel_card_director,1,0,0,0
 access_fuel_card_load_logistic,fuel.card.load.logistic,model_fuel_card_load,group_fuel_card_logistic,1,1,1,1
 access_fuel_card_load_cashier,fuel.card.load.cashier,model_fuel_card_load,group_fuel_card_cashier,0,0,0,0
 
@@ -43,11 +23,6 @@ access_fuel_card_delivery_admin,fuel.card.delivery.admin,model_fuel_card_deliver
 access_fuel_card_delivery_director,fuel.card.delivery.director,model_fuel_card_delivery,group_fuel_card_director,1,0,0,0
 access_fuel_card_delivery_logistic,fuel.card.delivery.logistic,model_fuel_card_delivery,group_fuel_card_logistic,1,0,0,0
 access_fuel_card_delivery_cashier,fuel.card.delivery.cashier,model_fuel_card_delivery,group_fuel_card_cashier,1,1,1,1
-
-access_fuel_ticket_admin,fuel.ticket.admin,model_fuel_ticket,group_fuel_card_admin,1,1,1,1
-access_fuel_ticket_director,fuel.ticket.director,model_fuel_ticket,group_fuel_card_director,1,0,0,0
-access_fuel_ticket_logistic,fuel.ticket.logistic,model_fuel_ticket,group_fuel_card_logistic,1,1,1,0
-access_fuel_ticket_cashier,fuel.ticket.cashier,model_fuel_ticket,group_fuel_card_cashier,0,0,0,0
 
 access_fuel_balance_adjustment_admin,fuel.balance.adjustment.admin,model_fuel_balance_adjustment,group_fuel_card_admin,1,1,1,1
 access_fuel_balance_adjustment_director,fuel.balance.adjustment.director,model_fuel_balance_adjustment,group_fuel_card_director,1,0,0,0
@@ -65,14 +40,19 @@ access_fuel_plan_logistic,fuel.plan.logistic,model_fuel_plan,group_fuel_card_log
 access_fuel_plan_cashier,fuel.plan.cashier,model_fuel_plan,group_fuel_card_cashier,0,0,0,0
 
 access_fuel_plan_distribution_admin,fuel.plan.distribution.admin,model_fuel_plan_distribution,group_fuel_card_admin,1,1,1,1
-access_fuel_plan_distribution_director,fuel.plan.distribution.director,model_fuel_plan_distribution,group_fuel_card_director,1,1,1,1
+access_fuel_plan_distribution_director,fuel.plan.distribution.director,model_fuel_plan_distribution,group_fuel_card_director,1,0,0,0
 access_fuel_plan_distribution_logistic,fuel.plan.distribution.logistic,model_fuel_plan_distribution,group_fuel_card_logistic,1,1,1,0
 access_fuel_plan_distribution_cashier,fuel.plan.distribution.cashier,model_fuel_plan_distribution,group_fuel_card_cashier,0,0,0,0
+
+access_fuel_unassigned_usage_admin,fuel.unassigned.usage.admin,model_fuel_unassigned_usage,group_fuel_card_admin,1,1,1,1
+access_fuel_unassigned_usage_director,fuel.unassigned.usage.director,model_fuel_unassigned_usage,group_fuel_card_director,1,0,0,0
+access_fuel_unassigned_usage_logistic,fuel.unassigned.usage.logistic,model_fuel_unassigned_usage,group_fuel_card_logistic,1,1,1,0
+access_fuel_unassigned_usage_cashier,fuel.unassigned.usage.cashier,model_fuel_unassigned_usage,group_fuel_card_cashier,0,0,0,0
 
 access_fuel_carrier_admin,fuel.carrier.admin,model_fuel_carrier,group_fuel_card_admin,1,1,1,1
 access_fuel_carrier_director,fuel.carrier.director,model_fuel_carrier,group_fuel_card_director,1,0,0,0
 access_fuel_carrier_logistic,fuel.carrier.logistic,model_fuel_carrier,group_fuel_card_logistic,1,1,1,0
-access_fuel_carrier_cashier,fuel.carrier.cashier,model_fuel_carrier,group_fuel_card_cashier,0,0,0,0
+access_fuel_carrier_cashier,fuel.carrier.cashier,model_fuel_carrier,group_fuel_card_cashier,1,0,0,0
 
 access_fuel_carrier_price_history_admin,fuel.carrier.price.history.admin,model_fuel_carrier_price_history,group_fuel_card_admin,1,1,1,1
 access_fuel_carrier_price_history_director,fuel.carrier.price.history.director,model_fuel_carrier_price_history,group_fuel_card_director,1,0,0,0

@@ -1,93 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista de formulario para cargas de tarjetas -->
-    <record id="view_fuel_card_load_form" model="ir.ui.view">
-        <field name="name">fuel.card.load.form</field>
-        <field name="model">fuel.card.load</field>
-        <field name="arch" type="xml">
-            <form string="Carga de Tarjeta">
-                <header>
-                    <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                    <button name="action_cancel" string="Cancelar" type="object" attrs="{'invisible': [('state', '=', 'cancelled')]}"/>
-                    <button name="action_reset_to_draft" string="Volver a Borrador" type="object" attrs="{'invisible': [('state', '!=', 'cancelled')]}"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
-                </header>
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
-                    </div>
-                    <group>
-                        <group>
-                            <field name="date"/>
-                            <field name="card_id"/>
-                            <field name="carrier_id"/>
-                            <field name="initial_balance"/>
-                        </group>
-                        <group>
-                            <field name="unassigned_id" domain="[('state', '=', 'confirmed'), ('carrier_id', '=', carrier_id)]" options="{'no_create': True}"/>
-                            <field name="amount"/>
-                            <field name="final_balance"/>
-                        </group>
-                    </group>
-                    <notebook>
-                        <page string="Notas">
-                            <field name="notes"/>
-                        </page>
-                    </notebook>
-                </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids" widget="mail_followers"/>
-                    <field name="activity_ids" widget="mail_activity"/>
-                    <field name="message_ids" widget="mail_thread"/>
-                </div>
-            </form>
-        </field>
-    </record>
+  <!-- Vista de formulario para cargas de tarjetas -->
+  <record id="view_fuel_card_load_form" model="ir.ui.view">
+      <field name="name">fuel.card.load.form</field>
+      <field name="model">fuel.card.load</field>
+      <field name="arch" type="xml">
+          <form string="Carga de Tarjeta">
+              <header>
+                  <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                  <button name="action_cancel" string="Cancelar" type="object" attrs="{'invisible': [('state', '=', 'cancelled')]}"/>
+                  <button name="action_reset_to_draft" string="Volver a Borrador" type="object" attrs="{'invisible': [('state', '!=', 'cancelled')]}"/>
+                  <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
+              </header>
+              <sheet>
+                  <div class="oe_title">
+                      <h1>
+                          <field name="name" readonly="1"/>
+                      </h1>
+                  </div>
+                  <group>
+                      <group>
+                          <field name="date"/>
+                          <field name="card_id"/>
+                          <!-- NUEVO: Campo para seleccionar portador específico -->
+                          <field name="carrier_id" domain="[('id', 'in', carrier_ids)]" options="{'no_create': True}" required="1"/>
+                          <field name="initial_balance"/>
+                          <!-- Campo invisible para obtener portadores disponibles -->
+                          <field name="carrier_ids" invisible="1"/>
+                      </group>
+                      <group>
+                          <!-- ELIMINADO: unassigned_id field -->
+                          <field name="amount"/>
+                          <field name="final_balance"/>
+                      </group>
+                  </group>
+                  <notebook>
+                      <page string="Notas">
+                          <field name="notes"/>
+                      </page>
+                      <!-- NUEVA: Página para mostrar información de portadores disponibles -->
+                      <page string="Portadores Disponibles" attrs="{'invisible': [('card_id', '=', False)]}">
+                          <group>
+                              <field name="carrier_ids" widget="many2many_tags" readonly="1"/>
+                          </group>
+                      </page>
+                  </notebook>
+              </sheet>
+              <div class="oe_chatter">
+                  <field name="message_follower_ids" widget="mail_followers"/>
+                  <field name="activity_ids" widget="mail_activity"/>
+                  <field name="message_ids" widget="mail_thread"/>
+              </div>
+          </form>
+      </field>
+  </record>
 
-    <!-- Vista de árbol para cargas de tarjetas -->
-    <record id="view_fuel_card_load_tree" model="ir.ui.view">
-        <field name="name">fuel.card.load.tree</field>
-        <field name="model">fuel.card.load</field>
-        <field name="arch" type="xml">
-            <tree string="Cargas de Tarjeta" decoration-success="state == 'confirmed'" decoration-muted="state == 'cancelled'" decoration-info="state == 'draft'">
-                <field name="name"/>
-                <field name="date"/>
-                <field name="card_id"/>
-                <field name="carrier_id"/>
-                <field name="initial_balance"/>
-                <field name="amount"/>
-                <field name="final_balance"/>
-                <field name="unassigned_id"/>
-                <field name="state"/>
-            </tree>
-        </field>
-    </record>
+  <!-- Vista de árbol para cargas de tarjetas -->
+  <record id="view_fuel_card_load_tree" model="ir.ui.view">
+      <field name="name">fuel.card.load.tree</field>
+      <field name="model">fuel.card.load</field>
+      <field name="arch" type="xml">
+          <tree string="Cargas de Tarjeta" decoration-success="state == 'confirmed'" decoration-muted="state == 'cancelled'" decoration-info="state == 'draft'">
+              <field name="name"/>
+              <field name="date"/>
+              <field name="card_id"/>
+              <!-- MODIFICADO: Ahora carrier_id es un campo directo -->
+              <field name="carrier_id"/>
+              <field name="initial_balance"/>
+              <field name="amount"/>
+              <field name="final_balance"/>
+              <!-- ELIMINADO: unassigned_id field -->
+              <field name="state"/>
+          </tree>
+      </field>
+  </record>
 
-    <!-- Vista de búsqueda para cargas de tarjetas -->
-    <record id="view_fuel_card_load_search" model="ir.ui.view">
-        <field name="name">fuel.card.load.search</field>
-        <field name="model">fuel.card.load</field>
-        <field name="arch" type="xml">
-            <search string="Buscar Cargas de Tarjeta">
-                <field name="name"/>
-                <field name="card_id"/>
-                <field name="carrier_id"/>
-                <field name="unassigned_id"/>
-                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Confirmado" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
-                <group expand="0" string="Agrupar Por">
-                    <filter string="Estado" name="state" context="{'group_by': 'state'}"/>
-                    <filter string="Tarjeta" name="card_id" context="{'group_by': 'card_id'}"/>
-                    <filter string="Portador" name="carrier_id" context="{'group_by': 'carrier_id'}"/>
-                    <filter string="Fecha" name="date" context="{'group_by': 'date'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
+  <!-- Vista de búsqueda para cargas de tarjetas -->
+  <record id="view_fuel_card_load_search" model="ir.ui.view">
+      <field name="name">fuel.card.load.search</field>
+      <field name="model">fuel.card.load</field>
+      <field name="arch" type="xml">
+          <search string="Buscar Cargas de Tarjeta">
+              <field name="name"/>
+              <field name="card_id"/>
+              <!-- MODIFICADO: Ahora carrier_id es un campo directo -->
+              <field name="carrier_id"/>
+              <!-- ELIMINADO: unassigned_id field -->
+              <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
+              <filter string="Confirmado" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+              <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+              <group expand="0" string="Agrupar Por">
+                  <filter string="Estado" name="state" context="{'group_by': 'state'}"/>
+                  <filter string="Tarjeta" name="card_id" context="{'group_by': 'card_id'}"/>
+                  <!-- MODIFICADO: Ahora carrier_id es un campo directo -->
+                  <filter string="Portador" name="carrier_id" context="{'group_by': 'carrier_id'}"/>
+                  <filter string="Fecha" name="date" context="{'group_by': 'date'}"/>
+              </group>
+          </search>
+      </field>
+  </record>
 
-    
+  
 </odoo>
 

@@ -1,135 +1,178 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista de formulario para planes de combustible -->
-    <record id="view_fuel_plan_form" model="ir.ui.view">
-        <field name="name">fuel.plan.form</field>
-        <field name="model">fuel.plan</field>
-        <field name="arch" type="xml">
-            <form string="Plan de Combustible">
-                <header>
-                    <!-- CORREGIDO: Cambiado group_fuel_card_user por group_fuel_card_logistic -->
-                    <button name="action_generate_distribution" string="Generar Distribución" type="object" class="oe_highlight" 
-                            attrs="{'invisible': ['|', ('state', '!=', 'draft'), ('distribution_ids', '!=', [])]}" 
-                            groups="fuel_card_management.group_fuel_card_logistic,fuel_card_management.group_fuel_card_admin"/>
-                    
-                    <button name="action_send_for_approval" string="Enviar para Aprobación" type="object" class="oe_highlight" 
-                            attrs="{'invisible': ['|', ('state', '!=', 'draft'), ('distribution_ids', '=', [])]}" 
-                            groups="fuel_card_management.group_fuel_card_logistic,fuel_card_management.group_fuel_card_admin"/>
-                    
-                    <!-- CORREGIDO: Cambiado group_fuel_card_manager por group_fuel_card_director -->
-                    <button name="action_save_director_changes" string="Guardar Cambios" type="object" class="oe_highlight" 
-                            attrs="{'invisible': [('state', '!=', 'pending_approval')]}" 
-                            groups="fuel_card_management.group_fuel_card_director,fuel_card_management.group_fuel_card_admin"/>
-                    
-                    <button name="action_approve" string="Aprobar" type="object" class="oe_highlight" 
-                            attrs="{'invisible': [('state', '!=', 'pending_approval')]}" 
-                            groups="fuel_card_management.group_fuel_card_director,fuel_card_management.group_fuel_card_admin"/>
-                    
-                    <button name="action_reject" string="Rechazar" type="object" 
-                            attrs="{'invisible': [('state', '!=', 'pending_approval')]}" 
-                            groups="fuel_card_management.group_fuel_card_director,fuel_card_management.group_fuel_card_admin"/>
-                    
-                    <button name="action_reset_to_draft" string="Volver a Borrador" type="object" 
-                            attrs="{'invisible': [('state', 'not in', ['rejected', 'pending_approval'])]}" 
-                            groups="fuel_card_management.group_fuel_card_logistic,fuel_card_management.group_fuel_card_admin"/>
-                    
-                    <button name="action_cancel" string="Cancelar" type="object" 
-                            attrs="{'invisible': [('state', 'in', ['cancelled', 'approved'])]}" 
-                            groups="fuel_card_management.group_fuel_card_logistic,fuel_card_management.group_fuel_card_admin"/>
-                    
-                    <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved,rejected"/>
-                </header>
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
-                    </div>
-                    
-                    <!-- Sección de información del combustible no asignado -->
-                    <group string="Información del Combustible">
-                        <group>
-                            <field name="date"/>
-                            <field name="unassigned_fuel_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                            <field name="carrier_id"/>
-                        </group>
-                        <group>
-                            <field name="invoiced_fuel" string="Combustible Disponible (L)"/>
-                            <field name="director_id" attrs="{'required': [('state', '=', 'draft')]}"/>
-                            <field name="modified_by_director" invisible="1"/>
-                        </group>
-                    </group>
-                    
-                    <notebook>
-                        <page string="Distribución entre Tarjetas">
-                            <field name="distribution_ids" attrs="{'readonly': [('state', 'in', ['approved', 'rejected', 'cancelled'])]}">
-                                <tree editable="bottom">
-                                    <field name="card_id"/>
-                                    <field name="amount"/>
-                                </tree>
-                            </field>
-                        </page>
-                        <page string="Comentarios del Director">
-                            <field name="director_comments" attrs="{'readonly': [('state', 'not in', ['pending_approval', 'approved', 'rejected'])]}"/>
-                        </page>
-                    </notebook>
-                </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids" widget="mail_followers"/>
-                    <field name="activity_ids" widget="mail_activity"/>
-                    <field name="message_ids" widget="mail_thread"/>
-                </div>
-            </form>
-        </field>
-    </record>
+<!-- Vista de formulario para planes de combustible -->
+<record id="view_fuel_plan_form" model="ir.ui.view">
+  <field name="name">fuel.plan.form</field>
+  <field name="model">fuel.plan</field>
+  <field name="arch" type="xml">
+      <form string="Plan de Combustible">
+          <header>
+              <button name="action_generate_distribution" string="Generar Distribución" type="object" class="oe_highlight" 
+                      groups="fuel_card_management.group_fuel_card_logistic"
+                      help="Genera una distribución equitativa del combustible disponible entre las tarjetas activas."/>
+              <button name="action_clear_distribution" string="Limpiar Distribución" type="object" 
+                      groups="fuel_card_management.group_fuel_card_logistic"
+                      confirm="¿Está seguro de que desea limpiar la distribución actual?"
+                      help="Elimina todas las líneas de distribución para empezar de nuevo."/>
+              <button name="action_send_for_approval" string="Enviar para Aprobación" type="object" class="oe_highlight" 
+                      groups="fuel_card_management.group_fuel_card_logistic"
+                      help="Envía el plan al director para su revisión y aprobación."/>
 
-    <!-- Vista de árbol para planes de combustible -->
-    <record id="view_fuel_plan_tree" model="ir.ui.view">
-        <field name="name">fuel.plan.tree</field>
-        <field name="model">fuel.plan</field>
-        <field name="arch" type="xml">
-            <tree string="Planes de Combustible" 
-                  decoration-success="state == 'approved'" 
-                  decoration-danger="state == 'rejected'" 
-                  decoration-warning="state == 'pending_approval'" 
-                  decoration-muted="state == 'cancelled'" 
-                  decoration-info="state == 'draft'">
-                <field name="name"/>
-                <field name="date"/>
-                <field name="unassigned_fuel_id"/>
-                <field name="carrier_id"/>
-                <field name="invoiced_fuel"/>
-                <field name="director_id"/>
-                <field name="modified_by_director"/>
-                <field name="state"/>
-            </tree>
-        </field>
-    </record>
+              <button name="action_save_director_changes" string="Guardar Cambios" type="object" class="oe_highlight" 
+                      attrs="{'invisible': [('state', '!=', 'pending_approval')]}" 
+                      groups="fuel_card_management.group_fuel_card_director"
+                      help="Guarda las modificaciones realizadas por el director en la distribución."/>
+              <button name="action_approve" string="Aprobar" type="object" class="oe_highlight" 
+                      attrs="{'invisible': [('state', '!=', 'pending_approval')]}" 
+                      groups="fuel_card_management.group_fuel_card_director"
+                      help="Aprueba el plan de combustible. Las tarjetas se cargarán en un paso posterior."/>
+              
+              <!-- NUEVO BOTÓN: Cargar Tarjetas -->
+              <button name="action_load_cards" string="Cargar Tarjetas" type="object" class="oe_highlight"
+                      attrs="{'invisible': [('state', '!=', 'approved')]}"
+                      groups="fuel_card_management.group_fuel_card_logistic"
+                      help="Carga el combustible en las tarjetas y descuenta del combustible no asignado."/>
 
-    <!-- Vista de búsqueda para planes de combustible -->
-    <record id="view_fuel_plan_search" model="ir.ui.view">
-        <field name="name">fuel.plan.search</field>
-        <field name="model">fuel.plan</field>
-        <field name="arch" type="xml">
-            <search string="Buscar Planes de Combustible">
-                <field name="name"/>
-                <field name="unassigned_fuel_id"/>
-                <field name="carrier_id"/>
-                <field name="director_id"/>
-                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Pendiente de Aprobación" name="pending_approval" domain="[('state', '=', 'pending_approval')]"/>
-                <filter string="Aprobado" name="approved" domain="[('state', '=', 'approved')]"/>
-                <filter string="Rechazado" name="rejected" domain="[('state', '=', 'rejected')]"/>
-                <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
-                <filter string="Modificado por Director" name="modified_by_director" domain="[('modified_by_director', '=', True)]"/>
-                <group expand="0" string="Agrupar Por">
-                    <filter string="Estado" name="state" context="{'group_by': 'state'}"/>
-                    <filter string="Combustible No Asignado" name="unassigned_fuel_id" context="{'group_by': 'unassigned_fuel_id'}"/>
-                    <filter string="Portador" name="carrier_id" context="{'group_by': 'carrier_id'}"/>
-                    <filter string="Director" name="director_id" context="{'group_by': 'director_id'}"/>
-                    <filter string="Fecha" name="date" context="{'group_by': 'date'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
+              <button name="action_reject" string="Rechazar" type="object" 
+                      attrs="{'invisible': [('state', '!=', 'pending_approval')]}" 
+                      groups="fuel_card_management.group_fuel_card_director"
+                      help="Rechaza el plan de combustible. Se puede añadir un comentario con el motivo."/>
+              <button name="action_reset_to_draft" string="Volver a Borrador" type="object" 
+                      attrs="{'invisible': [('state', 'not in', ['rejected', 'pending_approval'])]}" 
+                      groups="fuel_card_management.group_fuel_card_user"
+                      confirm="¿Está seguro de que desea volver el plan a borrador? Esto eliminará los comentarios del director."
+                      help="Permite editar el plan nuevamente si fue rechazado o está pendiente de aprobación."/>
+              <button name="action_cancel" string="Cancelar" type="object" 
+                      attrs="{'invisible': [('state', 'in', ['cancelled'])]}" 
+                      groups="fuel_card_management.group_fuel_card_user"
+                      confirm="¿Está seguro de que desea cancelar el plan? Si está cargado, se revertirán las cargas."
+                      help="Cancela el plan. Si ya fue cargado, se revertirán las cargas de tarjetas y el uso de combustible no asignado."/>
+              <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved,loaded,rejected"/>
+          </header>
+          <sheet>
+              <div class="oe_title">
+                  <h1>
+                      <field name="name" readonly="1"/>
+                  </h1>
+              </div>
+              <group>
+                  <group>
+                      <field name="date"/>
+                      <!-- MODIFICADO: plan_type ahora es de solo lectura y siempre 'Todos los Portadores' -->
+                      <field name="plan_type" readonly="1"
+                             help="El plan de combustible siempre se genera para todos los portadores disponibles."/>
+                      <!-- ELIMINADO: carrier_id ya no es necesario en el plan principal -->
+                      <!-- <field name="carrier_id" attrs="{'invisible': [('plan_type', '!=', 'specific_carrier')], 
+                                                       'required': [('plan_type', '=', 'specific_carrier')], 
+                                                       'readonly': [('state', 'in', ['approved', 'rejected', 'cancelled'])]}"
+                             options="{'no_create': True, 'no_open': True}"
+                             help="Selecciona el portador de combustible si el tipo de plan es 'Portador Específico'."/> -->
+                      <field name="available_fuel" string="Combustible Disponible (L)" readonly="1"
+                             help="Cantidad total de combustible no asignado disponible para este plan."/>
+                  </group>
+                  <group>
+                      <field name="director_id" 
+                             options="{'no_create': True, 'no_open': True}"
+                             help="Usuario que debe aprobar este plan de combustible."/>
+                      <field name="modified_by_director" invisible="1"/>
+                  </group>
+              </group>
+              
+              <!-- Mostrar información del combustible disponible -->
+              <div class="alert alert-info" attrs="{'invisible': [('available_fuel', '=', 0)]}">
+                  <p><strong>Combustible Disponible:</strong> <field name="available_fuel" readonly="1"/> L</p>
+                  <p>
+                      <em>Este plan considera el combustible disponible de todos los portadores.</em>
+                  </p>
+              </div>
+              
+              <!-- Alerta cuando no hay combustible disponible -->
+              <div class="alert alert-warning" attrs="{'invisible': [('available_fuel', '>', 0)]}">
+                  <p><strong>No hay combustible disponible</strong></p>
+                  <p>Verifique que haya combustible no asignado confirmado.</p>
+              </div>
+              
+              <notebook>
+                  <page string="Distribución entre Tarjetas">
+                      <field name="distribution_ids" attrs="{'readonly': [('state', 'in', ['approved', 'loaded', 'rejected', 'cancelled'])]}">
+                          <tree editable="bottom">
+                              <field name="card_id" options="{'no_create': True, 'no_open': True}"
+                                     domain="[('operational_state', 'in', ['available', 'assigned'])]"/>
+                              <field name="carrier_id" required="1" options="{'no_create': True, 'no_open': True}"/>
+                              <field name="amount"/>
+                          </tree>
+                      </field>
+                      <group class="mt16">
+                          <group>
+                              <field name="available_fuel" string="Combustible Disponible" readonly="1"/>
+                          </group>
+                          <group>
+                              <field name="total_distributed_amount" string="Total Distribuido" readonly="1"/>
+                          </group>
+                      </group>
+                  </page>
+                  <page string="Comentarios del Director">
+                      <div>
+                          <label string="Comentarios:" class="o_form_label" for="director_comments"/>
+                          <field name="director_comments" attrs="{'readonly': [('state', 'not in', ['pending_approval'])]}"
+                                 placeholder="Añada comentarios sobre la aprobación o rechazo del plan."/>
+                      </div>
+                  </page>
+              </notebook>
+          </sheet>
+          <div class="oe_chatter">
+              <field name="message_follower_ids" widget="mail_followers"/>
+              <field name="activity_ids" widget="mail_activity"/>
+              <field name="message_ids" widget="mail_thread"/>
+          </div>
+      </form>
+  </field>
+</record>
+
+<!-- Vista de árbol para planes de combustible -->
+<record id="view_fuel_plan_tree" model="ir.ui.view">
+    <field name="name">fuel.plan.tree</field>
+    <field name="model">fuel.plan</field>
+    <field name="arch" type="xml">
+        <tree string="Planes de Combustible" decoration-success="state=='approved'" 
+              decoration-info="state=='pending_approval'" decoration-danger="state=='rejected'"
+              decoration-muted="state=='cancelled'" decoration-primary="state=='loaded'">
+            <field name="name"/>
+            <field name="date"/>
+            <field name="total_distributed_amount"/>
+            <field name="available_fuel" string="Comb. Disp."/>
+            <field name="director_id"/>
+            <field name="state" widget="badge" 
+                   decoration-success="state=='approved'" 
+                   decoration-info="state=='pending_approval'"
+                   decoration-warning="state=='draft'"
+                   decoration-danger="state=='rejected'"
+                   decoration-muted="state=='cancelled'"
+                   decoration-primary="state=='loaded'"/>
+        </tree>
+    </field>
+</record>
+
+<!-- Vista de búsqueda para planes de combustible -->
+<record id="view_fuel_plan_search" model="ir.ui.view">
+    <field name="name">fuel.plan.search</field>
+    <field name="model">fuel.plan</field>
+    <field name="arch" type="xml">
+        <search string="Buscar Planes de Combustible">
+            <field name="name"/>
+            <field name="director_id"/>
+            <filter string="Borrador" name="draft_plans" domain="[('state', '=', 'draft')]"/>
+            <filter string="Pendiente de Aprobación" name="pending_approval_plans" domain="[('state', '=', 'pending_approval')]"/>
+            <filter string="Aprobado" name="approved_plans" domain="[('state', '=', 'approved')]"/>
+            <filter string="Rechazado" name="rejected_plans" domain="[('state', '=', 'rejected')]"/>
+            <filter string="Cancelado" name="cancelled_plans" domain="[('state', '=', 'cancelled')]"/>
+            <group expand="0" string="Agrupar por">
+                <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}"/>
+                <filter string="Director" name="group_by_director" context="{'group_by': 'director_id'}"/>
+                <filter string="Fecha" name="group_by_date" context="{'group_by': 'date'}"/>
+            </group>
+        </search>
+    </field>
+</record>
 </odoo>
+

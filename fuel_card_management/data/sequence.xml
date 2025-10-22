@@ -72,11 +72,22 @@
         <field name="company_id" eval="False"/>
     </record>
 
-    <!-- Secuencia para entregas/devoluciones de tarjetas -->
+    <!-- SECUENCIAS SEPARADAS PARA ENTREGAS Y DEVOLUCIONES -->
+    
+    <!-- Secuencia para entregas de tarjetas -->
     <record id="sequence_fuel_card_delivery" model="ir.sequence">
-        <field name="name">Secuencia de Entregas/Devoluciones de Tarjeta</field>
+        <field name="name">Secuencia de Entregas de Tarjeta</field>
         <field name="code">fuel.card.delivery</field>
-        <field name="prefix">DEL</field>
+        <field name="prefix">ENT</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Secuencia para devoluciones de tarjetas -->
+    <record id="sequence_fuel_card_return" model="ir.sequence">
+        <field name="name">Secuencia de Devoluciones de Tarjeta</field>
+        <field name="code">fuel.card.return</field>
+        <field name="prefix">DEV</field>
         <field name="padding">5</field>
         <field name="company_id" eval="False"/>
     </record>
@@ -117,4 +128,3 @@
         <field name="company_id" eval="False"/>
     </record>
 </odoo>
-

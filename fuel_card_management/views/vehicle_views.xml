@@ -35,9 +35,9 @@
                             <field name="fuel_card_ids" readonly="1">
                                 <tree>
                                     <field name="name"/>
-                                    <field name="supplier_id"/>
+                                    <field name="card_type"/>
                                     <field name="current_balance"/>
-                                    <field name="state"/>
+                                    <field name="operational_state"/>
                                 </tree>
                             </field>
                             <div class="oe_right">
@@ -50,12 +50,12 @@
                         <page string="Consumo de Combustible">
                             <field name="fuel_consumption_ids" readonly="1">
                                 <tree>
-                                    <field name="name"/>
+                                    <field name="service_type_id"/>
                                     <field name="date"/>
-                                    <field name="card_id"/>
-                                    <field name="driver_id"/>
-                                    <field name="liters"/>
-                                    <field name="unit_price"/>
+                                    <field name="card_main_id"/>
+                                    <field name="purchaser_id"/>
+                                    <field name="liter"/>
+                                    <field name="price_per_liter"/>
                                     <field name="amount"/>
                                     <field name="state"/>
                                 </tree>
@@ -104,3 +104,4 @@
         </field>
     </record>
 </odoo>
+

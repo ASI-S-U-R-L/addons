@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista de formulario para entregas/devoluciones de tarjetas -->
+    <!-- Vista de formulario para entrega/devolución de tarjetas -->
     <record id="view_fuel_card_delivery_form" model="ir.ui.view">
         <field name="name">fuel.card.delivery.form</field>
         <field name="model">fuel.card.delivery</field>
         <field name="arch" type="xml">
             <form string="Entrega/Devolución de Tarjeta">
                 <header>
-                    <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                    <button name="action_cancel" string="Cancelar" type="object" attrs="{'invisible': [('state', '=', 'cancelled')]}"/>
-                    <button name="action_reset_to_draft" string="Volver a Borrador" type="object" attrs="{'invisible': [('state', '!=', 'cancelled')]}"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
+                    <button name="action_confirm" type="object" string="Confirmar" 
+                            class="oe_highlight" states="draft"/>
+                    <button name="action_cancel" type="object" string="Cancelar" 
+                            states="draft,confirmed"/>
+                    <button name="action_reset_to_draft" type="object" string="Volver a Borrador" 
+                            states="cancelled"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -18,90 +21,43 @@
                             <field name="name" readonly="1"/>
                         </h1>
                     </div>
-                    
-                    <!-- Indicadores visuales según el tipo de operación -->
-                    <div class="alert alert-info" attrs="{'invisible': [('delivery_type', '!=', 'delivery')]}">
-                        <i class="fa fa-hand-o-right"/> <strong>Entrega de Tarjeta:</strong> Se asignará la tarjeta seleccionada a los responsables indicados.
-                    </div>
-                    <div class="alert alert-warning" attrs="{'invisible': [('delivery_type', '!=', 'return')]}">
-                        <i class="fa fa-hand-o-left"/> <strong>Devolución de Tarjeta:</strong> La tarjeta volverá a estar disponible para nuevas asignaciones.
-                    </div>
-                    
                     <group>
                         <group>
                             <field name="date"/>
                             <field name="delivery_type"/>
-                            <field name="card_id" 
-                                   domain="[('delivery_type', '=', 'delivery'), ('operational_state', '=', 'available'), ('active', '=', True)] if delivery_type == 'delivery' else [('operational_state', '=', 'assigned'), ('active', '=', True)]"
-                                   attrs="{'required': [('delivery_type', 'in', ['delivery', 'return'])]}"/>
-                            <field name="balance" attrs="{'invisible': [('card_id', '=', False)]}"/>
+                            <field name="card_id" domain="[('active', '=', True)]"/>
+                            <field name="balance" widget="monetary"/>
                         </group>
                         <group>
-                            <!-- Campos de asignación con visibilidad dinámica según tipo de tarjeta -->
-                            <!-- Titular: Siempre visible para todos los tipos de tarjeta -->
-                            <field name="holder_id" 
-                                   attrs="{'readonly': [('delivery_type', '=', 'return')], 
-                                          'required': [('delivery_type', '=', 'delivery')]}"/>
-                            
-                            <!-- Chofer: Solo visible para tarjetas de vehículo y otros tipos -->
-                            <field name="driver_id" 
-                                   attrs="{'readonly': [('delivery_type', '=', 'return')],
-                                          'invisible': [('card_type', '=', 'generator')]}"/>
-                            
-                            <!--  Solo mostrar el campo relevante según el tipo de tarjeta -->
                             <field name="vehicle_id" 
-                                   attrs="{'readonly': [('delivery_type', '=', 'return')], 
-                                          'invisible': [('card_type', '!=', 'vehicle')],
-                                          'required': [('delivery_type', '=', 'delivery'), ('card_type', '=', 'vehicle')]}"/>
-                            <field name="generator_id" 
                                    attrs="{'readonly': [('delivery_type', '=', 'return')],
-                                          'invisible': [('card_type', '!=', 'generator')],
-                                          'required': [('delivery_type', '=', 'delivery'), ('card_type', '=', 'generator')]}"/>
+                                          'required': [('delivery_type', '=', 'delivery')]}"/>
+                            <field name="vehicle_custom_type" invisible="1"/>
+                            <field name="engine_type" 
+                                   attrs="{'invisible': [('vehicle_custom_type', '!=', 'tecnologico')],
+                                          'required': [('vehicle_custom_type', '=', 'tecnologico'), ('delivery_type', '=', 'delivery')],
+                                          'readonly': [('delivery_type', '=', 'return')]}"/>
+                            <field name="driver_id" 
+                                   attrs="{'readonly': [('delivery_type', '=', 'return')]}"/>
                         </group>
                     </group>
                     
-                    <!-- Información adicional de la tarjeta seleccionada -->
+                    <!-- Información de la tarjeta -->
                     <group string="Información de la Tarjeta" attrs="{'invisible': [('card_id', '=', False)]}">
                         <group>
-                            <field name="card_type" readonly="1"/>
-                            <field name="card_supplier_id" readonly="1"/>
+                            <field name="card_type"/>
+                            <field name="card_operational_state"/>
                         </group>
                         <group>
-                            <field name="card_operational_state" readonly="1"/>
-                            <field name="card_expiry_date" readonly="1"/>
+                            <field name="card_expiry_date"/>
+                            <field name="card_current_driver_id" attrs="{'invisible': [('delivery_type', '!=', 'return')]}"/>
+                            <field name="card_current_vehicle_id" attrs="{'invisible': [('delivery_type', '!=', 'return')]}"/>
                         </group>
                     </group>
                     
-                    <!-- Alerta sobre el tipo de tarjeta con información de responsables -->
-                    <div class="alert alert-success" attrs="{'invisible': ['|', ('card_id', '=', False), ('card_type', '!=', 'vehicle')]}">
-                        <i class="fa fa-car"/> <strong>Tarjeta de Vehículo:</strong> Esta tarjeta solo puede asignarse a un vehículo y requiere tanto titular como chofer.
-                    </div>
-                    <div class="alert alert-primary" attrs="{'invisible': ['|', ('card_id', '=', False), ('card_type', '!=', 'generator')]}">
-                        <i class="fa fa-cogs"/> <strong>Tarjeta de Generador:</strong> Esta tarjeta solo puede asignarse a un generador y requiere únicamente titular.
-                    </div>
-                    <div class="alert alert-secondary" attrs="{'invisible': ['|', ('card_id', '=', False), ('card_type', '!=', 'other')]}">
-                        <i class="fa fa-question-circle"/> <strong>Tarjeta de Otro Tipo:</strong> Esta tarjeta puede asignarse a vehículos o generadores y requiere titular y chofer.
-                    </div>
-                    
-                    <!-- Mostrar asignación actual para devoluciones -->
-                    <group string="Asignación Actual" attrs="{'invisible': ['|', ('delivery_type', '!=', 'return'), ('card_id', '=', False)]}">
-                        <group>
-                            <field name="card_current_holder_id" readonly="1"/>
-                            <!-- Chofer actual: Solo mostrar si no es tarjeta de generador -->
-                            <field name="card_current_driver_id" readonly="1" 
-                                   attrs="{'invisible': [('card_type', '=', 'generator')]}"/>
-                        </group>
-                        <group>
-                            <field name="card_current_vehicle_id" readonly="1" attrs="{'invisible': [('card_current_vehicle_id', '=', False)]}"/>
-                            <field name="card_current_generator_id" readonly="1" attrs="{'invisible': [('card_current_generator_id', '=', False)]}"/>
-                        </group>
+                    <group string="Notas">
+                        <field name="notes" nolabel="1"/>
                     </group>
-                    
-                    <notebook>
-                        <page string="Notas">
-                            <field name="notes" placeholder="Observaciones adicionales sobre la entrega/devolución..."/>
-                        </page>
-                    </notebook>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
@@ -112,152 +68,78 @@
         </field>
     </record>
 
-    <!-- Vista de árbol para entregas/devoluciones de tarjetas -->
+    <!-- Vista de lista para entrega/devolución de tarjetas -->
     <record id="view_fuel_card_delivery_tree" model="ir.ui.view">
         <field name="name">fuel.card.delivery.tree</field>
         <field name="model">fuel.card.delivery</field>
         <field name="arch" type="xml">
-            <tree string="Entregas/Devoluciones de Tarjeta" 
-                  decoration-success="state == 'confirmed'" 
-                  decoration-muted="state == 'cancelled'" 
-                  decoration-info="state == 'draft'"
-                  decoration-bf="delivery_type == 'delivery'"
-                  decoration-it="delivery_type == 'return'">
-                <field name="name"/>
-                <field name="date"/>
-                <field name="delivery_type" widget="badge" 
-                       decoration-info="delivery_type == 'delivery'" 
-                       decoration-warning="delivery_type == 'return'"/>
-                <field name="card_id" string="Número de Tarjeta"/>
-                <field name="card_type" string="Tipo Tarjeta"/>
-                <field name="holder_id"/>
-                <field name="driver_id"/>
-                <field name="vehicle_id"/>
-                <field name="generator_id"/>
-                <field name="balance" string="Saldo"/>
-                <field name="state" widget="badge" 
-                       decoration-success="state == 'confirmed'" 
-                       decoration-muted="state == 'cancelled'" 
-                       decoration-info="state == 'draft'"/>
-            </tree>
-        </field>
-    </record>
-
-    <!-- Vista de búsqueda para entregas/devoluciones de tarjetas -->
-    <record id="view_fuel_card_delivery_search" model="ir.ui.view">
-        <field name="name">fuel.card.delivery.search</field>
-        <field name="model">fuel.card.delivery</field>
-        <field name="arch" type="xml">
-            <search string="Buscar Entregas/Devoluciones de Tarjeta">
-                <field name="name" string="Referencia" filter_domain="[('name', 'ilike', self)]"/>
-                <field name="card_id" string="Número de Tarjeta" filter_domain="[('card_id.name', 'ilike', self)]"/>
-                <field name="holder_id"/>
-                <field name="driver_id"/>
-                <field name="vehicle_id"/>
-                <field name="generator_id"/>
-                
-                <!-- Filtros por tipo de operación -->
-                <filter string="Entregas" name="delivery" domain="[('delivery_type', '=', 'delivery')]" 
-                        help="Mostrar solo entregas de tarjetas"/>
-                <filter string="Devoluciones" name="return" domain="[('delivery_type', '=', 'return')]" 
-                        help="Mostrar solo devoluciones de tarjetas"/>
-                
-                <!-- Filtros por tipo de tarjeta -->
-                <filter string="Tarjetas de Vehículo" name="vehicle_cards" domain="[('card_type', '=', 'vehicle')]"/>
-                <filter string="Tarjetas de Generador" name="generator_cards" domain="[('card_type', '=', 'generator')]"/>
-                <filter string="Otras Tarjetas" name="other_cards" domain="[('card_type', '=', 'other')]"/>
-                
-                <!-- Filtros por estado -->
-                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Confirmado" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
-                
-                <!-- Filtros por fecha -->
-                <filter string="Hoy" name="today" domain="[('date', '=', context_today())]"/>
-                <filter string="Esta Semana" name="this_week" 
-                        domain="[('date', '&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d')), 
-                                ('date', '&lt;=', (context_today() + datetime.timedelta(days=6-context_today().weekday())).strftime('%Y-%m-%d'))]"/>
-                <filter string="Este Mes" name="this_month" 
-                        domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01')), 
-                                ('date', '&lt;=', (context_today().replace(day=1) + datetime.timedelta(days=32)).replace(day=1) - datetime.timedelta(days=1)).strftime('%Y%-m-%d')]"/>
-                
-                <group expand="0" string="Agrupar Por">
-                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Tipo de Operación" name="group_delivery_type" context="{'group_by': 'delivery_type'}"/>
-                    <filter string="Tipo de Tarjeta" name="group_card_type" context="{'group_by': 'card_type'}"/>
-                    <filter string="Tarjeta" name="group_card_id" context="{'group_by': 'card_id'}"/>
-                    <filter string="Titular" name="group_holder_id" context="{'group_by': 'holder_id'}"/>
-                    <filter string="Conductor" name="group_driver_id" context="{'group_by': 'driver_id'}"/>
-                    <filter string="Fecha" name="group_date" context="{'group_by': 'date'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
-
-    <!-- Vista de kanban para entregas/devoluciones -->
-    <record id="view_fuel_card_delivery_kanban" model="ir.ui.view">
-        <field name="name">fuel.card.delivery.kanban</field>
-        <field name="model">fuel.card.delivery</field>
-        <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile" default_group_by="state">
+            <tree string="Entregas/Devoluciones de Tarjetas" decoration-success="state=='confirmed'" 
+                  decoration-muted="state=='cancelled'">
                 <field name="name"/>
                 <field name="date"/>
                 <field name="delivery_type"/>
                 <field name="card_id"/>
-                <field name="card_type"/>
-                <field name="holder_id"/>
-                <field name="driver_id"/>
                 <field name="vehicle_id"/>
-                <field name="generator_id"/>
-                <field name="balance"/>
+                <field name="vehicle_custom_type"/>
+                <field name="engine_type" attrs="{'invisible': [('vehicle_custom_type', '!=', 'tecnologico')]}"/>
+                <field name="driver_id"/>
+                <field name="balance" widget="monetary"/>
+                <field name="state" widget="badge" 
+                       decoration-success="state=='confirmed'" 
+                       decoration-info="state=='draft'"
+                       decoration-muted="state=='cancelled'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista kanban para entrega/devolución de tarjetas -->
+    <record id="view_fuel_card_delivery_kanban" model="ir.ui.view">
+        <field name="name">fuel.card.delivery.kanban</field>
+        <field name="model">fuel.card.delivery</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="delivery_type"/>
+                <field name="card_id"/>
+                <field name="vehicle_id"/>
+                <field name="vehicle_custom_type"/>
+                <field name="engine_type"/>
+                <field name="driver_id"/>
                 <field name="state"/>
+                <field name="balance"/>
                 <templates>
                     <t t-name="kanban-box">
-                        <div t-attf-class="oe_kanban_global_click">
-                            <div class="oe_kanban_details">
-                                <div class="o_kanban_record_top">
-                                    <div class="o_kanban_record_headings">
-                                        <strong class="o_kanban_record_title">
-                                            <field name="name"/>
-                                        </strong>
-                                        <span class="o_kanban_record_subtitle text-muted">
-                                            <field name="date"/>
-                                        </span>
-                                    </div>
-                                    <div class="o_kanban_tags_section">
-                                        <span class="badge badge-pill" t-attf-class="badge-#{
-                                            record.delivery_type.raw_value == 'delivery' ? 'info' : 'warning'}">
-                                            <i t-attf-class="fa #{record.delivery_type.raw_value == 'delivery' ? 'fa-hand-o-right' : 'fa-hand-o-left'}"/>
-                                            <field name="delivery_type"/>
-                                        </span>
-                                        <span class="badge badge-pill badge-secondary">
-                                            <i t-attf-class="fa #{record.card_type.raw_value == 'vehicle' ? 'fa-car' : 
-                                                                  record.card_type.raw_value == 'generator' ? 'fa-cogs' : 'fa-question-circle'}"/>
-                                            <field name="card_type"/>
-                                        </span>
-                                    </div>
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="name"/>
+                                    </strong>
                                 </div>
-                                <div class="o_kanban_record_body">
-                                    <ul>
-                                        <li>
-                                            <strong>Tarjeta:</strong> <field name="card_id"/>
-                                        </li>
-                                        <li t-if="record.holder_id.raw_value">
-                                            <strong>Titular:</strong> <field name="holder_id"/>
-                                        </li>
-                                        <li t-if="record.driver_id.raw_value and record.card_type.raw_value != 'generator'">
-                                            <strong>Conductor:</strong> <field name="driver_id"/>
-                                        </li>
-                                        <li t-if="record.vehicle_id.raw_value">
-                                            <strong>Vehículo:</strong> <field name="vehicle_id"/>
-                                        </li>
-                                        <li t-if="record.generator_id.raw_value">
-                                            <strong>Generador:</strong> <field name="generator_id"/>
-                                        </li>
-                                        <li>
-                                            <strong>Saldo:</strong> <field name="balance"/>
-                                        </li>
-                                    </ul>
+                                <span class="float-right badge badge-pill" 
+                                      t-attf-class="badge-#{record.state.raw_value == 'confirmed' ? 'success' : record.state.raw_value == 'draft' ? 'info' : 'secondary'}">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div>
+                                    <i class="fa fa-calendar"/> <field name="date"/>
+                                </div>
+                                <div>
+                                    <i class="fa fa-credit-card"/> <field name="card_id"/>
+                                </div>
+                                <div>
+                                    <i class="fa fa-car"/> <field name="vehicle_id"/>
+                                    <t t-if="record.vehicle_custom_type.raw_value == 'tecnologico' and record.engine_type.raw_value">
+                                        (<field name="engine_type"/>)
+                                    </t>
+                                </div>
+                                <div t-if="record.driver_id.raw_value">
+                                    <i class="fa fa-user"/> <field name="driver_id"/>
+                                </div>
+                                <div>
+                                    <i class="fa fa-money"/> Saldo: <field name="balance" widget="monetary"/>
                                 </div>
                             </div>
                         </div>
@@ -267,27 +149,56 @@
         </field>
     </record>
 
-    <!-- Acción para entregas/devoluciones de tarjetas -->
-    <record id="action_fuel_card_delivery" model="ir.actions.act_window">
-        <field name="name">Entregas/Devoluciones de Tarjeta</field>
-        <field name="res_model">fuel.card.delivery</field>
-        <field name="view_mode">tree,form,kanban</field>
-        <field name="context">{'search_default_confirmed': 1}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                ¡Crea una nueva entrega o devolución de tarjeta!
-            </p>
-            <p>
-                Aquí puedes gestionar las entregas y devoluciones de tarjetas magnéticas:
-                <br/>• <strong>Entrega:</strong> Asignar una tarjeta disponible a un responsable
-                <br/>• <strong>Devolución:</strong> Recibir una tarjeta asignada y dejarla disponible
-                <br/><br/>
-                <strong>Tipos de tarjetas y responsables:</strong>
-                <br/>• <i class="fa fa-car"/> <strong>Vehículo:</strong> Requiere titular y chofer
-                <br/>• <i class="fa fa-cogs"/> <strong>Generador:</strong> Requiere solo titular
-                <br/>• <i class="fa fa-question-circle"/> <strong>Otros:</strong> Requiere titular y chofer
-            </p>
+    <!-- Vista de búsqueda -->
+    <record id="view_fuel_card_delivery_search" model="ir.ui.view">
+        <field name="name">fuel.card.delivery.search</field>
+        <field name="model">fuel.card.delivery</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Entregas/Devoluciones">
+                <field name="name"/>
+                <field name="card_id"/>
+                <field name="vehicle_id"/>
+                <field name="driver_id"/>
+                <separator/>
+                <filter name="filter_delivery" string="Entregas" domain="[('delivery_type', '=', 'delivery')]"/>
+                <filter name="filter_return" string="Devoluciones" domain="[('delivery_type', '=', 'return')]"/>
+                <separator/>
+                <filter name="filter_draft" string="Borrador" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="Confirmado" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="filter_cancelled" string="Cancelado" domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter name="filter_tecnologico" string="Vehículos Tecnológicos" domain="[('vehicle_custom_type', '=', 'tecnologico')]"/>
+                <filter name="filter_movil" string="Vehículos Móviles" domain="[('vehicle_custom_type', '=', 'movil')]"/>
+                <filter name="filter_estacionario" string="Vehículos Estacionarios" domain="[('vehicle_custom_type', '=', 'estacionario')]"/>
+                <separator/>
+                <filter name="filter_today" string="Hoy" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_this_week" string="Esta Semana" domain="[('date', '&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_this_month" string="Este Mes" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_delivery_type" string="Tipo de Operación" context="{'group_by': 'delivery_type'}"/>
+                    <filter name="group_vehicle_type" string="Tipo de Vehículo" context="{'group_by': 'vehicle_custom_type'}"/>
+                    <filter name="group_state" string="Estado" context="{'group_by': 'state'}"/>
+                    <filter name="group_date" string="Fecha" context="{'group_by': 'date'}"/>
+                </group>
+            </search>
         </field>
     </record>
 
+    <!-- Acción para entrega/devolución de tarjetas -->
+    <record id="action_fuel_card_delivery" model="ir.actions.act_window">
+        <field name="name">Entregas/Devoluciones de Tarjetas</field>
+        <field name="res_model">fuel.card.delivery</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="search_view_id" ref="view_fuel_card_delivery_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Crea tu primera entrega/devolución de tarjeta!
+            </p>
+            <p>
+                Gestiona las entregas y devoluciones de tarjetas magnéticas de combustible.
+                Para vehículos tecnológicos puedes asignar hasta 2 tarjetas (una por motor).
+                <br/><strong>Nota:</strong> Es obligatorio seleccionar un vehículo para realizar entregas.
+            </p>
+        </field>
+    </record>
 </odoo>

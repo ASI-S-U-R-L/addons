@@ -1,130 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista de formulario para combustible no asignado -->
-    <record id="view_fuel_unassigned_form" model="ir.ui.view">
-        <field name="name">fuel.unassigned.form</field>
-        <field name="model">fuel.unassigned</field>
-        <field name="arch" type="xml">
-            <form string="Combustible No Asignado" create="false">
-                <header>
-                    <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                    <button name="action_create_fuel_plan" string="Crear Plan de Combustible" type="object" class="oe_highlight" attrs="{'invisible': ['|', ('state', '!=', 'confirmed'), ('has_fuel_plan', '=', True)]}" groups="fuel_card_management.group_fuel_card_user"/>
-                    <button name="action_cancel" string="Cancelar" type="object" attrs="{'invisible': [('state', '=', 'cancelled')]}"/>
-                    <button name="action_reset_to_draft" string="Volver a Borrador" type="object" attrs="{'invisible': [('state', '!=', 'cancelled')]}"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
-                </header>
-                <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" name="action_create_fuel_plan" type="object" icon="fa-plus" attrs="{'invisible': ['|', ('state', '!=', 'confirmed'), ('has_fuel_plan', '=', True)]}" groups="fuel_card_management.group_fuel_card_user">
-                            <div class="o_stat_info">
-                                <span class="o_stat_text">Crear Plan</span>
-                            </div>
-                        </button>
-                        <button class="oe_stat_button" type="action" name="%(fuel_card_management.action_fuel_plan)d" icon="fa-file-text-o" attrs="{'invisible': [('has_fuel_plan', '=', False)]}" context="{'search_default_unassigned_fuel_id': active_id}">
-                            <div class="o_stat_info">
-                                <span class="o_stat_text">Ver Plan</span>
-                            </div>
-                        </button>
-                    </div>
-                    
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
-                    </div>
-                    
-                    <!-- Campos ocultos para cálculos -->
-                    <field name="has_fuel_plan" invisible="1"/>
-                    <field name="fuel_plan_id" invisible="1"/>
-                    <field name="created_from_invoice" invisible="1"/>
-                    
-                    <group>
-                        <group>
-                            <field name="date"/>
-                            <field name="supplier_id"/>
-                            <field name="invoice_id" domain="[('supplier_id', '=', supplier_id)]"/>
-                            <field name="carrier_id"/>
-                        </group>
-                        <group>
-                            <field name="amount"/>
-                            <field name="unit_price"/>
-                            <field name="total_amount"/>
-                        </group>
-                    </group>
-                    
-                    <!-- Mostrar información del plan asociado si existe -->
-                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('has_fuel_plan', '=', False)]}">
-                        <strong>Plan de Combustible Asociado:</strong> 
-                        <field name="fuel_plan_id" readonly="1"/>
-                    </div>
-                    
-                    <notebook>
-                        <page string="Notas">
-                            <field name="notes"/>
-                        </page>
-                    </notebook>
-                </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids" widget="mail_followers"/>
-                    <field name="activity_ids" widget="mail_activity"/>
-                    <field name="message_ids" widget="mail_thread"/>
-                </div>
-            </form>
-        </field>
-    </record>
+  <!-- Vista de formulario para combustible no asignado -->
+  <record id="view_fuel_unassigned_form" model="ir.ui.view">
+      <field name="name">fuel.unassigned.form</field>
+      <field name="model">fuel.unassigned</field>
+      <field name="arch" type="xml">
+          <form string="Combustible No Asignado" create="false">
+              <header>
+                  <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                  <button name="action_cancel" string="Cancelar" type="object" attrs="{'invisible': [('state', '=', 'cancelled')]}"/>
+                  <button name="action_reset_to_draft" string="Volver a Borrador" type="object" attrs="{'invisible': [('state', '!=', 'cancelled')]}"/>
+                  <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
+              </header>
+              <sheet>
+                  <div class="oe_title">
+                      <h1>
+                          <field name="name" readonly="1"/>
+                      </h1>
+                  </div>
+                  <group>
+                      <group>
+                          <field name="date"/>
+                          <field name="invoice_id"/>
+                          <field name="carrier_id"/>
+                      </group>
+                      <group>
+                          <field name="amount"/>
+                          <field name="unit_price"/>
+                          <field name="total_amount"/>
+                          <field name="amount_used" readonly="1"/>
+                          <field name="amount_available" readonly="1"/>
+                      </group>
+                  </group>
+                  <notebook>
+                      <page string="Notas">
+                          <field name="notes"/>
+                      </page>
+                  </notebook>
+              </sheet>
+              <div class="oe_chatter">
+                  <field name="message_follower_ids" widget="mail_followers"/>
+                  <field name="activity_ids" widget="mail_activity"/>
+                  <field name="message_ids" widget="mail_thread"/>
+              </div>
+          </form>
+      </field>
+  </record>
 
-    <!-- Vista de árbol para combustible no asignado -->
-    <record id="view_fuel_unassigned_tree" model="ir.ui.view">
-        <field name="name">fuel.unassigned.tree</field>
-        <field name="model">fuel.unassigned</field>
-        <field name="arch" type="xml">
-            <tree string="Combustible No Asignado" 
-                  create="false" 
-                  decoration-success="state == 'confirmed'" 
-                  decoration-muted="state == 'cancelled'" 
-                  decoration-info="state == 'draft'"
-                  decoration-bf="has_fuel_plan == True">
-                <field name="name"/>
-                <field name="date"/>
-                <field name="supplier_id"/>
-                <field name="invoice_id"/>
-                <field name="carrier_id"/>
-                <field name="amount"/>
-                <field name="unit_price"/>
-                <field name="total_amount"/>
-                <field name="has_fuel_plan" string="Tiene Plan"/>
-                <field name="state"/>
-            </tree>
-        </field>
-    </record>
+  <!-- Vista de árbol para combustible no asignado -->
+  <record id="view_fuel_unassigned_tree" model="ir.ui.view">
+      <field name="name">fuel.unassigned.tree</field>
+      <field name="model">fuel.unassigned</field>
+      <field name="arch" type="xml">
+          <tree string="Combustible No Asignado" 
+                create="false" 
+                decoration-success="state == 'confirmed'" 
+                decoration-muted="state == 'cancelled'" 
+                decoration-info="state == 'draft'">
+              <field name="name"/>
+              <field name="date"/>
+              <field name="invoice_id"/>
+              <field name="carrier_id"/>
+              <field name="amount"/>
+              <field name="unit_price"/>
+              <field name="total_amount"/>
+              <field name="amount_used"/>
+              <field name="amount_available"/>
+              <field name="state"/>
+          </tree>
+      </field>
+  </record>
 
-    <!-- Vista de búsqueda para combustible no asignado -->
-    <record id="view_fuel_unassigned_search" model="ir.ui.view">
-        <field name="name">fuel.unassigned.search</field>
-        <field name="model">fuel.unassigned</field>
-        <field name="arch" type="xml">
-            <search string="Buscar Combustible No Asignado">
-                <field name="name"/>
-                <field name="supplier_id"/>
-                <field name="invoice_id"/>
-                <field name="carrier_id"/>
-                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Confirmado" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="Utilizado" name="used" domain="[('state', '=', 'used')]"/>
-                <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
-                <separator/>
-                <filter string="Con Plan Asociado" name="with_plan" domain="[('has_fuel_plan', '=', True)]"/>
-                <filter string="Sin Plan Asociado" name="without_plan" domain="[('has_fuel_plan', '=', False)]"/>
-                <filter string="Disponible para Plan" name="available_for_plan" domain="[('state', '=', 'confirmed'), ('has_fuel_plan', '=', False)]"/>
-                <group expand="0" string="Agrupar Por">
-                    <filter string="Estado" name="state" context="{'group_by': 'state'}"/>
-                    <filter string="Proveedor" name="supplier_id" context="{'group_by': 'supplier_id'}"/>
-                    <filter string="Factura" name="invoice_id" context="{'group_by': 'invoice_id'}"/>
-                    <filter string="Portador" name="carrier_id" context="{'group_by': 'carrier_id'}"/>
-                    <filter string="Fecha" name="date" context="{'group_by': 'date'}"/>
-                    <filter string="Tiene Plan" name="has_fuel_plan" context="{'group_by': 'has_fuel_plan'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
+  <!-- Vista de búsqueda para combustible no asignado -->
+  <record id="view_fuel_unassigned_search" model="ir.ui.view">
+      <field name="name">fuel.unassigned.search</field>
+      <field name="model">fuel.unassigned</field>
+      <field name="arch" type="xml">
+          <search string="Buscar Combustible No Asignado">
+              <field name="name"/>
+              <field name="invoice_id"/>
+              <field name="carrier_id"/>
+              <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
+              <filter string="Confirmado" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+              <filter string="Cancelado" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+              <group expand="0" string="Agrupar Por">
+                  <filter string="Estado" name="state" context="{'group_by': 'state'}"/>
+                  <filter string="Factura" name="invoice_id" context="{'group_by': 'invoice_id'}"/>
+                  <filter string="Portador" name="carrier_id" context="{'group_by': 'carrier_id'}"/>
+                  <filter string="Fecha" name="date" context="{'group_by': 'date'}"/>
+              </group>
+          </search>
+      </field>
+  </record>
 </odoo>
+

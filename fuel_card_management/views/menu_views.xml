@@ -1,149 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Menú raíz -->
-    <menuitem id="menu_fuel_card_management_root"
-              name="Tarjetas de Combustible"
-              web_icon="fuel_card_management,static/description/icon.png"
-              sequence="90"/>
+  <!-- Creando menú padre "Tarjetas Magnéticas" en la barra principal antes de informes y configuraciones -->
+  <menuitem id="menu_magnetic_cards_main"
+            name="Tarjetas Magnéticas"
+            parent="fleet.menu_root"
+            sequence="15"/>
+  
+  <!-- Solo manteniendo operaciones bajo el menú padre Tarjetas Magnéticas -->
+  <menuitem id="menu_fuel_card_management_operations"
+            name="Operaciones"
+            parent="menu_magnetic_cards_main"
+            sequence="10"/>
+  
+  <!-- Elementos de menú bajo Operaciones -->
+  <menuitem id="menu_fuel_magnetic_card"
+            name="Tarjetas Magnéticas"
+            parent="menu_fuel_card_management_operations"
+            action="action_fuel_magnetic_card"
+            sequence="10"/>
 
-    <!-- Submenús principales -->
-    <menuitem id="menu_fuel_card_management_operations"
-              name="Operaciones"
-              parent="menu_fuel_card_management_root"
-              sequence="10"/>
-    
-    <menuitem id="menu_fuel_card_management_planning"
-              name="Planificación"
-              parent="menu_fuel_card_management_root"
-              sequence="20"/>
-    
-    <menuitem id="menu_fuel_card_management_assets"
-              name="Activos"
-              parent="menu_fuel_card_management_root"
-              sequence="30"/>
-    
-    <menuitem id="menu_fuel_card_management_reports"
-              name="Informes"
-              parent="menu_fuel_card_management_root"
-              sequence="40"/>
-    
-    <menuitem id="menu_fuel_card_management_config"
-              name="Configuración"
-              parent="menu_fuel_card_management_root"
-              sequence="50"/>
+  <menuitem id="menu_fuel_invoice"
+            name="Facturas de Combustible"
+            parent="menu_fuel_card_management_operations"
+            action="action_fuel_invoice"
+            sequence="20"/>
 
-    <!-- Elementos de menú bajo Operaciones -->
-    <menuitem id="menu_fuel_magnetic_card"
-              name="Tarjetas Magnéticas"
-              parent="menu_fuel_card_management_operations"
-              action="action_fuel_magnetic_card"
-              sequence="10"/>
+  <menuitem id="menu_fuel_unassigned"
+            name="Combustible No Asignado"
+            parent="menu_fuel_card_management_operations"
+            action="action_fuel_unassigned"
+            sequence="30"/>
 
-    <menuitem id="menu_fuel_invoice"
-              name="Facturas de Combustible"
-              parent="menu_fuel_card_management_operations"
-              action="action_fuel_invoice"
-              sequence="20"/>
+  <menuitem id="menu_fuel_card_load"
+            name="Cargas de Tarjeta"
+            parent="menu_fuel_card_management_operations"
+            action="action_fuel_card_load"
+            sequence="40"/>
 
-    <menuitem id="menu_fuel_unassigned"
-              name="Combustible No Asignado"
-              parent="menu_fuel_card_management_operations"
-              action="action_fuel_unassigned"
-              sequence="30"/>
+  <menuitem id="menu_fuel_card_delivery"
+            name="Entregas/Devoluciones"
+            parent="menu_fuel_card_management_operations"
+            action="action_fuel_card_delivery"
+            sequence="50"/>
 
-    <menuitem id="menu_fuel_card_load"
-              name="Cargas de Tarjeta"
-              parent="menu_fuel_card_management_operations"
-              action="action_fuel_card_load"
-              sequence="40"/>
+  <menuitem id="menu_fuel_balance_adjustment"
+            name="Ajustes de Saldo"
+            parent="menu_fuel_card_management_operations"
+            action="action_fuel_balance_adjustment"
+            sequence="70"/>
 
-    <menuitem id="menu_fuel_card_delivery"
-              name="Entregas/Devoluciones"
-              parent="menu_fuel_card_management_operations"
-              action="action_fuel_card_delivery"
-              sequence="50"/>
+  <menuitem id="menu_fuel_balance_transfer"
+            name="Traspasos de Saldo"
+            parent="menu_fuel_card_management_operations"
+            action="action_fuel_balance_transfer"
+            sequence="80"/>
 
-    <menuitem id="menu_fuel_ticket"
-              name="Tickets de Combustible"
-              parent="menu_fuel_card_management_operations"
-              action="action_fuel_ticket"
-              sequence="60"/>
+  <!-- Moviendo Planes de Combustible y Portadores de Combustible al menú Tarjetas Magnéticas -->
+  <menuitem id="menu_fuel_plan"
+            name="Planes de Combustible"
+            parent="menu_magnetic_cards_main"
+            action="action_fuel_plan"
+            sequence="20"/>
 
-    <menuitem id="menu_fuel_balance_adjustment"
-              name="Ajustes de Saldo"
-              parent="menu_fuel_card_management_operations"
-              action="action_fuel_balance_adjustment"
-              sequence="70"/>
+  <menuitem id="menu_fuel_carrier"
+            name="Portadores de Combustible"
+            parent="menu_magnetic_cards_main"
+            action="action_fuel_carrier"
+            sequence="30"/>
+  
+  <!-- Moviendo informes al menú de informes de Fleet -->
+  <menuitem id="menu_fuel_consumption_report"
+            name="Consumo de Combustible"
+            parent="fleet.menu_fleet_reporting"
+            action="fuel_card_management.action_fuel_consumption_report"
+            sequence="100"/>
 
-    <menuitem id="menu_fuel_balance_transfer"
-              name="Traspasos de Saldo"
-              parent="menu_fuel_card_management_operations"
-              action="action_fuel_balance_transfer"
-              sequence="80"/>
+  <menuitem id="menu_card_balance_report"
+            name="Saldo de Tarjetas"
+            parent="fleet.menu_fleet_reporting"
+            action="fuel_card_management.action_card_balance_report"
+            sequence="110"/>
 
-    <!-- Elementos de menú bajo Planificación -->
-    <menuitem id="menu_fuel_plan"
-              name="Planes de Combustible"
-              parent="menu_fuel_card_management_planning"
-              action="action_fuel_plan"
-              sequence="10"/>
-
-    <!-- Elementos de menú bajo Activos -->
-    <menuitem id="menu_fuel_vehicle"
-              name="Vehículos"
-              parent="menu_fuel_card_management_assets"
-              action="fleet.fleet_vehicle_action"
-              sequence="10"/>
-
-    <menuitem id="menu_fuel_power_generator"
-              name="Generadores de Energía"
-              parent="menu_fuel_card_management_assets"
-              action="action_fuel_power_generator"
-              sequence="20"/>
-
-    <!-- Elementos de menú bajo Informes -->
-    <menuitem id="menu_fuel_consumption_report"
-              name="Consumo de Combustible"
-              parent="menu_fuel_card_management_reports"
-              action="fuel_card_management.action_fuel_consumption_report"
-              sequence="10"/>
-
-    <menuitem id="menu_card_balance_report"
-              name="Saldo de Tarjetas"
-              parent="menu_fuel_card_management_reports"
-              action="fuel_card_management.action_card_balance_report"
-              sequence="20"/>
-
-    <menuitem id="menu_fuel_card_balance_report"
-              name="Balance Contable de Combustible"
-              parent="menu_fuel_card_management_reports"
-              action="action_fuel_card_balance_report_wizard"
-              sequence="30"/>
-
-    <!-- Elementos de menú bajo Configuración -->
-    <menuitem id="menu_fuel_card_holder"
-              name="Titulares de Tarjeta"
-              parent="menu_fuel_card_management_config"
-              action="action_fuel_card_holder"
-              sequence="10"/>
-
-    <menuitem id="menu_fuel_supplier"
-              name="Proveedores de Combustible"
-              parent="menu_fuel_card_management_config"
-              action="action_fuel_supplier"
-              sequence="20"/>
-
-    <menuitem id="menu_fuel_driver"
-              name="Conductores"
-              parent="menu_fuel_card_management_config"
-              action="action_fuel_driver"
-              sequence="30"/>
-
-    <!-- Menú para Portadores de Combustible -->
-    <menuitem id="menu_fuel_carrier"
-              name="Portadores de Combustible"
-              parent="menu_fuel_card_management_config"
-              action="action_fuel_carrier"
-              sequence="40"/>
+  <menuitem id="menu_fuel_card_balance_report"
+            name="Balance Contable de Combustible"
+            parent="fleet.menu_fleet_reporting"
+            action="action_fuel_card_balance_report_wizard"
+            sequence="120"/>
 </odoo>
-

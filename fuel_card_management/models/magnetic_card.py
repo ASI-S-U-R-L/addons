@@ -4,6 +4,7 @@ from odoo.exceptions import ValidationError
 from datetime import date, timedelta
 import re
 import logging
+
 _logger = logging.getLogger(__name__)
 
 class FuelMagneticCard(models.Model):
@@ -12,35 +13,100 @@ class FuelMagneticCard(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
     
-    name = fields.Char(string='Número de Tarjeta', required=True, copy=False, tracking=True,
-                      help="Ingrese el número de 16 dígitos de la tarjeta")
-    active = fields.Boolean(default=True, tracking=True)
+    # --- Campos básicos ---
+    name = fields.Char(
+        string='Número de Tarjeta', 
+        required=True, 
+        copy=False, 
+        tracking=True,
+        help="Número de 16 dígitos de la tarjeta"
+    )
+    
+    active = fields.Boolean(
+        default=True, 
+        tracking=True
+    )
+    
     card_type = fields.Selection([
-        ('vehicle', 'Vehículo'),
-        ('generator', 'Generador'),
-        ('other', 'Otro')
-    ], string='Tipo de Tarjeta', required=True, default='vehicle', tracking=True)
+        ('basica', 'Básica'),
+        ('reserva', 'Reserva')
+    ], string='Tipo de Tarjeta', default='basica', required=True, tracking=True,
+       help="Básica: Tarjeta de uso normal. Reserva: Tarjeta de emergencia o respaldo")
     
-    issue_date = fields.Date(string='Fecha de Emisión', default=fields.Date.context_today, required=True, tracking=True)
-    expiry_date = fields.Date(string='Fecha de Vencimiento', required=True, tracking=True)
+    issue_date = fields.Date(
+        string='Fecha de Emisión', 
+        default=fields.Date.context_today, 
+        required=True, 
+        tracking=True
+    )
     
-    supplier_id = fields.Many2one('fuel.supplier', string='Proveedor', required=True, tracking=True)
-    carrier_id = fields.Many2one('fuel.carrier', string='Portador de Combustible', tracking=True,
-                           help="Tipo de combustible asociado a esta tarjeta") 
+    expiry_date = fields.Date(
+        string='Fecha de Vencimiento', 
+        required=True, 
+        tracking=True
+    )
     
-    vehicle_id = fields.Many2one('fleet.vehicle', string='Vehículo', tracking=True,
-                                domain="[('active', '=', True)]")
-    generator_id = fields.Many2one('fuel.power.generator', string='Generador', tracking=True)
+    # MODIFICADO: Cambio de Many2one a Many2many para múltiples portadores
+    carrier_ids = fields.Many2many(
+        'fuel.carrier', 
+        'fuel_card_carrier_rel',
+        'card_id',
+        'carrier_id',
+        string='Portadores de Combustible', 
+        tracking=True,
+        help="Tipos de combustible asociados a esta tarjeta"
+    )
     
-    driver_id = fields.Many2one('fuel.driver', string='Conductor Asignado', tracking=True)
-    holder_id = fields.Many2one('fuel.card.holder', string='Titular de la Tarjeta', tracking=True)
+    # Campo computado para mantener compatibilidad con código existente
+    carrier_id = fields.Many2one(
+        'fuel.carrier',
+        string='Portador Principal',
+        compute='_compute_carrier_id',
+        store=True,
+        help="Primer portador de combustible (para compatibilidad)"
+    )
     
-    pin = fields.Char(string='PIN', groups="fuel_card_management.group_fuel_card_manager", tracking=True)
+    vehicle_id = fields.Many2one(
+        'fleet.vehicle', 
+        string='Vehículo Asignado', 
+        tracking=True,
+        domain="[('active', '=', True)]"
+    )
     
-    initial_balance = fields.Float(string='Saldo Inicial', default=0.0, tracking=True)
-    current_balance = fields.Float(string='Saldo Actual', default=0.0, tracking=True)
+    driver_id = fields.Many2one(
+        'res.partner', 
+        string='Conductor Asignado', 
+        tracking=True,
+        domain="[('is_driver', '=', True)]"
+    )
     
-    # Estados básicos - solo para manejo administrativo
+    # Campo para especificar el motor en vehículos tecnológicos
+    engine_type = fields.Selection([
+        ('main', 'Motor Principal'),
+        ('secondary', 'Motor Secundario')
+    ], string='Tipo de Motor', tracking=True,
+       help="Para vehículos tecnológicos, especifica a qué motor está asignada la tarjeta")
+    
+    pin = fields.Char(
+        string='PIN', 
+        groups="fuel_card_management.group_fuel_card_manager", 
+        tracking=True
+    )
+    
+    initial_balance = fields.Float(
+        string='Saldo Inicial', 
+        default=0.0, 
+        tracking=True,
+        states={'available': [('readonly', True)], 'assigned': [('readonly', True)], 'expired': [('readonly', True)], 'blocked': [('readonly', True)], 'cancelled': [('readonly', True)]}
+    )
+    
+    current_balance = fields.Float(
+        string='Saldo Actual', 
+        default=0.0, 
+        tracking=True,
+    )
+    
+    # --- Estados y operaciones ---
     state = fields.Selection([
         ('draft', 'Borrador'),
         ('available', 'Disponible'),
@@ -50,7 +116,6 @@ class FuelMagneticCard(models.Model):
         ('cancelled', 'Cancelada')
     ], string='Estado', default='draft', tracking=True)
     
-    # Campo computed para mostrar el estado de operación
     operational_state = fields.Selection([
         ('draft', 'Borrador'),
         ('available', 'Disponible'),
@@ -60,203 +125,289 @@ class FuelMagneticCard(models.Model):
         ('cancelled', 'Cancelada')
     ], string='Estado Operativo', compute='_compute_operational_state', store=True)
     
-    # Campo para saber si está asignada por entrega
-    is_delivered = fields.Boolean(string='Entregada', default=False, tracking=True)
+    is_delivered = fields.Boolean(
+        string='Entregada', 
+        default=False, 
+        tracking=True
+    )
+    
+    # Campos relacionados del vehículo para mostrar información
+    vehicle_custom_type = fields.Selection(
+        related='vehicle_id.vehicle_custom_type', 
+        string='Tipo de Vehículo', 
+        readonly=True
+    )
     
     notes = fields.Text(string='Notas')
     
-    load_ids = fields.One2many('fuel.card.load', 'card_id', string='Historial de Cargas')
-    delivery_ids = fields.One2many('fuel.card.delivery', 'card_id', string='Historial de Entregas')
-    ticket_ids = fields.One2many('fuel.ticket', 'card_id', string='Tickets de Combustible')
-    
+    # --- Relaciones ---
+    fuel_log_ids = fields.One2many(
+        'fleet.vehicle.log.fuel', 
+        'card_main_id', 
+        string='Registros de Combustible'
+    )
+
+    # --- Constraints y validaciones ---
     _sql_constraints = [
-        ('name_uniq', 'unique(name)', 'El número de tarjeta debe ser único!')
+        ('name_uniq', 'unique(name)', '¡El número de tarjeta debe ser único!'),
+        ('balance_positive', 'CHECK(current_balance >= 0)', '¡El saldo no puede ser negativo!')
     ]
-    
-    # Agregar más dependencias al campo computed
-    @api.depends('state', 'is_delivered', 'holder_id', 'vehicle_id', 'generator_id')
-    def _compute_operational_state(self):
+
+    # NUEVO: Método computado para carrier_id (compatibilidad)
+    @api.depends('carrier_ids')
+    def _compute_carrier_id(self):
+        """Asigna el primer portador como portador principal para compatibilidad"""
         for card in self:
-            if card.state in ['expired', 'blocked', 'cancelled', 'draft']:
-                card.operational_state = card.state
-            else:
-                # Si está en estado normal, determinar si está disponible o asignada
-                if card.is_delivered or card.holder_id or card.vehicle_id or card.generator_id:
-                    card.operational_state = 'assigned'
-                else:
-                    card.operational_state = 'available'
-    
+            card.carrier_id = card.carrier_ids[0] if card.carrier_ids else False
+
     @api.constrains('name')
     def _check_card_number_format(self):
-        """Validar que el número de tarjeta tenga exactamente 16 dígitos"""
+        """Validar formato de 16 dígitos"""
         for card in self:
             if card.name:
-                # Remover espacios para validar solo los dígitos
                 clean_number = card.name.replace(' ', '')
-                
-                # Verificar que tenga exactamente 16 caracteres y que todos sean dígitos
                 if not re.match(r'^\d{16}$', clean_number):
                     raise ValidationError(_("El número de tarjeta debe tener exactamente 16 dígitos numéricos."))
-    
+
     @api.constrains('expiry_date')
     def _check_expiry_date(self):
         for card in self:
             if card.expiry_date and card.expiry_date < fields.Date.today():
                 raise ValidationError(_("La fecha de vencimiento no puede ser anterior a la fecha actual."))
-    
+
+    @api.constrains('initial_balance')
+    def _check_initial_balance(self):
+        for card in self:
+            if card.initial_balance < 0:
+                raise ValidationError(_("El saldo inicial no puede ser negativo."))
+
+    # NUEVO: Validación para portadores de combustible
+    @api.constrains('carrier_ids')
+    def _check_carrier_ids(self):
+        """Validar que se asigne al menos un portador de combustible"""
+        for card in self:
+            if not card.carrier_ids:
+                raise ValidationError(_("La tarjeta debe tener al menos un portador de combustible asignado."))
+
+    # Validación específica para vehículos tecnológicos
+    @api.constrains('vehicle_id', 'engine_type')
+    def _check_engine_type_assignment(self):
+        """Validar asignación de tipo de motor según el tipo de vehículo"""
+        for card in self:
+            if card.vehicle_id:
+                vehicle_type = card.vehicle_id.vehicle_custom_type
+                
+                if vehicle_type == 'tecnologico':
+                    if not card.engine_type:
+                        raise ValidationError(_(
+                            "Para vehículos tecnológicos debe especificar el tipo de motor "
+                            "(Principal o Secundario)."
+                        ))
+                elif vehicle_type in ['movil', 'estacionario']:
+                    if card.engine_type:
+                        raise ValidationError(_(
+                            "Los vehículos móviles y estacionarios no requieren especificar tipo de motor."
+                        ))
+
+    # --- Métodos computados ---
+    @api.depends('state', 'is_delivered', 'vehicle_id', 'driver_id', 'expiry_date')
+    def _compute_operational_state(self):
+        for card in self:
+            if card.expiry_date and card.expiry_date < fields.Date.today():
+                card.operational_state = 'expired'
+            elif card.state in ['expired', 'blocked', 'cancelled', 'draft']:
+                card.operational_state = card.state
+            else:
+                if card.is_delivered or card.vehicle_id or card.driver_id:
+                    card.operational_state = 'assigned'
+                else:
+                    card.operational_state = 'available'
+
+    # --- Métodos de negocio ---
+    def action_activate(self):
+        """Activar tarjeta (de borrador a disponible)"""
+        for card in self.filtered(lambda x: x.state == 'draft'):
+            card.write({
+                'state': 'available',
+                'is_delivered': False
+            })
+        return True
+
+    def action_block(self):
+        """Bloquear tarjeta"""
+        for card in self.filtered(lambda x: x.state not in ['expired', 'cancelled']):
+            card.state = 'blocked'
+        return True
+
+    def action_unblock(self):
+        """Desbloquear tarjeta"""
+        for card in self.filtered(lambda x: x.state == 'blocked'):
+            if card.expiry_date and card.expiry_date < fields.Date.today():
+                card.state = 'expired'
+            else:
+                card.state = 'available'
+        return True
+
+    def action_cancel(self):
+        """Cancelar tarjeta"""
+        for card in self.filtered(lambda x: x.state != 'cancelled'):
+            card.write({
+                'state': 'cancelled',
+                'is_delivered': False,
+                'driver_id': False,
+                'vehicle_id': False,
+                'engine_type': False
+            })
+        return True
+
+    def action_reset_to_draft(self):
+        """Reiniciar tarjeta a borrador desde estado cancelado"""
+        for card in self.filtered(lambda x: x.state == 'cancelled'):
+            card.write({
+                'state': 'draft',
+                'is_delivered': False,
+                'driver_id': False,
+                'vehicle_id': False,
+                'engine_type': False
+            })
+            card.message_post(
+                body=_("Tarjeta reiniciada a borrador"),
+                subject=_("Estado cambiado")
+            )
+        return True
+
+    # --- Métodos auxiliares ---
     def _format_card_number(self, number):
-        """Formatear el número de tarjeta con espacios cada 4 dígitos"""
+        """Formatear número con espacios cada 4 dígitos"""
         if not number:
             return number
-        
-        # Remover espacios existentes y caracteres no numéricos
-        clean_number = ''.join(filter(str.isdigit, number))
-        
-        # Limitar a 16 dígitos
-        clean_number = clean_number[:16]
-        
-        # Agregar espacios cada 4 dígitos
-        formatted = ' '.join([clean_number[i:i+4] for i in range(0, len(clean_number), 4)])
-        
-        return formatted
-    
+        clean_number = ''.join(filter(str.isdigit, str(number)))[:16]
+        return ' '.join([clean_number[i:i+4] for i in range(0, len(clean_number), 4)])
+
     @api.onchange('name')
     def _onchange_card_number(self):
-        """Formatear automáticamente el número mientras se escribe"""
         if self.name:
-            formatted_number = self._format_card_number(self.name)
-            if formatted_number != self.name:
-                self.name = formatted_number
-    
+            self.name = self._format_card_number(self.name)
+
+    @api.onchange('vehicle_id')
+    def _onchange_vehicle_id(self):
+        """Lógica específica según el tipo de vehículo"""
+        if self.vehicle_id:
+            # Asignar conductor si el vehículo tiene uno
+            if hasattr(self.vehicle_id, 'driver_id') and self.vehicle_id.driver_id:
+                self.driver_id = self.vehicle_id.driver_id
+            
+            # Limpiar engine_type al cambiar vehículo
+            self.engine_type = False
+            
+            # Para vehículos no tecnológicos, asegurar que engine_type esté vacío
+            if self.vehicle_id.vehicle_custom_type in ['movil', 'estacionario']:
+                self.engine_type = False
+        else:
+            self.engine_type = False
+
     @api.model
     def create(self, vals):
-        """Formatear el número antes de crear el registro y establecer estado inicial"""
         if vals.get('name'):
             vals['name'] = self._format_card_number(vals['name'])
-        
-        # Automáticamente pasar a disponible después de crear
         if vals.get('state') == 'draft':
             vals['state'] = 'available'
         
-        return super(FuelMagneticCard, self).create(vals)
-    
+        # NEW: Initialize current_balance with initial_balance if not explicitly set
+        if 'initial_balance' in vals and 'current_balance' not in vals:
+            vals['current_balance'] = vals['initial_balance']
+            
+        return super().create(vals)
+
     def write(self, vals):
-        """Formatear el número antes de actualizar el registro"""
         if vals.get('name'):
             vals['name'] = self._format_card_number(vals['name'])
-        return super(FuelMagneticCard, self).write(vals)
-    
-    @api.onchange('card_type')
-    def _onchange_card_type(self):
-        self.vehicle_id = False
-        self.generator_id = False
-    
-    @api.onchange('vehicle_id')
-    def _onchange_vehicle_id(self):
-        if self.vehicle_id and self.vehicle_id.driver_id:
-            driver = self.env['fuel.driver'].search([('partner_id', '=', self.vehicle_id.driver_id.id)], limit=1)
-            if driver:
-                self.driver_id = driver.id
-    
-    # Métodos simplificados para manejo de estados administrativos
-    def action_activate(self):
-        """Activar tarjeta (de borrador a disponible)"""
+        return super().write(vals)
+
+    def name_get(self):
+        """Personalizar la representación del nombre para incluir el tipo y motor"""
+        result = []
         for card in self:
-            if card.state == 'draft':
-                card.write({
-                    'state': 'available',
-                    'is_delivered': False
-                })
-    
-    def action_block(self):
-        """Bloquear tarjeta"""
-        for card in self:
-            if card.state not in ['expired', 'cancelled']:
-                card.state = 'blocked'
-    
-    def action_unblock(self):
-        """Desbloquear tarjeta"""
-        for card in self:
-            if card.state == 'blocked':
-                # Verificar si la tarjeta ha vencido mientras estaba bloqueada
-                if card.expiry_date and card.expiry_date < fields.Date.today():
-                    card.state = 'expired'
-                else:
-                    card.state = 'available'
-    
-    def action_cancel(self):
-        """Cancelar tarjeta"""
-        for card in self:
-            if card.state != 'cancelled':
-                card.write({
-                    'state': 'cancelled',
-                    'is_delivered': False,
-                    'holder_id': False,
-                    'driver_id': False,
-                    'vehicle_id': False,
-                    'generator_id': False
-                })
-    
-    def action_reset_to_draft(self):
-        """Volver a borrador"""
-        for card in self:
-            if card.state == 'cancelled':
-                card.write({
-                    'state': 'draft',
-                    'is_delivered': False
-                })
-    
-    # Métodos para manejo de entrega/devolución
-    def _set_delivered(self, holder_id=False, driver_id=False, vehicle_id=False, generator_id=False):
-        """Marcar tarjeta como entregada"""
-        self.ensure_one()
-        #Cambiar la condición para permitir desde 'available'
-        if self.state in ['available', 'draft']:
-            vals = {
-                'is_delivered': True,
-                'state': 'assigned',  
-                'holder_id': holder_id,
-                'driver_id': driver_id,
-                'vehicle_id': vehicle_id,
-                'generator_id': generator_id,
-            }
-            self.write(vals)
-            # Forzar recálculo del campo computed
-            self._compute_operational_state()
-            
-            # Log para debugging
-            _logger.info(f"Tarjeta {self.name} entregada. Estado: {self.state}, Operativo: {self.operational_state}")
-    
-    def _set_returned(self):
-        """Marcar tarjeta como devuelta"""
-        self.ensure_one()
-        # Verificar tanto el estado como el operational_state
-        if self.state == 'assigned' or self.operational_state == 'assigned':
-            vals = {
-                'is_delivered': False,
-                'state': 'available', 
-                'holder_id': False,
-                'driver_id': False,
-                'vehicle_id': False,
-                'generator_id': False,
-            }
-            self.write(vals)
-            #  Forzar recálculo del campo computed
-            self._compute_operational_state()
-            
-            # Log para debugging
-            _logger.info(f"Tarjeta {self.name} devuelta. Estado: {self.state}, Operativo: {self.operational_state}")
-    
+            try:
+                card_type_label = dict(card._fields['card_type'].selection).get(card.card_type, card.card_type)
+                name = f"{card.name} ({card_type_label})"
+                
+                # Añadir información del motor para vehículos tecnológicos
+                if card.engine_type and card.vehicle_id and card.vehicle_id.vehicle_custom_type == 'tecnologico':
+                    engine_label = dict(card._fields['engine_type'].selection)[card.engine_type]
+                    name += f" - {engine_label}"
+                
+                # NUEVO: Añadir información de portadores
+                if card.carrier_ids:
+                    carriers_names = ', '.join(card.carrier_ids.mapped('name'))
+                    name += f" [{carriers_names}]"
+                
+                result.append((card.id, name))
+            except Exception as e:
+                _logger.warning(f"Error en name_get para tarjeta {card.id}: {e}")
+                result.append((card.id, card.name or ''))
+        return result
+
     def can_be_delivered(self):
         """Verificar si la tarjeta puede ser entregada"""
-        return self.operational_state == 'available' and self.state in ['available', 'draft']
-    
+        self.ensure_one()
+        return self.operational_state == 'available' and self.active
+
     def can_be_returned(self):
         """Verificar si la tarjeta puede ser devuelta"""
-        return self.operational_state == 'assigned' or self.state == 'assigned'
+        self.ensure_one()
+        return self.operational_state == 'assigned' and self.active
+
+    def _set_delivered(self, driver_id=False, vehicle_id=False, engine_type=False):
+        """Marcar tarjeta como entregada y asignar conductor/vehículo/motor"""
+        self.ensure_one()
+        vals = {
+            'is_delivered': True,
+            'state': 'assigned'
+        }
+        if driver_id:
+            vals['driver_id'] = driver_id
+        if vehicle_id:
+            vals['vehicle_id'] = vehicle_id
+        if engine_type:
+            vals['engine_type'] = engine_type
+        self.write(vals)
+
+    def _set_returned(self):
+        """Marcar tarjeta como devuelta y limpiar asignaciones"""
+        self.ensure_one()
+        self.write({
+            'is_delivered': False,
+            'state': 'available',
+            'driver_id': False,
+            'vehicle_id': False,
+            'engine_type': False
+        })
+
+    def unlink(self):
+        """Prevenir eliminación de tarjetas con historial"""
+        for card in self:
+            if card.fuel_log_ids:
+                raise ValidationError(_("No se puede eliminar una tarjeta con historial de transacciones. Considere desactivarla en su lugar."))
+        return super().unlink()
+
+    # NUEVO: Método para verificar si un portador específico está asignado
+    def has_carrier(self, carrier_id):
+        """Verificar si la tarjeta tiene un portador específico asignado"""
+        self.ensure_one()
+        return carrier_id in self.carrier_ids.ids
+
+    # NUEVO: Método para obtener nombres de portadores
+    def get_carriers_display(self):
+        """Obtener nombres de portadores para mostrar"""
+        self.ensure_one()
+        return ', '.join(self.carrier_ids.mapped('name')) if self.carrier_ids else _('Sin portadores')
+
+    # --- MÉTODOS CRON PARA NOTIFICACIONES ---
     
     @api.model
     def _cron_check_expired_cards(self):
+        """Marcar tarjetas vencidas como expiradas"""
         today = fields.Date.today()
         expired_cards = self.search([
             ('expiry_date', '<', today),
@@ -264,105 +415,45 @@ class FuelMagneticCard(models.Model):
         ])
         
         for card in expired_cards:
-            card.state = 'expired'
+            card.write({'state': 'expired'})
             card.message_post(
-                body=_("Esta tarjeta ha vencido automáticamente el %s.") % today,
-                message_type='notification',
-                subtype_xmlid='mail.mt_comment'
+                body=_("Tarjeta marcada como vencida automáticamente"),
+                subject=_("Tarjeta Vencida")
             )
-    
+            _logger.info("Tarjeta %s marcada como vencida automáticamente", card.name)
+
     @api.model
     def _cron_notify_expiring_cards(self):
+        """Crear actividades para tarjetas que vencen en 30 días"""
         today = fields.Date.today()
-        expiry_warning_date = today + timedelta(days=30)  # Notificar 30 días antes
+        expiry_limit = today + timedelta(days=30)
         
         expiring_cards = self.search([
+            ('expiry_date', '<=', expiry_limit),
             ('expiry_date', '>=', today),
-            ('expiry_date', '<=', expiry_warning_date),
             ('state', 'in', ['available', 'assigned'])
         ])
         
         for card in expiring_cards:
-            days_remaining = (card.expiry_date - today).days
-            card.message_post(
-                body=_("Esta tarjeta vencerá en %s días (el %s).") % (days_remaining, card.expiry_date),
-                message_type='notification',
-                subtype_xmlid='mail.mt_comment'
-            )
+            days_until_expiry = (card.expiry_date - today).days
             
-            # Notificar al responsable de tarjetas
-            managers = self.env.ref('fuel_card_management.group_fuel_card_manager').users
-            if managers:
-                self.env['mail.activity'].create({
-                    'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
-                    'note': _("La tarjeta %s vencerá en %s días (el %s).") % (card.name, days_remaining, card.expiry_date),
-                    'user_id': managers[0].id,
-                    'res_id': card.id,
-                    'res_model_id': self.env['ir.model'].search([('model', '=', 'fuel.magnetic.card')], limit=1).id,
-                })
-    
-    # Método para obtener datos del dashboard
-    @api.model
-    def get_dashboard_data(self):
-        # Contar tarjetas por estado operativo
-        available_cards = self.search_count([('operational_state', '=', 'available'), ('active', '=', True)])
-        assigned_cards = self.search_count([('operational_state', '=', 'assigned'), ('active', '=', True)])
-        expired_cards = self.search_count([('state', '=', 'expired'), ('active', '=', True)])
-        blocked_cards = self.search_count([('state', '=', 'blocked'), ('active', '=', True)])
-        
-        # Calcular saldo total
-        total_balance = sum(self.search([('active', '=', True)]).mapped('current_balance'))
-        
-        # Obtener consumo del mes actual
-        today = fields.Date.today()
-        first_day = today.replace(day=1)
-        tickets = self.env['fuel.ticket'].search([
-            ('date', '>=', first_day),
-            ('date', '<=', today),
-            ('state', '=', 'confirmed')
-        ])
-        month_consumption = sum(tickets.mapped('liters'))
-        
-        # Obtener planes pendientes de aprobación
-        pending_plans = self.env['fuel.plan'].search_count([('state', '=', 'pending_approval')])
-        
-        # Obtener cargas recientes
-        recent_loads = self.env['fuel.card.load'].search([
-            ('state', '=', 'confirmed')
-        ], limit=5, order='date desc')
-        
-        recent_loads_data = []
-        for load in recent_loads:
-            recent_loads_data.append({
-                'id': load.id,
-                'date': load.date,
-                'card_name': load.card_id.name,
-                'amount': load.amount
-            })
-        
-        # Obtener tickets recientes
-        recent_tickets = self.env['fuel.ticket'].search([
-            ('state', '=', 'confirmed')
-        ], limit=5, order='date desc')
-        
-        recent_tickets_data = []
-        for ticket in recent_tickets:
-            recent_tickets_data.append({
-                'id': ticket.id,
-                'date': ticket.date,
-                'card_name': ticket.card_id.name,
-                'liters': ticket.liters
-            })
-        
-        return {
-            'available_cards': available_cards,
-            'assigned_cards': assigned_cards,
-            'expired_cards': expired_cards,
-            'blocked_cards': blocked_cards,
-            'total_balance': total_balance,
-            'month_consumption': month_consumption,
-            'pending_plans': pending_plans,
-            'recent_loads': recent_loads_data,
-            'recent_tickets': recent_tickets_data
-        }
-
+            # Buscar si ya existe una actividad pendiente para esta tarjeta
+            existing_activity = self.env['mail.activity'].search([
+                ('res_model', '=', 'fuel.magnetic.card'),
+                ('res_id', '=', card.id),
+                ('activity_type_id', '=', self.env.ref('mail.mail_activity_data_todo').id),
+                ('summary', 'ilike', 'vencer')
+            ])
+            
+            if not existing_activity:
+                card.activity_schedule(
+                    'mail.mail_activity_data_todo',
+                    summary=_("Tarjeta próxima a vencer"),
+                    note=_(
+                        "La tarjeta %s vence el %s (en %d días).\n"
+                        "Por favor, tome las acciones necesarias."
+                    ) % (card.name, card.expiry_date, days_until_expiry),
+                    user_id=card.create_uid.id,
+                    date_deadline=card.expiry_date - timedelta(days=7)
+                )
+                _logger.info("Actividad creada para tarjeta %s que vence en %d días", card.name, days_until_expiry)
