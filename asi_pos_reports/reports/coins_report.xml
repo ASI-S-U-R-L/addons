@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template del reporte PDF -->
+    <template id="report_pos_coins_document">
+        <t t-call="web.html_container">
+            <t t-call="asi_pos_reports.report_blank_layout">
+                <div class="page" style="font-size: 11pt;">
+                    <t t-foreach="docs" t-as="doc">
+                        <t t-set="data" t-value="doc._get_coins_data()" />
+
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h3 style="margin: 0 0 10px 0; font-weight: 600;">Monedas</h3>
+                        </div>
+
+                        <hr style="margin: 10px 0; border-top: 1px solid #ddd;" />
+
+                        <div style="margin-bottom: 15px; font-size: 10pt;">
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td style="width: 30%;">
+                                        <strong>Fecha:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['date']" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Usuario:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['user_name']" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Sesión:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['session_name']" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <hr style="margin: 10px 0; border-top: 1px solid #ddd;" />
+
+                        <div style="margin-bottom: 15px; font-size: 10pt;">
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td style="width: 30%;">
+                                        <strong>Empresa:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['empresa_name']" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Entidad:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['company_name']" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Dirección:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['company_address']" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Teléfono:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['company_phone']" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Desde:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['start_date']" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Hasta:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['end_date']" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <hr style="margin: 10px 0; border-top: 1px solid #ddd;" />
+
+                        <!-- Simplificado: solo mostrar el importe de apertura sin desglose de
+                        monedas -->
+                        <div style="margin-bottom: 15px; font-size: 10pt;">
+                            <div style="font-weight: 600; margin-bottom: 5px;">Inicial</div>
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td style="width: 30%;">
+                                        <strong>CUP Importe:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['opening_balance']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <hr style="margin: 10px 0; border-top: 1px solid #ddd;" />
+
+                        <!-- Simplificado: solo mostrar el importe de retiro sin desglose de monedas -->
+                        <div style="margin-bottom: 15px; font-size: 10pt;">
+                            <div style="font-weight: 600; margin-bottom: 5px;">Retiro</div>
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td style="width: 30%;">
+                                        <strong>CUP Importe:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['withdrawal']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <hr style="margin: 10px 0; border-top: 1px solid #ddd;" />
+
+                        <!-- Simplificado: solo mostrar el importe de apertura sin desglose de
+                        monedas -->
+                        <div style="margin-bottom: 15px; font-size: 10pt;">
+                            <div style="font-weight: 600; margin-bottom: 5px;">Final</div>
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td style="width: 30%;">
+                                        <strong>CUP Importe:</strong>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <t t-esc="data['ending_cash']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Reporte PDF de Monedas -->
+    <record id="action_report_pos_coins" model="ir.actions.report">
+        <field name="name">Reporte de Monedas</field>
+        <field name="model">pos.session</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_pos_coins_document</field>
+        <field name="report_file">asi_pos_reports.report_pos_coins_document</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_session" />
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template para previsualización de ticket -->
+    <template id="report_pos_coins_ticket_preview">
+        <t t-call="web.html_container">
+            <t t-call="asi_pos_reports.report_blank_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="doc">
+                        <t t-set="data" t-value="doc._get_coins_data()" />
+
+                        <div
+                            style="max-width: 300px; margin: 0 auto; font-family: 'Courier New', monospace; border: 2px dashed #ccc; padding: 20px; background-color: #f9f9f9;">
+                            <!-- Título centrado -->
+                            <div style="font-weight: bold; margin-bottom: 5px; text-align: center;">
+                                Monedas</div>
+                            <br></br>
+
+                            <!-- Información de sesión alineada a la izquierda -->
+                            <div style="text-align: left; font-size: 12px;">
+                                <div style="margin: 2px 0;">
+                                    <t t-esc="data['date']" />
+                                </div>
+                                <div style="margin: 2px 0;">Usuario: <t t-esc="data['user_name']" /></div>
+                                <div style="margin: 2px 0;">Sesión: <t t-esc="data['session_name']" /></div>
+                                <div style="margin: 5px 0;">============================</div>
+
+                                <!-- Información de empresa con valores alineados a la derecha -->
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell; width: 40%;">Empresa:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['empresa_name']" />
+                                    </div>
+                                </div>
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell; width: 40%;">Entidad:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['company_name']" />
+                                    </div>
+                                </div>
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell; width: 40%;">Dirección:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['company_address']" />
+                                    </div>
+                                </div>
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell; width: 40%;">Teléfono:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['company_phone']" />
+                                    </div>
+                                </div>
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell; width: 40%;">Desde:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['start_date']" />
+                                    </div>
+                                </div>
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell; width: 40%;">Hasta:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['end_date']" />
+                                    </div>
+                                </div>
+                                <div style="margin: 5px 0;">============================</div>
+                            </div>
+
+                            <!-- Simplificado: solo mostrar el importe de apertura -->
+                            <div style="font-size: 12px;">
+                                <div style="font-weight: bold; margin: 5px 0;">Inicial</div>
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell;">CUP Importe:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['opening_balance']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin: 5px 0;">============================</div>
+
+                            <!-- Simplificado: solo mostrar el importe de retiro -->
+                            <div style="font-size: 12px;">
+                                <div style="font-weight: bold; margin: 5px 0;">Retiro</div>
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell;">CUP Importe:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['withdrawal']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin: 5px 0;">============================</div>
+
+                            <!-- Simplificado: solo mostrar el importe de apertura -->
+                            <div style="font-size: 12px;">
+                                <div style="font-weight: bold; margin: 5px 0;">Final</div>
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell;">CUP Importe:</div>
+                                    <div style="display: table-cell; text-align: right;">
+                                        <t t-esc="data['ending_cash']"
+                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Reporte para previsualización de ticket -->
+    <record id="action_report_pos_coins_ticket_preview" model="ir.actions.report">
+        <field name="name">Previsualización Ticket - Monedas</field>
+        <field name="model">pos.session</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_pos_coins_ticket_preview</field>
+        <field name="report_file">asi_pos_reports.report_pos_coins_ticket_preview</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_session" />
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template para ticket de impresora -->
+    <template id="report_pos_coins_ticket_document">
+        <t t-call="asi_pos_reports.report_ticket_thermal_layout">
+            <t t-foreach="docs" t-as="doc">
+                <div class="ticket-content" style="font-size:11px">
+                    <div class="ticket-center">
+                        <p class="ticket-line" style="font-size:12px">
+                            <strong>MONEDAS</strong>
+                        </p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">Fecha: <t t-esc="doc.start_at.strftime('%d/%m/%Y')" /></p>
+                        <p class="ticket-line">Usuario: <t t-esc="doc.user_id.name" /></p>
+                        <p class="ticket-line">Sesion: <t t-esc="doc.name" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <t t-set="data" t-value="doc._get_coins_data()" />
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">Empresa: <t t-esc="data['empresa_name']" /></p>
+                        <p class="ticket-line">Entidad: <t t-esc="data['company_name']" /></p>
+                        <p class="ticket-line">Desde: <t t-esc="data['start_date']" /></p>
+                        <p class="ticket-line">Hasta: <t t-esc="data['end_date']" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">
+                            <strong>INICIAL</strong>
+                        </p>
+                        <p class="ticket-line">CUP Importe: $<t
+                                t-esc="'{0:.2f}'.format(data['opening_balance'])" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">
+                            <strong>RETIRO</strong>
+                        </p>
+                        <p class="ticket-line">CUP Importe: $<t
+                                t-esc="'{0:.2f}'.format(data['withdrawal'])" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">
+                            <strong>FINAL</strong>
+                        </p>
+                        <p class="ticket-line">CUP Importe: $<t
+                                t-esc="'{0:.2f}'.format(data['ending_cash'])" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Reporte Ticket de Monedas para impresora -->
+    <record id="action_report_pos_coins_ticket" model="ir.actions.report">
+        <field name="name">Ticket de Monedas</field>
+        <field name="model">pos.session</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_pos_coins_ticket_document</field>
+        <field name="report_file">asi_pos_reports.report_pos_coins_ticket_document</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_session" />
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="asi_pos_reports.paperformat_thermal_ticket" />
+    </record>
+</odoo>

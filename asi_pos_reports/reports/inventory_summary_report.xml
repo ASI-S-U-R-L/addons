@@ -14,7 +14,7 @@
     <!-- Template principal del reporte with right-aligned numbers and thousand separators -->
     <template id="report_inventory_summary_template">
         <t t-call="web.html_container">
-            <t t-call="web.external_layout">
+            <t t-call="asi_pos_reports.report_blank_layout">
                 <div class="page" style="font-size: 11pt;">
                     <t t-foreach="docs" t-as="wizard">
                         <t t-set="data" t-value="wizard._get_inventory_data()" />
@@ -196,5 +196,76 @@
         <field name="report_file">asi_pos_reports.report_inventory_ticket_preview_template</field>
         <field name="binding_model_id" ref="model_inventory_summary_wizard" />
         <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template para ticket de impresora -->
+    <template id="report_inventory_ticket_document">
+        <t t-call="asi_pos_reports.report_ticket_thermal_layout">
+            <t t-foreach="docs" t-as="wizard">
+                <div class="ticket-content" style="font-size:11px">
+                    <div class="ticket-center">
+                        <p class="ticket-line" style="font-size:12px">
+                            <strong>INVENTARIO POR ARTICULOS Y GRUPO</strong>
+                        </p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">Fecha: <t
+                                t-esc="data['report_date'].strftime('%d/%m/%Y %H:%M')" /></p>
+                        <p class="ticket-line">Entidad/es: <t
+                                t-esc="', '.join(data['warehouse_names'])" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <t t-set="data" t-value="wizard._get_inventory_data()" />
+
+                    <t t-if="data['categories_data']">
+                        <t t-foreach="data['categories_data'].items()" t-as="category_item">
+                            <t t-set="category_name" t-value="category_item[0]" />
+                            <t t-set="category_products" t-value="category_item[1]" />
+
+                            <div class="ticket-left">
+                                <p class="ticket-line">
+                                    <strong>
+                                        <t t-esc="category_name.upper()" />
+                                    </strong>
+                                </p>
+                                <t t-foreach="category_products" t-as="product">
+                                    <p class="ticket-line">
+                                        <t t-esc="product['product_name']" /> (<t
+                                            t-esc="product['uom_symbol']" />): <t
+                                            t-esc="product['quantity']" />
+                                    </p>
+                                </t>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <p class="ticket-line">No se encontraron productos en inventario</p>
+                    </t>
+
+                    <div class="ticket-center">
+                        <p class="ticket-line">============================</p>
+                        <p class="ticket-line">
+                            <strong>TOTAL PRODUCTOS: <t t-esc="data['total_products']" /></strong>
+                        </p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Reporte Ticket de Inventario para impresora -->
+    <record id="action_report_inventory_ticket" model="ir.actions.report">
+        <field name="name">Ticket de Inventario</field>
+        <field name="model">inventory.summary.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_inventory_ticket_document</field>
+        <field name="report_file">asi_pos_reports.report_inventory_ticket_document</field>
+        <field name="binding_model_id" ref="model_inventory_summary_wizard" />
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="asi_pos_reports.paperformat_thermal_ticket" />
     </record>
 </odoo>

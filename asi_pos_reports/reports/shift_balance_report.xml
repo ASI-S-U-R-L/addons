@@ -14,7 +14,7 @@
     <!-- Template principal del reporte PDF -->
     <template id="report_shift_balance_document">
         <t t-call="web.html_container">
-            <t t-call="web.external_layout">
+            <t t-call="asi_pos_reports.report_blank_layout">
                 <div class="page" style="font-size: 11pt;">
                     <t t-foreach="docs" t-as="doc">
                         <t t-set="shift_data" t-value="doc._get_shift_balance_data()" />
@@ -117,7 +117,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <strong>Otros ingresos:</strong>
+                                        <strong>Transferencias:</strong>
                                     </td>
                                     <td style="text-align: right;">
                                         <t t-esc="shift_data['other_income']"
@@ -364,7 +364,7 @@
                                     </div>
                                 </div>
                                 <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Otros ingresos:</div>
+                                    <div style="display: table-cell;">Transferencias:</div>
                                     <div style="display: table-cell; text-align: right;">
                                         <t t-esc="shift_data['other_income']"
                                             t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
@@ -501,6 +501,108 @@
             </t>
         </t>
     </template>
+
+    <!-- Template para ticket de impresora -->
+    <template id="report_shift_balance_ticket_document">
+        <t t-call="asi_pos_reports.report_ticket_thermal_layout">
+            <t t-foreach="docs" t-as="doc">
+                <div class="ticket-content" style="font-size:11px">
+                    <div class="ticket-center">
+                        <p class="ticket-line" style="font-size:12px">
+                            <strong>BALANCE DE TURNO</strong>
+                        </p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">Fecha: <t t-esc="doc.start_at.strftime('%d/%m/%Y')" /></p>
+                        <p class="ticket-line">Usuario: <t t-esc="doc.user_id.name" /></p>
+                        <p class="ticket-line">Sesion: <t t-esc="doc.name" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <t t-set="shift_data" t-value="doc._get_shift_balance_data()" />
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">Empresa: <t t-esc="shift_data['empresa_name']" /></p>
+                        <p class="ticket-line">Entidad: <t t-esc="shift_data['company_name']" /></p>
+                        <p class="ticket-line">Desde: <t t-esc="shift_data['start_date']" /></p>
+                        <p class="ticket-line">Hasta: <t t-esc="shift_data['end_date']" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">Inicio: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['opening_balance'])" /></p>
+                        <p class="ticket-line">Efectivo: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['cash_amount'])" /></p>
+                        <p class="ticket-line">Transferencias: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['other_income'])" /></p>
+                        <p class="ticket-line">Gastos: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['expenses'])" /></p>
+                        <p class="ticket-line">
+                            <strong>Balance: $<t t-esc="'{0:.2f}'.format(shift_data['balance'])" /></strong>
+                        </p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">
+                            <strong>PAGOS:</strong>
+                        </p>
+                        <t t-foreach="shift_data['payment_methods']" t-as="payment">
+                            <p class="ticket-line"><t t-esc="payment['name']" />: $<t
+                                    t-esc="'{0:.2f}'.format(payment['amount'])" /></p>
+                        </t>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">Deudas: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['debts'])" /></p>
+                        <p class="ticket-line">Servicio: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['service'])" /></p>
+                        <p class="ticket-line">Descuento: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['discount'])" /></p>
+                        <p class="ticket-line">Devoluciones: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['returns'])" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-left">
+                        <p class="ticket-line">Balance: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['balance'])" /></p>
+                        <p class="ticket-line">Retiro: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['cash_amount'])" /></p>
+                        <p class="ticket-line">Final: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['final_balance'])" /></p>
+                        <p class="ticket-line">Restante: $<t
+                                t-esc="'{0:.2f}'.format(shift_data['remaining'])" /></p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+
+                    <div class="ticket-center">
+                        <p class="ticket-line">
+                            <strong>TOTAL: $<t t-esc="'{0:.2f}'.format(shift_data['total'])" /></strong>
+                        </p>
+                        <p class="ticket-line">============================</p>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Reporte Ticket de Balance de Turno para impresora -->
+    <record id="action_report_shift_balance_ticket" model="ir.actions.report">
+        <field name="name">Ticket de Balance de Turno</field>
+        <field name="model">pos.session</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_shift_balance_ticket_document</field>
+        <field name="report_file">asi_pos_reports.report_shift_balance_ticket_document</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_session" />
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="asi_pos_reports.paperformat_thermal_ticket" />
+    </record>
 
     <!-- Reporte para previsualización de ticket -->
     <record id="action_report_shift_balance_ticket_preview" model="ir.actions.report">
