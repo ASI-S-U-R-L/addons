@@ -9,7 +9,7 @@
     'author': 'Javier',
     'website': 'https://www.asisurl.cu',
     'category': 'Sales',
-    'depends': ['base','web','sale', 'account','helpdesk_mgmt'],
+    'depends': ['base','web','sale', 'account'],
     'data': [
         'views/invoice_views.xml',
         'views/partner_views.xml',  

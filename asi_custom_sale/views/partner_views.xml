@@ -26,7 +26,6 @@
                     </xpath>
                 <field name="property_product_pricelist" position="after">
                   <field name="asi_contract" />
-                  <field name="team_id" />
                 </field>               
                     <!-- Agregar campo después de 'function' -->
                     <xpath expr="//field[@name='function']" position="after">
