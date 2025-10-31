@@ -11,7 +11,10 @@ class ResPartner(models.Model):
     accreditation_sign_invoices_data = fields.Text(string='Datos de Acreditación para firmar facturas')
     bank_accounts = fields.Text(compute='_compute_bank_accounts', store=True)
     asi_contract = fields.Char('Contract')
-
+    team_id = fields.Many2one(
+        comodel_name="helpdesk.ticket.team",
+        string="Zona",
+    )
 
     @api.depends('bank_ids','bank_ids.acc_holder_name','bank_ids.currency_id','bank_ids.acc_number')
     def _compute_bank_accounts(self):
