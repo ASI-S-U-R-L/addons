@@ -47,15 +47,15 @@ function showTRMQrCode(root = document, ctx = null) {
     if (isBankPayment && pos.config.show_trm_qr_in_pos) {
         // Usar el importe de la línea de pago seleccionada (solo Transferencia)
         const transferAmount = selectedPaymentLine ? selectedPaymentLine.amount : order.get_total_with_tax();
-
+              
         // Generar QR básico para POS con el importe correcto
         const qrData = {
-            'id_transaccion': order.name || 'POS-' + Date.now(),
+            'id_transaccion': "ESTATICO",
             'importe': transferAmount,
             'moneda': pos.currency.display_name || 'CUP',
             'numero_proveedor': '0000000000', // Esto debería configurarse
             'version': 1,
-            'titulo': "test123"
+            'titulo': pos.config.display_name
         };
         const newQrString = JSON.stringify(qrData);
         const qrUrl = `/report/barcode/?barcode_type=QR&value=${encodeURIComponent(newQrString)}&width=150&height=150`;
