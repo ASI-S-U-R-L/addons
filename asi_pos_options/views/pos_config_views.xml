@@ -9,6 +9,7 @@
           <field name="hide_customer_button" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Si está activo, los botones no se muestran en la pantalla del POS."/>
           <!-- <field name="show_product_stock" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Si está activo, muestra el stock actual de los productos en la vista del POS."/> -->
           <field name="hide_bank_payment" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Si está activo, oculta el botón de pago por banco (transferencia) en la pantalla de pagos del POS."/>
+          <field name="show_trm_qr_in_pos" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Si está activo, muestra el código QR de Transfermovil en la pantalla de pago del POS para pagos por transferencia."/>
         </group>
       </xpath>
     </field>

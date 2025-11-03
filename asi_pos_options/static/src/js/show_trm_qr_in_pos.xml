@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-inherit="point_of_sale.PaymentScreen" t-inherit-mode="extension" owl="1">
+        <xpath expr="//div[hasclass('payment-screen')]" position="inside">
+            <div t-if="trmQrCodeVisible" class="mt-2 text-center">
+                <h5>Escanear con Transfermóvil</h5>
+                <img class="border border-dark rounded" t-att-src="trm_qr_code_url" alt="QR Transfermovil" />
+            </div>
+        </xpath>
+    </t>
+
+</templates>
+

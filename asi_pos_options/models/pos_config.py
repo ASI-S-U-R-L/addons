@@ -26,4 +26,9 @@ class PosConfig(models.Model):
     #     default=False,
     # )
 
-    
+    show_trm_qr_in_pos = fields.Boolean(
+        string="Mostrar QR de Transfermovil en POS",
+        help="Si está activo, muestra el código QR de Transfermovil en la pantalla de pago del POS para pagos por transferencia.",
+        default=False,
+    )
+
