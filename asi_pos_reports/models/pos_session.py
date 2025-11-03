@@ -11,24 +11,58 @@ class PosSession(models.Model):
     _inherit = 'pos.session'
 
     def action_merchandise_sales_report(self):
-        """Acción para mostrar el reporte de ventas por mercancías"""
+        """Acción para mostrar el wizard de Ventas por Mercancías"""
         self.ensure_one()
-        
-        # Crear el wizard para el reporte
-        wizard = self.env['pos.merchandise.report.wizard'].create({
+
+        date_start = self.start_at or self.create_date
+        date_stop = self.stop_at or fields.Datetime.now()
+
+        # 1) Crear el registro del wizard con defaults REALES
+        wiz = self.env['pos.merchandise.report.wizard'].create({
             'session_id': self.id,
-            'date_start': self.start_at,
-            'date_stop': self.stop_at or fields.Datetime.now(),
+            'date_start': date_start,
+            'date_stop': date_stop,
         })
-        
-        return {
-            'name': _('Ventas por Mercancías'),
+
+        # 2) Leer la ACCIÓN (no la vista) del wizard y fijar res_id
+        action = self.env.ref('asi_pos_reports.action_pos_merchandise_report_wizard').read()[0]
+        action.update({
+            'res_id': wiz.id,
+            'target': 'new',  # modal en webclient; en POS caerá en el fallback a nueva pestaña
             'type': 'ir.actions.act_window',
-            'res_model': 'pos.merchandise.report.wizard',
-            'res_id': wizard.id,
-            'view_mode': 'form',
+        })
+        return action
+
+    def action_shift_balance_report(self):
+        """Acción para mostrar el reporte de balance de turno"""
+        self.ensure_one()
+
+        # Leer la acción del wizard y crear el registro
+        action = self.env.ref('asi_pos_reports.action_pos_shift_balance_wizard').read()[0]
+        action.update({
+            'res_id': False,  # No pre-crear el wizard, dejar que se cree vacío
             'target': 'new',
-        }
+            'type': 'ir.actions.act_window',
+            'context': {
+                'default_pos_config_id': self.config_id.id,
+                'default_report_date': self.start_at.date() if self.start_at else fields.Date.today(),
+                'default_session_id': self.id,
+            }
+        })
+        return action
+
+    def action_inventory_summary_report(self):
+        """Acción para mostrar el reporte de resumen de inventario"""
+        self.ensure_one()
+
+        # Leer la acción del wizard de resumen de inventario
+        action = self.env.ref('asi_pos_reports.action_inventory_summary_wizard').read()[0]
+        action.update({
+            'res_id': False,  # No pre-crear el wizard, dejar que se cree vacío
+            'target': 'new',
+            'type': 'ir.actions.act_window',
+        })
+        return action
 
 
     def _generate_merchandise_report_on_close(self):

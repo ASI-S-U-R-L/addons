@@ -22,11 +22,11 @@ class PosMerchandiseReportWizard(models.TransientModel):
     def action_print_report(self):
         """Acción para imprimir el reporte principal (ahora usa el mejorado)"""
         self.ensure_one()
-        
+
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
-        
-        # Generar el reporte mejorado
+
+        # Generar el reporte usando el método estándar de Odoo
         return self.env.ref('asi_pos_reports.action_report_pos_merchandise_sales').report_action(
             self.session_id.ids
         )
@@ -34,10 +34,10 @@ class PosMerchandiseReportWizard(models.TransientModel):
     def action_preview_ticket(self):
         """Acción para previsualizar el formato de ticket"""
         self.ensure_one()
-        
+
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
-        
+
         # Generar la previsualización del ticket
         return self.env.ref('asi_pos_reports.action_report_pos_merchandise_ticket_preview').report_action(
             self.session_id.ids

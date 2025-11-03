@@ -12,120 +12,102 @@
     </record>
 
     <!-- Minimalist template with right-aligned numbers and thousand separators -->
-    <template id="report_pos_merchandise_sales_improved">
-        <t t-call="web.html_container">
-            <t t-call="web.external_layout">
-                <div class="page" style="font-size: 11pt;">
-                    <t t-foreach="docs" t-as="doc">
-                        <div style="margin-bottom: 20px;">
-                            <h3 style="margin: 0 0 5px 0; font-weight: 600;">Ventas por Mercancías</h3>
-                            <div style="font-size: 10pt; color: #666;">
-                                <div>
-                                    <strong>Sesión:</strong>
-                                    <span t-esc="doc.name" />
-                                </div>
-                                <div>
-                                    <strong>Apertura:</strong>
-                                    <span t-esc="doc.start_at" t-options="{'widget': 'datetime'}" />
-                                </div>
-                                <div t-if="doc.stop_at">
-                                    <strong>Cierre:</strong>
-                                    <span t-esc="doc.stop_at" t-options="{'widget': 'datetime'}" />
-                                </div>
-                                <div>
-                                    <strong>Usuario:</strong>
-                                    <span t-esc="doc.user_id.name" />
-                                </div>
+   <template id="report_pos_merchandise_sales_improved">
+    <t t-call="web.html_container">
+        <t t-call="web.external_layout">
+            <div class="page" style="font-size: 11pt;">
+                <t t-foreach="docs" t-as="doc">
+                    <!-- Define la moneda válida para el widget monetary -->
+                    <t t-set="curr" t-value="doc.config_id.currency_id or doc.company_id.currency_id"/>
+
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 5px 0; font-weight: 600;">Ventas por Mercancías</h3>
+                        <div style="font-size: 10pt; color: #666;">
+                            <div><strong>Sesión:</strong> <span t-esc="doc.name" /></div>
+                            <div><strong>Apertura:</strong>
+                                <span t-esc="doc.start_at" t-options="{'widget': 'datetime'}" />
                             </div>
+                            <div t-if="doc.stop_at"><strong>Cierre:</strong>
+                                <span t-esc="doc.stop_at" t-options="{'widget': 'datetime'}" />
+                            </div>
+                            <div><strong>Usuario:</strong> <span t-esc="doc.user_id.name" /></div>
                         </div>
+                    </div>
 
-                        <t t-set="report_data" t-value="doc.get_merchandise_report_grouped_data()" />
+                    <t t-set="report_data" t-value="doc.get_merchandise_report_grouped_data()" />
 
-                        <t t-if="report_data['categories_data']">
-                            <t t-foreach="report_data['categories_data'].items()"
-                                t-as="category_item">
-                                <t t-set="category_name" t-value="category_item[0]" />
-                                <t t-set="category_products" t-value="category_item[1]" />
+                    <t t-if="report_data['categories_data']">
+                        <t t-foreach="report_data['categories_data'].items()" t-as="category_item">
+                            <t t-set="category_name" t-value="category_item[0]" />
+                            <t t-set="category_products" t-value="category_item[1]" />
 
-                                <div style="margin-top: 15px;">
-                                    <div
-                                        style="background: #f5f5f5; padding: 5px 8px; font-weight: 600; font-size: 10pt; margin-bottom: 5px;"
-                                        t-esc="category_name" />
-                                    <table
-                                        style="width: 100%; border-collapse: collapse; font-size: 10pt;">
-                                        <thead>
-                                            <tr style="border-bottom: 1px solid #ddd;">
-                                                <th
-                                                    style="padding: 5px; text-align: left; font-weight: 600;">
-                                                    Producto</th>
-                                                <th
-                                                    style="padding: 5px; text-align: right; font-weight: 600; width: 80px;">
-                                                    Cantidad</th>
-                                                <th
-                                                    style="padding: 5px; text-align: right; font-weight: 600; width: 100px;">Precio
-                                                    Unit.</th>
-                                                <th
-                                                    style="padding: 5px; text-align: right; font-weight: 600; width: 100px;">
-                                                    Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <t t-foreach="category_products" t-as="product">
-                                                <tr style="border-bottom: 1px solid #eee;">
-                                                    <td style="padding: 5px;"
-                                                        t-esc="product['product_name']" />
-                                                    <td style="padding: 5px; text-align: right;">
-                                                        <span t-esc="product['quantity']"
-                                                            t-options="{'widget': 'float', 'precision': 0}" />
-                                                    </td>
-                                                    <td style="padding: 5px; text-align: right;">
-                                                        <span t-esc="product['price_unit']"
-                                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                                    </td>
-                                                    <td
-                                                        style="padding: 5px; text-align: right; font-weight: 600;">
-                                                        <span t-esc="product['total_amount']"
-                                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                                    </td>
-                                                </tr>
-                                            </t>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr style="background: #f9f9f9;">
-                                                <td colspan="3"
-                                                    style="padding: 5px; font-weight: 600;">Subtotal <span
-                                                        t-esc="category_name" /></td>
-                                                <td
-                                                    style="padding: 5px; text-align: right; font-weight: 600;">
-                                                    <span
-                                                        t-esc="sum(p['total_amount'] for p in category_products)"
-                                                        t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                            <div style="margin-top: 15px;">
+                                <div style="background: #f5f5f5; padding: 5px 8px; font-weight: 600; font-size: 10pt; margin-bottom: 5px;"
+                                     t-esc="category_name" />
+                                <table style="width:100%; border-collapse:collapse; font-size:10pt;">
+                                    <thead>
+                                        <tr style="border-bottom:1px solid #ddd;">
+                                            <th style="padding:5px; text-align:left; font-weight:600;">Producto</th>
+                                            <th style="padding:5px; text-align:right; font-weight:600; width:80px;">Cantidad</th>
+                                            <th style="padding:5px; text-align:right; font-weight:600; width:100px;">Precio Unit.</th>
+                                            <th style="padding:5px; text-align:right; font-weight:600; width:100px;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="category_products" t-as="product">
+                                            <tr style="border-bottom:1px solid #eee;">
+                                                <td style="padding:5px;" t-esc="product['product_name']"/>
+                                                <td style="padding:5px; text-align:right;">
+                                                    <span t-esc="product['quantity']"
+                                                          t-options="{'widget': 'float', 'precision': 0}"/>
+                                                </td>
+                                                <td style="padding:5px; text-align:right;">
+                                                    <span t-esc="product['price_unit']"
+                                                          t-options="{'widget': 'monetary', 'display_currency': curr}"/>
+                                                </td>
+                                                <td style="padding:5px; text-align:right; font-weight:600;">
+                                                    <span t-esc="product['total_amount']"
+                                                          t-options="{'widget': 'monetary', 'display_currency': curr}"/>
                                                 </td>
                                             </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </t>
+                                        </t>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background:#f9f9f9;">
+                                            <td colspan="3" style="padding:5px; font-weight:600;">
+                                                Subtotal <span t-esc="category_name"/>
+                                            </td>
+                                            <td style="padding:5px; text-align:right; font-weight:600;">
+                                              <t t-set="category_total" t-value="sum([p['total_amount'] for p in category_products])"/>
+                                                <span t-esc="category_total" t-options="{'widget': 'monetary', 'display_currency': curr}"/>
 
-                            <div
-                                style="margin-top: 20px; padding: 10px; background: #f5f5f5; text-align: right;">
-                                <span style="font-size: 12pt; font-weight: 600;"> TOTAL GENERAL: <span
-                                        t-esc="report_data['total_amount']"
-                                        t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                </span>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
                         </t>
 
-                        <t t-else="">
-                            <div style="text-align: center; margin-top: 40px; color: #999;">
-                                <p>No se encontraron ventas en esta sesión</p>
-                            </div>
-                        </t>
+                        <div style="margin-top:20px; padding:10px; background:#f5f5f5; text-align:right;">
+                            <span style="font-size:12pt; font-weight:600;">
+                                TOTAL GENERAL:
+                                <span t-esc="report_data['total_amount']"
+                                      t-options="{'widget': 'monetary', 'display_currency': curr}"/>
+                            </span>
+                        </div>
                     </t>
-                </div>
-            </t>
+
+                    <t t-else="">
+                        <div style="text-align:center; margin-top:40px; color:#999;">
+                            <p>No se encontraron ventas en esta sesión</p>
+                        </div>
+                    </t>
+                </t>
+            </div>
         </t>
-    </template>
+    </t>
+</template>
+
 
     <!-- Layout completamente en blanco sin iteraciones -->
     <template id="report_blank_layout">

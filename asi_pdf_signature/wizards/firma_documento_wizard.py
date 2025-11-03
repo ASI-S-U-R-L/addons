@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.fields import Command
 import base64
 import tempfile
 import os
@@ -61,7 +63,6 @@ class DocumentoFirma(models.TransientModel):
     ], string='Estado', default='pendiente')
     error_message = fields.Text(string='Error')
     document_size = fields.Char(string='Tamaño', compute='_compute_document_size')
-    needs_retry = fields.Boolean(string='Necesita Reintento', default=False)
 
     @api.depends('pdf_document')
     def _compute_document_size(self):
@@ -75,7 +76,7 @@ class DocumentoFirma(models.TransientModel):
                         record.document_size = f"{size_bytes / 1024:.1f} KB"
                     else:
                         record.document_size = f"{size_bytes / (1024 * 1024):.1f} MB"
-                except:
+                except Exception:
                     record.document_size = "N/A"
             else:
                 record.document_size = "N/A"
@@ -100,6 +101,13 @@ class FirmaDocumentoWizard(models.TransientModel):
     # Campos para múltiples documentos
     document_ids = fields.One2many('documento.firma', 'wizard_id', string='Documentos a Firmar')
     document_count = fields.Integer(string='Cantidad de Documentos', compute='_compute_documento_count')
+    
+    # NUEVO: Dropzone múltiple (arrastrar y soltar varios PDFs de una vez)
+    temp_pdf_uploads = fields.Many2many(
+        'ir.attachment',
+        string='Subir PDFs (arrastrar y soltar)',
+        help='Arrastra y suelta uno o varios archivos PDF. Se crearán líneas automáticamente.'
+    )
     
     # Campos específicos para la firma (copiados del módulo Alfresco)
     signature_role = fields.Many2one('document.signature.tag', string='Etiqueta de la firma', help='Rol con el que se desea firmar (ej: Aprobado por:, Entregado por:, etc.)', required=True, ondelete='cascade')
@@ -152,26 +160,10 @@ class FirmaDocumentoWizard(models.TransientModel):
         help='Si está marcado, se firmará todas las páginas del documento en lugar de solo la última'
     )
 
-    show_sign_button = fields.Boolean(string='Mostrar Botón Firmar', default=True, compute='_compute_show_sign_button', store=True)
-    has_password_error = fields.Boolean(string='Error de Contraseña', default=False)
-
     @api.depends('document_ids')
     def _compute_documento_count(self):
         for record in self:
             record.document_count = len(record.document_ids)
-    
-    @api.depends('status', 'documents_with_error', 'document_ids.needs_retry')
-    def _compute_show_sign_button(self):
-        for record in self:
-            if record.status == 'completado' and record.documents_with_error == 0:
-                # Si el proceso terminó sin errores, ocultar el botón
-                record.show_sign_button = False
-            elif record.status in ['completado', 'error'] and record.documents_with_error > 0:
-                # Si hay errores, mostrar el botón para reintentar
-                record.show_sign_button = True
-            else:
-                # En otros casos (borrador, procesando), mostrar el botón
-                record.show_sign_button = True
     
     @api.depends('certificate_wizard', 'certificate_wizard_name', 'wizard_signature_image')
     def _compute_estado_usuario(self):
@@ -198,7 +190,7 @@ class FirmaDocumentoWizard(models.TransientModel):
                             try:
                                 cert_decoded = base64.b64decode(cert_value)
                                 record.has_certificate = len(cert_decoded) > 0
-                            except:
+                            except Exception:
                                 record.has_certificate = bool(cert_value)
                 except Exception as e:
                     _logger.error(f"Error verificando certificado: {e}")
@@ -223,7 +215,7 @@ class FirmaDocumentoWizard(models.TransientModel):
                             try:
                                 img_decoded = base64.b64decode(img_value)
                                 record.has_image = len(img_decoded) > 0
-                            except:
+                            except Exception:
                                 record.has_image = bool(img_value)
                 except Exception as e:
                     _logger.error(f"Error verificando imagen: {e}")
@@ -235,6 +227,51 @@ class FirmaDocumentoWizard(models.TransientModel):
                 record.has_certificate = False
                 record.has_password = False
                 record.has_image = False
+
+    # NUEVO: convierte los adjuntos del dropzone en líneas documento.firma
+    @api.onchange('temp_pdf_uploads')
+    def _onchange_temp_pdf_uploads(self):
+        """Convierte cada attachment PDF en una línea documento.firma y limpia la dropzone."""
+        for wiz in self:
+            if not wiz.temp_pdf_uploads:
+                continue
+
+            create_cmds = []
+            for att in wiz.temp_pdf_uploads.sudo():
+                name = (att.name or 'Documento.pdf')
+                is_pdf = (att.mimetype == 'application/pdf') or name.lower().endswith('.pdf')
+                if not is_pdf:
+                    # Para bloquear no-PDFs de forma estricta, descomenta la siguiente línea:
+                    # raise UserError(_('Solo se permiten archivos PDF.'))
+                    continue
+
+                # Nombre sin .pdf para mostrar
+                visible_name = name[:-4] if name.lower().endswith('.pdf') else name
+                # Contenido binario base64
+                datas = att.with_context(bin_size=False).datas
+                # Tamaño legible
+                size = att.file_size or 0
+                if size < 1024:
+                    size_str = f"{size} B"
+                elif size < 1024 * 1024:
+                    size_str = f"{size / 1024:.1f} KB"
+                else:
+                    size_str = f"{size / (1024 * 1024):.1f} MB"
+
+                vals = {
+                    'wizard_id': wiz.id,
+                    'document_name': visible_name,
+                    'pdf_document': datas,
+                    'document_size': size_str,
+                    # 'signature_status': 'pendiente',
+                }
+                create_cmds.append(Command.create(vals))
+
+            if create_cmds:
+                wiz.update({'document_ids': create_cmds})
+
+            # Limpiar la dropzone para permitir nuevas subidas
+            wiz.temp_pdf_uploads = [(5, 0, 0)]
     
     def action_seleccionar_archivos(self):
         """Acción para abrir un wizard de selección de archivos"""
@@ -333,11 +370,11 @@ class FirmaDocumentoWizard(models.TransientModel):
             try:
                 # Intentar cargar una fuente del sistema
                 font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 10)
-            except:
+            except Exception:
                 try:
                     # Fuente alternativa
                     font = ImageFont.truetype("arial.ttf", 10)
-                except:
+                except Exception:
                     # Fuente por defecto
                     font = ImageFont.load_default()
             
@@ -460,35 +497,15 @@ class FirmaDocumentoWizard(models.TransientModel):
         if not self.signature_role:
             raise UserError(_('Debe especificar el rol para la firma.'))
         
-        if self.status in ['completado', 'error'] and self.documents_with_error > 0:
-            # Solo procesar documentos que necesitan reintento
-            documentos_a_procesar = self.document_ids.filtered(lambda d: d.needs_retry or d.signature_status == 'error')
-            # Resetear el estado de los documentos que se van a reintentar
-            documentos_a_procesar.write({
-                'signature_status': 'pendiente',
-                'error_message': False,
-                'needs_retry': False
-            })
-        else:
-            # Procesar todos los documentos
-            documentos_a_procesar = self.document_ids
-            # Resetear todos los documentos
-            self.document_ids.write({
-                'signature_status': 'pendiente',
-                'error_message': False,
-                'needs_retry': False
-            })
-        
         # Cambiar status a procesando
         self.write({
             'status': 'procesando',
             'message_result': 'Iniciando proceso de firma...',
-            'documents_processed': len(self.document_ids.filtered(lambda d: d.signature_status == 'firmado')),
-            'documents_with_error': 0,
-            'has_password_error': False
+            'documents_processed': 0,
+            'documents_with_error': 0
         })
         
-        documents_processed = len(self.document_ids.filtered(lambda d: d.signature_status == 'firmado'))
+        documents_processed = 0
         documents_with_error = 0
         errores_detalle = []
         
@@ -502,37 +519,14 @@ class FirmaDocumentoWizard(models.TransientModel):
                 self.signature_role.name
             )
             imagen_width, imagen_height = imagen_size
-            
-            try:
-                # Cargar certificado
-                private_key, certificate, additional_certificates = pkcs12.load_key_and_certificates(
-                    certificado_data,
-                    contrasena.encode('utf-8')
-                )
-            except ValueError as e:
-                error_msg = str(e)
-                if "Invalid password or PKCS12 data" in error_msg:
-                    self.write({
-                        'has_password_error': True,
-                        'signature_password': '',  # Limpiar contraseña
-                        'status': 'borrador'  # Volver al estado de configuración
-                    })
-                    # Mostrar notificación en lugar de excepción
-                    return {
-                        'type': 'ir.actions.client',
-                        'tag': 'display_notification',
-                        'params': {
-                            'title': _('Error de Contraseña'),
-                            'message': _('La contraseña del certificado PKCS#12 es incorrecta. Por favor, ingrese la contraseña correcta.'),
-                            'type': 'warning',
-                            'sticky': False,
-                        }
-                    }
-                else:
-                    raise Exception(f"Error cargando certificado PKCS#12: {error_msg}")
+            # Cargar certificado
+            private_key, certificate, additional_certificates = pkcs12.load_key_and_certificates(
+                certificado_data,
+                contrasena.encode('utf-8')
+            )
             
             # Procesar cada documento
-            for documento in documentos_a_procesar:
+            for documento in self.document_ids:
                 try:
                     self._firmar_documento_individual(
                         documento, imagen_firma_path, imagen_width, imagen_height,
@@ -551,7 +545,6 @@ class FirmaDocumentoWizard(models.TransientModel):
                     documents_with_error += 1
                     documento.signature_status = 'error'
                     documento.error_message = str(e)
-                    documento.needs_retry = True  # Marcar para reintento
                     error_msg = f"Error en {documento.document_name}: {str(e)}"
                     errores_detalle.append(error_msg)
                     _logger.error(f"Error firmando documento {documento.document_name}: {e}")
@@ -559,7 +552,7 @@ class FirmaDocumentoWizard(models.TransientModel):
             # Limpiar archivo temporal
             try:
                 os.unlink(imagen_firma_path)
-            except:
+            except Exception:
                 pass
         
             # Crear ZIP con documentos firmados
@@ -578,7 +571,7 @@ class FirmaDocumentoWizard(models.TransientModel):
                 if documents_processed > 0:
                     mensaje += 'Los archivos firmados exitosamente están disponibles para descarga.\n\n'
                 mensaje += 'Errores detallados:\n' + '\n'.join(errores_detalle)
-                estado_final = 'error' if documents_processed == 0 else 'completado'
+                estado_final = 'completado' if documents_processed > 0 else 'error'
         
             self.write({
                 'status': estado_final,
@@ -592,7 +585,7 @@ class FirmaDocumentoWizard(models.TransientModel):
             self.write({
                 'status': 'error',
                 'message_result': f'Error general: {str(e)}',
-                'documents_with_error': len(documentos_a_procesar)
+                'documents_with_error': len(self.document_ids)
             })
     
         return self._recargar_wizard()
@@ -701,7 +694,7 @@ class FirmaDocumentoWizard(models.TransientModel):
                     # Eliminar el archivo anterior y usar el nuevo
                     try:
                         os.unlink(temp_final_path)
-                    except:
+                    except Exception:
                         pass
                     temp_final_path = temp_next_path
                     
@@ -726,7 +719,7 @@ class FirmaDocumentoWizard(models.TransientModel):
             # Limpiar archivo temporal en caso de error
             try:
                 os.unlink(temp_pdf_path)
-            except:
+            except Exception:
                 pass
             raise e
 
@@ -741,9 +734,11 @@ class FirmaDocumentoWizard(models.TransientModel):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as temp_zip:
             with zipfile.ZipFile(temp_zip, 'w', zipfile.ZIP_DEFLATED) as zip_file:
                 for documento in documents_signed:
-                    # Obtener el nombre base
+                    # Obtener el nombre base y añadir " - firmado"
                     nombre_base, extension = os.path.splitext(documento.document_name)
-                    nombre_firmado = f"{nombre_base}{extension}"
+                    if not extension:
+                        extension = '.pdf'
+                    nombre_firmado = f"{nombre_base} - firmado{extension}"
                     
                     # Añadir el PDF firmado al ZIP
                     pdf_content = base64.b64decode(documento.pdf_signed)
@@ -767,7 +762,7 @@ class FirmaDocumentoWizard(models.TransientModel):
         # Limpiar archivo temporal
         try:
             os.unlink(temp_zip_path)
-        except:
+        except Exception:
             pass
 
     def _recargar_wizard(self):

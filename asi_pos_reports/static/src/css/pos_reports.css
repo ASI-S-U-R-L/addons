@@ -1,0 +1,41 @@
+/* Estilos para los botones de reportes en POS */
+.control-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px !important;
+    margin: 5px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+    min-height: 80px;
+    cursor: pointer;
+}
+
+.control-button:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.control-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.control-button i {
+    font-size: 24px;
+    margin-bottom: 5px;
+    color: #495057;
+}
+
+.control-button span {
+    font-size: 12px;
+    font-weight: 500;
+    color: #495057;
+    text-align: center;
+    line-height: 1.2;
+}
