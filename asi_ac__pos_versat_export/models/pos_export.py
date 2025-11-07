@@ -90,7 +90,7 @@ Importe={self._format_importe(amount)}
         
         content = ""
         
-        # Aporte 1% - PRIMERO en el archivo
+        # Aporte 1% - PRIMERO
         if type_1 and aporte_1 > 0:
             content += f"""[Obligacion]
 Concepto={type_1.concepto}
@@ -111,7 +111,7 @@ Importe={self._format_importe(aporte_1)}
 
 """
         
-        # Aporte 10% - SEGUNDO en el archivo
+        # Aporte 10% - SEGUNDO
         if type_10 and aporte_10 > 0:
             content += f"""[Obligacion]
 Concepto={type_10.concepto}

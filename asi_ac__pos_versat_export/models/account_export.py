@@ -152,7 +152,7 @@ class AccountMoveVersatExport(models.Model):
         
             
             if move.journal_id and 'pos' in move.journal_id.name.lower():
-                # En POS, las líneas de débito que no son impuestos suelen ser pagos
+                
                 if 'tax' not in account_name and 'impuesto' not in account_name:
                     cash_amount += line.debit
                     _logger.info(f"   ℹ️  EFECTIVO ASUMIDO por débito en POS: {line.debit}")
@@ -186,17 +186,17 @@ class AccountMoveVersatExport(models.Model):
         is_pos = self._is_pos_move(move)
         _logger.info(f"   🎯 Es POS: {is_pos}")
     
-        # SOLO facturas generan obligacion_factura
+        
         if move.move_type in ['out_invoice', 'out_refund'] and move.state == 'posted' and not is_pos:
             document_types.append('obligacion_factura')
             _logger.info(f"   ✅ Añadido obligacion_factura para factura")
     
-        # Para POS: SIEMPRE buscar cobros
+        
         if is_pos and move.state == 'posted':
             _logger.info(f"   🔍 BUSCANDO PAGOS POS (BÚSQUEDA AGRESIVA)...")
             payment_amounts = self._get_pos_payment_amounts_improved(move, config)
         
-            # FORZAR generación de cobro si hay algún monto detectado
+            
             if payment_amounts['efectivo'] > 0:
                 document_types.append('cobro_caja')
                 _logger.info(f"   ✅✅✅ Añadido cobro_caja (efectivo: {payment_amounts['efectivo']})")
@@ -215,7 +215,7 @@ class AccountMoveVersatExport(models.Model):
                 document_types.append('cobro_caja')
             
         else:
-            # Lógica normal para facturas
+            
             payments = self.env['account.payment'].search([
                 ('move_id', '=', move.id),
                 ('state', '=', 'posted'),
@@ -308,7 +308,7 @@ Importe={self._format_importe(amount)}
         
             return f"Doc-0-{pos_number}-CAJA.cyp", content
         else:
-            # Lógica original para contabilidad normal
+            
             payment = self.env['account.payment'].search([
                 ('move_id', '=', move.id),
                 ('journal_id.type', '=', 'cash')
@@ -433,7 +433,7 @@ Importe={self._format_importe(payment.amount)}
         
         content = ""
         
-        # Aporte 1% - PRIMERO en el archivo (como en el ejemplo)
+        # Aporte 1% - PRIMERO en el archivo
         if type_1 and aporte_1 > 0:
             content += f"""[Obligacion]
 Concepto={type_1.concepto}
@@ -454,7 +454,7 @@ Importe={self._format_importe(aporte_1)}
 
 """
         
-        # Aporte 10% - SEGUNDO en el archivo
+        # Aporte 10% - SEGUNDO
         if type_10 and aporte_10 > 0:
             content += f"""[Obligacion]
 Concepto={type_10.concepto}

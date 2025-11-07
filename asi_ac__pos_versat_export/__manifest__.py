@@ -19,6 +19,7 @@
         'data/versat_default_data.xml',
         'views/versat_config_views.xml',
         'views/export_wizard_views.xml',
+        'views/aporte_report_wizard_views.xml',
         'views/menus.xml',
     ],
     'demo': [],
