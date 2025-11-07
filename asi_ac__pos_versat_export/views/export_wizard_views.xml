@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Acción Servidor para Exportación Unificada desde Asientos Contables -->
+    
     <record id="action_export_unified_versat_server" model="ir.actions.server">
         <field name="name">Exportar a VERSAT</field>
         <field name="model_id" ref="account.model_account_move"/>
@@ -19,7 +19,7 @@ action = wizard.with_context(active_ids=active_ids).action_export_unified()
         </field>
     </record>
 
-    <!-- Acción Servidor para Exportación desde Pedidos POS -->
+    
     <record id="action_export_unified_versat_pos_server" model="ir.actions.server">
         <field name="name">Exportar a VERSAT</field>
         <field name="model_id" ref="point_of_sale.model_pos_order"/>
