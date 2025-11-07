@@ -10,6 +10,7 @@
                     <field name="commercial_registration_number"/>
                     <field name="subordination"/>
                     <field name="accreditation_data"/>
+                    <field name="expediente_number" attrs="{'invisible': [('is_company', '=', False)]}"/>
                 </xpath>
                 <field name="function" position="after">
                     <field name="can_sign_invoices" attrs="{'invisible': [('company_type', '=', 'company')]}"/>
