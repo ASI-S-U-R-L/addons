@@ -12,7 +12,7 @@
         - Formatos .obl y .cyp exactos para VERSAT
     """,
     'author': 'Reysel',
-    'website': 'https://www.tudominio.com',
+    'website': 'https://www.asisurl.cu',
     'depends': ['account', 'point_of_sale'],
     'data': [
         'security/ir.model.access.csv',
