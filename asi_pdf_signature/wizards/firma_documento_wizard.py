@@ -680,6 +680,26 @@ class FirmaDocumentoWizard(models.TransientModel):
                         # Añadir la primera firma de manera incremental
                         temp_final.write(datas)
                         temp_final_path = temp_final.name
+
+                    # Flatten the PDF to avoid xref issues in subsequent signatures
+                    with open(temp_final_path, 'rb') as f:
+                        reader = PdfReader(f)
+                        writer = PdfWriter()
+                        if NEW_PYPDF2:
+                            pages = reader.pages
+                        else:
+                            pages = [reader.getPage(i) for i in range(reader.getNumPages())]
+                        for page in pages:
+                            if NEW_PYPDF2:
+                                writer.add_page(page)
+                            else:
+                                writer.addPage(page)
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='_flattened.pdf') as temp_flat:
+                            writer.write(temp_flat)
+                            temp_flat_path = temp_flat.name
+                    os.unlink(temp_final_path)
+                    temp_final_path = temp_flat_path
+                    datau = open(temp_flat_path, 'rb').read()
                 else:
                     # Para firmas adicionales, leer el archivo ya firmado y agregar la nueva firma
                     with open(temp_final_path, 'rb') as f:
@@ -690,16 +710,35 @@ class FirmaDocumentoWizard(models.TransientModel):
                         temp_next.write(datau_firmado)
                         temp_next.write(datas)
                         temp_next_path = temp_next.name
-                    
+
+                    # Flatten the PDF to avoid xref issues in subsequent signatures
+                    with open(temp_next_path, 'rb') as f:
+                        reader = PdfReader(f)
+                        writer = PdfWriter()
+                        if NEW_PYPDF2:
+                            pages = reader.pages
+                        else:
+                            pages = [reader.getPage(i) for i in range(reader.getNumPages())]
+                        for page in pages:
+                            if NEW_PYPDF2:
+                                writer.add_page(page)
+                            else:
+                                writer.addPage(page)
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=f'_flattened_p{pagina_index + 1}.pdf') as temp_flat:
+                            writer.write(temp_flat)
+                            temp_flat_path = temp_flat.name
+                    os.unlink(temp_next_path)
+                    temp_next_path = temp_flat_path
+
                     # Eliminar el archivo anterior y usar el nuevo
                     try:
                         os.unlink(temp_final_path)
                     except Exception:
                         pass
                     temp_final_path = temp_next_path
-                    
+
                     # Actualizar datau para la siguiente iteración
-                    datau = datau_firmado
+                    datau = open(temp_flat_path, 'rb').read()
             
             # Leer el PDF final firmado
             with open(temp_final_path, 'rb') as f:
@@ -724,12 +763,12 @@ class FirmaDocumentoWizard(models.TransientModel):
             raise e
 
     def _crear_zip_firmados(self):
-        """Crea un archivo ZIP con todos los documentos firmados exitosamente"""
+        """Crea un archivo ZIP con todos los documentos firmados exitosamente solo si hay más de uno"""
         documents_signed = self.document_ids.filtered(lambda d: d.signature_status == 'firmado' and d.pdf_signed)
-        
-        if not documents_signed:
+
+        if not documents_signed or len(documents_signed) <= 1:
             return
-        
+
         # Crear archivo ZIP temporal
         with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as temp_zip:
             with zipfile.ZipFile(temp_zip, 'w', zipfile.ZIP_DEFLATED) as zip_file:
@@ -739,26 +778,26 @@ class FirmaDocumentoWizard(models.TransientModel):
                     if not extension:
                         extension = '.pdf'
                     nombre_firmado = f"{nombre_base} - firmado{extension}"
-                    
+
                     # Añadir el PDF firmado al ZIP
                     pdf_content = base64.b64decode(documento.pdf_signed)
                     zip_file.writestr(nombre_firmado, pdf_content)
-            
+
             temp_zip_path = temp_zip.name
-        
+
         # Leer el ZIP y guardarlo en el campo
         with open(temp_zip_path, 'rb') as f:
             zip_content = f.read()
-        
+
         # Generar nombre para el ZIP
         timestamp = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         zip_name = f"Documentos_firmados_{timestamp}.zip"
-        
+
         self.write({
             'zip_signed': base64.b64encode(zip_content),
             'zip_name': zip_name
         })
-        
+
         # Limpiar archivo temporal
         try:
             os.unlink(temp_zip_path)

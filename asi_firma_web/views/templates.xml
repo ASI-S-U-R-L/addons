@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="firma_form_page" name="Firma de Documentos">
+    <t t-call="website.layout">
+      <t t-set="pageName" t-value="'firmar-documentos'"/>
+      <link rel="stylesheet" type="text/css" href="/asi_firma_web/static/src/css/drag_drop.css"/>
+      <script type="text/javascript" src="/asi_firma_web/static/src/js/drag_drop.js"></script>
+      <div id="wrap">
+        <div class="oe_structure">
+          <section class="oe_structure mt-5 mb-5">
+            <div class="container">
+              <h2 class="mb-3 text-center">Firmar documento/s</h2>
+              <t t-if="message">
+                <div class="alert alert-info"><t t-esc="message"/></div>
+              </t>
+              <form t-att-action="url_for('/firmar-documentos/enviar')" method="post" enctype="multipart/form-data" class="o_website_form border shadow p-4">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label class="form-label">PDF(s) a firmar</label>
+                    <div class="asi-dnd" id="pdf-drop-zone">
+                      <div class="asi-dnd__content">
+                        <div class="asi-dnd__icon">
+                          <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+                        </div>
+                        <div class="asi-dnd__text">
+                          <![CDATA[<strong>Arrastra y suelta tus PDFs aquí</strong><br>
+                          <span class="text-muted">o haz clic para seleccionar archivos</span>]]>
+                        </div>
+                        <div class="asi-dnd__files-list" id="files-list"></div>
+                      </div>
+                      <div class="asi-dnd__progress" style="display: none;">
+                        <div class="asi-progress__bar"></div>
+                        <div class="asi-progress__text">Subiendo...</div>
+                      </div>
+                      <input type="file" name="pdfs" accept="application/pdf" multiple="multiple" class="d-none" required="required" id="pdf-input"/>
+                    </div>
+                  </div>
+
+                  <div class="col-md-3">
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label class="form-label">Etiqueta / Rol de firma</label>
+                        <select name="signature_role" class="form-select" required="required">
+                            <option value="">-- Selecciona --</option>
+                            <t t-foreach="tags" t-as="tag">
+                              <option t-att-value="tag.id"><t t-esc="tag.name"/></option>
+                            </t>
+                        </select>
+                      </div>
+
+                      <div class="col-12">
+                        <label class="form-label">Certificado (.p12)</label>
+                        <div class="input-group">
+                          <input type="file" id="certificate-input" name="certificate_wizard" accept=".p12,.pfx,application/x-pkcs12" class="d-none"/>
+                          <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('certificate-input').click()"><i class="fa fa-cloud-upload"></i></button>
+                          <span id="certificate-name" class="ms-2 align-self-center"></span>
+                        </div>
+                      </div>
+
+                      <div class="col-12 form-check">
+                        <input class="form-check-input" type="checkbox" name="signature_opaque_background" id="opaque"/>
+                        <label class="form-check-label" for="opaque">Firma con fondo opaco</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-3">
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label class="form-label">Posición de la firma</label>
+                        <select name="signature_position" class="form-select">
+                          <option value="izquierda">Izquierda</option>
+                          <option value="centro_izquierda">Centro-Izquierda</option>
+                          <option value="centro_derecha">Centro-Derecha</option>
+                          <option value="derecha" selected="selected">Derecha</option>
+                        </select>
+                      </div>
+
+                      <div class="col-12">
+                        <label class="form-label">Contraseña del certificado</label>
+                        <input type="password" name="signature_password" class="form-control"/>
+                      </div>
+
+                      <div class="col-12 form-check">
+                        <input class="form-check-input" type="checkbox" name="sign_all_pages" id="all_pages"/>
+                        <label class="form-check-label" for="all_pages">Firmar todas las páginas</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label class="form-label">Imagen de firma (PNG/JPG)</label>
+                    <div class="input-group">
+                      <input type="file" id="signature-image" name="wizard_signature_image" accept="image/*" class="d-none"/>
+                      <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('signature-image').click()"><i class="fa fa-cloud-upload"></i></button>
+                      <span id="signature-name" class="ms-2 align-self-center"></span>
+                    </div>
+                    <img id="signature-preview" style="display:none; max-width:200px; margin-top:10px; border:1px solid #ddd; border-radius:4px;"/>
+                  </div>
+                </div>
+
+                <div class="row g-3 mt-3">
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-primary w-100">Firmar</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </section>
+        </div>
+      </div>
+    </t>
+  </template>
+
+  <!-- Botón en la página de inicio -->
+  <template id="homepage_button" inherit_id="website.homepage" name="Botón Firmar Documentos">
+    <xpath expr="//div[@id='wrap']" position="inside">
+      <section class="oe_structure mt-5 mb-5">
+        <div class="container text-center">
+          <a href="/firmar-documentos" class="btn btn-primary btn-lg">Firmar documentos</a>
+        </div>
+      </section>
+    </xpath>
+  </template>
+</odoo>
