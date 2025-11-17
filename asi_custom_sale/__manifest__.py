@@ -18,6 +18,11 @@
         'reports/report_invoice_extend.xml',
         'reports/sale_report.xml',
     ],
+    'assets': {
+        'web.assets_common': [
+            'asi_custom_sale/static/src/css/styles.css',
+        ],
+    },
    
     'installable': True,
     'application': True,
