@@ -6,7 +6,7 @@
             <field name="url">/firmar-documentos</field>
             <field name="website_id" ref="website.default_website"/>
             <field name="parent_id" ref="website.main_menu"/>
-            <field name="sequence" eval="55"/>
+            <field name="sequence" eval="4"/>
         </record>
     </data>
 </odoo>

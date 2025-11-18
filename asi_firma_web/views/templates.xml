@@ -8,11 +8,15 @@
       <div id="wrap">
         <div class="oe_structure">
           <section class="oe_structure mt-5 mb-5">
-            <div class="container">
-              <h2 class="mb-3 text-center">Firmar documento/s</h2>
-              <t t-if="message">
-                <div class="alert alert-info"><t t-esc="message"/></div>
-              </t>
+            <div class="container position-relative">
+              <!-- Contenedor para notificaciones - parte superior derecha del main -->
+              <div id="notification-container" class="position-absolute" style="top: 0; right: 15px; z-index: 1050;"></div>
+              <div style="padding-right: 320px;">
+                <h2 class="mb-3 text-center">Firmar documento/s</h2>
+                <t t-if="message">
+                  <div class="alert alert-info"><t t-esc="message"/></div>
+                </t>
+              </div>
               <form t-att-action="url_for('/firmar-documentos/enviar')" method="post" enctype="multipart/form-data" class="o_website_form border shadow p-4">
                 <div class="row g-3">
                   <div class="col-md-3">
@@ -48,14 +52,35 @@
                         </select>
                       </div>
 
-                      <div class="col-12">
-                        <label class="form-label">Certificado (.p12)</label>
-                        <div class="input-group">
-                          <input type="file" id="certificate-input" name="certificate_wizard" accept=".p12,.pfx,application/x-pkcs12" class="d-none"/>
-                          <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('certificate-input').click()"><i class="fa fa-cloud-upload"></i></button>
-                          <span id="certificate-name" class="ms-2 align-self-center"></span>
+                      <t t-if="not user_has_certificado">
+                        <div class="col-12">
+                          <label class="form-label">Certificado (.p12) <span class="text-danger">*</span></label>
+                          <div class="input-group">
+                            <input type="file" id="certificate-input" name="certificate_wizard" accept=".p12,.pfx,application/x-pkcs12" class="d-none" required="required"/>
+                            <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('certificate-input').click()"><i class="fa fa-cloud-upload"></i></button>
+                            <span id="certificate-name" class="ms-2 align-self-center"></span>
+                          </div>
                         </div>
-                      </div>
+                      </t>
+                      <t t-if="user_has_certificado">
+                        <div class="col-12">
+                          <label class="form-label">Certificado</label>
+                          <div class="alert alert-info mb-2">
+                            <i class="fa fa-info-circle"></i>
+                            Se utilizará el certificado almacenado en tu perfil
+                          </div>
+                          <button type="button" class="btn btn-sm btn-outline-primary modify-certificate-btn">
+                            <i class="fa fa-edit"></i> Modificar certificado
+                          </button>
+                          <div class="certificate-input-group mt-2" style="display: none;">
+                            <div class="input-group">
+                              <input type="file" id="certificate-input" name="certificate_wizard" accept=".p12,.pfx,application/x-pkcs12" class="d-none"/>
+                              <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('certificate-input').click()"><i class="fa fa-cloud-upload"></i></button>
+                              <span id="certificate-name" class="ms-2 align-self-center"></span>
+                            </div>
+                          </div>
+                        </div>
+                      </t>
 
                       <div class="col-12 form-check">
                         <input class="form-check-input" type="checkbox" name="signature_opaque_background" id="opaque"/>
@@ -76,10 +101,27 @@
                         </select>
                       </div>
 
-                      <div class="col-12">
-                        <label class="form-label">Contraseña del certificado</label>
-                        <input type="password" name="signature_password" class="form-control"/>
-                      </div>
+                      <t t-if="not user_has_password">
+                        <div class="col-12">
+                          <label class="form-label">Contraseña del certificado <span class="text-danger">*</span></label>
+                          <input type="password" name="signature_password" class="form-control" required="required"/>
+                        </div>
+                      </t>
+                      <t t-if="user_has_password">
+                        <div class="col-12">
+                          <label class="form-label">Contraseña del certificado</label>
+                          <div class="alert alert-info mb-2">
+                            <i class="fa fa-info-circle"></i>
+                            Se utilizará la contraseña almacenada en tu perfil
+                          </div>
+                          <button type="button" class="btn btn-sm btn-outline-primary modify-password-btn">
+                            <i class="fa fa-edit"></i> Modificar contraseña
+                          </button>
+                          <div class="password-input-group mt-2" style="display: none;">
+                            <input type="password" name="signature_password" class="form-control"/>
+                          </div>
+                        </div>
+                      </t>
 
                       <div class="col-12 form-check">
                         <input class="form-check-input" type="checkbox" name="sign_all_pages" id="all_pages"/>
@@ -89,13 +131,33 @@
                   </div>
 
                   <div class="col-md-3">
-                    <label class="form-label">Imagen de firma (PNG/JPG)</label>
-                    <div class="input-group">
-                      <input type="file" id="signature-image" name="wizard_signature_image" accept="image/*" class="d-none"/>
-                      <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('signature-image').click()"><i class="fa fa-cloud-upload"></i></button>
-                      <span id="signature-name" class="ms-2 align-self-center"></span>
-                    </div>
-                    <img id="signature-preview" style="display:none; max-width:200px; margin-top:10px; border:1px solid #ddd; border-radius:4px;"/>
+                    <t t-if="not user_has_imagen">
+                      <label class="form-label">Imagen de firma (PNG/JPG) <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <input type="file" id="signature-image" name="wizard_signature_image" accept="image/*" class="d-none" required="required"/>
+                        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('signature-image').click()"><i class="fa fa-cloud-upload"></i></button>
+                        <span id="signature-name" class="ms-2 align-self-center"></span>
+                      </div>
+                      <img id="signature-preview" style="display:none; max-width:200px; margin-top:10px; border:1px solid #ddd; border-radius:4px;"/>
+                    </t>
+                    <t t-if="user_has_imagen">
+                      <label class="form-label">Imagen de firma</label>
+                      <div class="alert alert-info mb-2">
+                        <i class="fa fa-info-circle"></i>
+                        Se utilizará la imagen de firma almacenada en tu perfil
+                      </div>
+                      <button type="button" class="btn btn-sm btn-outline-primary modify-image-btn">
+                        <i class="fa fa-edit"></i> Modificar imagen
+                      </button>
+                      <div class="image-input-group mt-2" style="display: none;">
+                        <div class="input-group">
+                          <input type="file" id="signature-image" name="wizard_signature_image" accept="image/*" class="d-none"/>
+                          <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('signature-image').click()"><i class="fa fa-cloud-upload"></i></button>
+                          <span id="signature-name" class="ms-2 align-self-center"></span>
+                        </div>
+                        <img id="signature-preview" style="display:none; max-width:200px; margin-top:10px; border:1px solid #ddd; border-radius:4px;"/>
+                      </div>
+                    </t>
                   </div>
                 </div>
 
@@ -120,6 +182,24 @@
           <a href="/firmar-documentos" class="btn btn-primary btn-lg">Firmar documentos</a>
         </div>
       </section>
+    </xpath>
+  </template>
+
+  <!-- Botón en la vista mi cuenta (my/home) -->
+  <template id="my_home_button" inherit_id="portal.portal_my_home" name="Botón Firmar Documentos Mi Cuenta">
+    <xpath expr="//div[hasclass('o_portal_my_home')]" position="inside">
+      <div class="col-12 col-md-6 d-flex">
+        <div class="card flex-fill">
+          <div class="card-body text-center">
+            <h4 class="card-title">Firma de Documentos</h4>
+            <p class="card-text">Firma tus documentos PDF de forma rápida y segura</p>
+            <a href="/firmar-documentos" class="btn btn-primary">
+              <i class="fa fa-file-pdf-o"></i>
+              Firmar documentos
+            </a>
+          </div>
+        </div>
+      </div>
     </xpath>
   </template>
 </odoo>

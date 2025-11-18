@@ -11,5 +11,6 @@
    ],
  },
  'license': 'LGPL-3',
+   'images': ['static/description/icon.png'],
    'installable': True,
    'application': False}
