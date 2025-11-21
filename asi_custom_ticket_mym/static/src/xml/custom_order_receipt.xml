@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <!-- Redefinimos OrderReceipt -->
+    <t t-name="OrderReceipt" owl="1">
+        <div class="pos-receipt custom-ticket">
+
+            <style>
+                @import
+                url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&display=swap');
+                .pos-receipt.custom-ticket {
+                font-family: 'Oswald', sans-serif;
+                font-size: 10px;
+                max-width: 200px;
+                margin: auto;
+                }
+                .pos-receipt.custom-ticket strong {
+                font-size: 12px;
+                }
+                .pos-receipt.custom-ticket .pos-receipt-info {
+                text-align: left;
+                font-size: 10px;
+                margin-bottom: 5px;
+                }
+                .pos-receipt.custom-ticket .pos-receipt-footer {
+                text-align: left;
+                margin-top: 10px;
+                }
+                .pos-receipt.custom-ticket .pos-receipt-qr {
+                width: 80px;
+                height: auto;
+                margin-bottom: 5px;
+                }
+            </style>
+
+            <!-- Encabezado personalizado -->
+            <div class="pos-receipt-center-align">
+                <strong>MERCADO MARTHA &amp; MAXIMO</strong><br/>
+                <strong>S.U.R.L.</strong>
+            </div>
+            <br/>
+
+            <!-- Datos antes de productos -->
+            <div class="pos-receipt-info">
+                <div>TELEFONO: <t t-esc="receipt.company.phone"/></div>
+                <div>DEPENDIENTE: <t t-esc="receipt.cashier"/></div>
+                <div>FECHA: <t t-esc="receipt.date.localestring or receipt.date.validation_date"/></div>
+                <div>POS: <t t-esc="env.pos.config.name"/></div>
+                <div>PEDIDO: <t t-esc="receipt.name"/></div>
+            </div>
+
+            <div>----------------------------------------------</div>
+
+            <!-- Productos -->
+            <div class="orderlines">
+                <t t-call="OrderLinesReceipt"/>
+            </div>
+
+            <div>----------------------------------------------</div>
+
+            <!-- Totales -->
+            <div class="pos-receipt-amount">
+                TOTAL
+                <span t-esc="env.pos.format_currency(receipt.total_with_tax)" class="pos-receipt-right-align"/>
+            </div>
+
+            <div>----------------------------------------------</div>
+
+            <!-- Pagos -->
+            <t t-foreach="receipt.paymentlines" t-as="line" t-key="line.cid">
+                <div>
+                    <t t-esc="line.name" />
+                    <span t-esc="env.pos.format_currency_no_symbol(line.amount)" class="pos-receipt-right-align"/>
+                </div>
+            </t>
+
+            <br/>
+            <div class="pos-receipt-amount receipt-change">
+                CHANGE
+                <span t-esc="env.pos.format_currency(receipt.change)" class="pos-receipt-right-align"/>
+            </div>
+
+            <br/><br/>
+
+            <!-- QR y mensaje -->
+            <div class="pos-receipt-footer">
+                <img src="/asi_custom_ticket_mym/static/img/mym-qr-code.svg" class="pos-receipt-qr"/>
+                <div>¡Gracias por elegirnos!</div>
+            </div>
+        </div>
+    </t>
+
+</templates>

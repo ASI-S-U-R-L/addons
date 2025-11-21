@@ -1,0 +1,46 @@
+/* Fuente Oswald solo para el ticket */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&display=swap');
+
+.pos-receipt.custom-ticket {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    max-width: 200px;
+    /* más estrecho para impresora térmica */
+    margin: auto;
+}
+
+/* Encabezado */
+.pos-receipt.custom-ticket strong {
+    font-size: 12px;
+}
+
+/* Bloque de información inicial */
+.pos-receipt.custom-ticket .pos-receipt-info {
+    text-align: left;
+    font-size: 10px;
+    margin-bottom: 5px;
+}
+
+/* Separadores */
+.pos-receipt.custom-ticket div.separator {
+    text-align: center;
+    margin: 5px 0;
+}
+
+/* Totales */
+.pos-receipt.custom-ticket .pos-receipt-amount {
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* Footer con QR */
+.pos-receipt.custom-ticket .pos-receipt-footer {
+    text-align: left;
+    margin-top: 10px;
+}
+
+.pos-receipt.custom-ticket .pos-receipt-qr {
+    width: 80px;
+    height: auto;
+    margin-bottom: 5px;
+}
