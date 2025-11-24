@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="asi_pos_options.DenominationsTableWidget" owl="1">
+        <div class="denominations-table-widget">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Denominación</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="denominationsData" t-as="denomination" t-key="denomination_index">
+                        <tr>
+                            <td><t t-esc="denomination.value"/></td>
+                            <td><t t-esc="denomination.count"/></td>
+                            <td><t t-esc="denomination.subtotal"/></td>
+                        </tr>
+                    </t>
+                    <t t-if="!denominationsData.length">
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">
+                                No hay datos de denominaciones
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+                <t t-if="totalAmount">
+                    <tfoot>
+                        <tr class="table-info">
+                            <th colspan="2">Total</th>
+                            <th><t t-esc="totalAmount"/></th>
+                        </tr>
+                    </tfoot>
+                </t>
+            </table>
+        </div>
+    </t>
+</templates>

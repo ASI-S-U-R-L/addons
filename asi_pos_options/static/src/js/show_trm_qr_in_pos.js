@@ -53,7 +53,7 @@ function showTRMQrCode(root = document, ctx = null) {
             'id_transaccion': "ESTATICO",
             'importe': transferAmount,
             'moneda': pos.currency.display_name || 'CUP',
-            'numero_proveedor': '0000000000', // Esto debería configurarse
+            'numero_proveedor': '0000000000', 
             'version': 1,
             'titulo': pos.config.display_name
         };

@@ -53,3 +53,68 @@
         <div class="text-muted"> Permita registrar y cambiar entre empleados seleccionados </div>
     </div>
 </div>
+
+
+<div role="dialog" class="modal-dialog" data-_calc-opened-once="1" data-_forced-denom="1">
+    <div class="popup opening-cash-control">
+        <header class="title drag-handle"> CONTROL DE EFECTIVO DE APERTURA </header>
+        <main class="body">
+            <div class="opening-cash-section"><span class="info-title">Caja de apertura</span>
+                <div class="cash-input-sub-section"><input class="pos-input" readonly="" aria-readonly="true"
+                        title="Use el conteo por denominaciones">
+                    <div class="button icon"><i class="fa fa-calculator" role="img"
+                            title="Abrir la ventana emergente de detalles monetarios"></i></div>
+                </div>
+            </div><textarea placeholder="Añadir una nota de apertura..." class="opening-cash-notes"></textarea>
+        </main>
+        <footer class="footer">
+            <div class="button dynamic-size"> Abrir sesión <span>$ 0,00</span></div>
+        </footer>
+    </div>
+    <div class="popup money-details">
+        <main class="body">
+            <div class="money-details-title"> Monedas/billetes </div>
+            <div class="money-details-info">
+                <div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="0.01"><label for="0.01"
+                            class="oe_link_icon">$ 0.01</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="0.02"><label for="0.02"
+                            class="oe_link_icon">$ 0.02</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="0.05"><label for="0.05"
+                            class="oe_link_icon">$ 0.05</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="0.1"><label for="0.1"
+                            class="oe_link_icon">$ 0.1</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="0.2"><label for="0.2"
+                            class="oe_link_icon">$ 0.2</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="0.25"><label for="0.25"
+                            class="oe_link_icon">$ 0.25</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="0.5"><label for="0.5"
+                            class="oe_link_icon">$ 0.5</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="1"><label for="1"
+                            class="oe_link_icon">$ 1</label></div>
+                </div>
+                <div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="2"><label for="2"
+                            class="oe_link_icon">$ 2</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="5"><label for="5"
+                            class="oe_link_icon">$ 5</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="10"><label for="10"
+                            class="oe_link_icon">$ 10</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="20"><label for="20"
+                            class="oe_link_icon">$ 20</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="50"><label for="50"
+                            class="oe_link_icon">$ 50</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="100"><label for="100"
+                            class="oe_link_icon">$ 100</label></div>
+                    <div class="money-details-value"><input class="pos-input" type="number" id="200"><label for="200"
+                            class="oe_link_icon">$ 200</label></div>
+                </div>
+            </div>
+            <div class="total-section"><span>Total </span><label>$ 0,00</label></div>
+        </main>
+        <footer class="footer">
+            <div class="button">Descartar </div>
+            <div class="button">Confirmar</div>
+        </footer>
+    </div>
+</div>
