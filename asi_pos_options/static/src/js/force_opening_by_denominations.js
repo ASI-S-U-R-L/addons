@@ -219,12 +219,7 @@ function wireCalculatorToOpeningPopup() {
                 total = parseFloat(last) || 0;
             }
         }
-        const amountInput = openingPopup.querySelector('input[type="number"], input');
-        if (amountInput) {
-            amountInput.value = Number.isFinite(total) ? String(total) : amountInput.value;
-            amountInput.dispatchEvent(new Event('input', { bubbles: true }));
-            amountInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        // NO actualizar input para no interferir en contabilidad
         const confirmBtn = Array.from(openingPopup.querySelectorAll('button, .button, [role="button"]'))
             .find((b) => /confirmar|confirm|aceptar/i.test((b.textContent || "")));
         if (confirmBtn) {
@@ -278,8 +273,9 @@ patch(PosGlobalState.prototype, "asi_pos_options.force_opening_by_denominations"
  */
 function wireCalculatorToOpeningPopupWithPersistence() {
     const openingPopup = findPopupRootByTitle(i18nIncludes);
-    const calcPopup  = openingPopup.querySelector('.popup.money-details');;
-        console.log("[calcPopup] ",calcPopup);
+    const calcPopup = openingPopup.querySelector('.popup.money-details');;
+    console.log("[openingPopup] ", openingPopup);
+    console.log("[calcPopup] ", calcPopup);
     if (!openingPopup || !calcPopup) {
         console.log("[asi_pos_options] No se encontraron popups de apertura o calculadora");
         return;
@@ -327,13 +323,8 @@ function wireCalculatorToOpeningPopupWithPersistence() {
             total = denominationData.total;
         }
         
-        const amountInput = openingPopup.querySelector('input[type="number"], input');
-        if (amountInput) {
-            amountInput.value = Number.isFinite(total) ? String(total) : amountInput.value;
-            amountInput.dispatchEvent(new Event('input', { bubbles: true }));
-            amountInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        
+        // NO actualizar input para no interferir en contabilidad
+
         const confirmBtn = Array.from(openingPopup.querySelectorAll('button, .button, [role="button"]'))
             .find((b) => /confirmar|confirm|aceptar/i.test((b.textContent || "")));
         if (confirmBtn) {

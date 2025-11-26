@@ -32,8 +32,8 @@
     # ],
     'assets': {
         'point_of_sale.assets': [
-             'asi_pos_reports/static/src/js/pos_session_close.js',
               'asi_pos_reports/static/src/js/pos_reports_buttons.js',
+              'asi_pos_reports/static/src/js/pos_reports_menu.js',
               'asi_pos_reports/static/src/xml/pos_reports_templates.xml',
               'asi_pos_reports/static/src/css/pos_reports.css',
         ],

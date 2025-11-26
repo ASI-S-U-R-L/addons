@@ -3,7 +3,7 @@
 
     <!-- Botón 1 -->
     <t t-name="asi_pos_reports.MerchandiseReportButton" owl="1">
-        <button class="control-button" t-on-click="onClick" title="Ventas por Mercancías">
+        <button class="control-button" t-on-click="onClick" title="Ventas por Mercancías" style="display: none;">
             <i class="fa fa-shopping-cart"/>
             <span><t t-esc="env._t('Ventas por Mercancías')"/></span>
         </button>
@@ -11,7 +11,7 @@
 
     <!-- Botón 2 -->
     <t t-name="asi_pos_reports.ShiftBalanceReportButton" owl="1">
-        <button class="control-button" t-on-click="onClick" title="Balance de Turno">
+        <button class="control-button" t-on-click="onClick" title="Balance de Turno" style="display: none;">
             <i class="fa fa-balance-scale"/>
             <span><t t-esc="env._t('Balance de Turno')"/></span>
         </button>
@@ -19,7 +19,7 @@
 
     <!-- Botón 3 -->
     <t t-name="asi_pos_reports.InventorySummaryReportButton" owl="1">
-        <button class="control-button" t-on-click="onClick" title="Resumen de Inventario">
+        <button class="control-button" t-on-click="onClick" title="Resumen de Inventario" style="display: none;">
             <i class="fa fa-inbox"/>
             <span><t t-esc="env._t('Resumen de Inventario')"/></span>
         </button>

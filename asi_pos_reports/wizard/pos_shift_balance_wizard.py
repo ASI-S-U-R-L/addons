@@ -16,19 +16,19 @@ class PosShiftBalanceWizard(models.TransientModel):
     _description = 'Wizard para Balance de Turno'
 
     pos_config_id = fields.Many2one(
-        'pos.config', 
-        string='Punto de Venta', 
+        'pos.config',
+        string='Punto de Venta',
         required=True,
         help='Seleccione el punto de venta'
     )
     report_date = fields.Date(
-        string='Fecha', 
+        string='Fecha',
         required=True,
         default=fields.Date.context_today,
         help='Seleccione la fecha para filtrar las sesiones'
     )
     session_id = fields.Many2one(
-        'pos.session', 
+        'pos.session',
         string='Sesión POS',
         help='Seleccione la sesión del día'
     )

@@ -295,14 +295,7 @@ function wireCalculatorToClosingPopupWithPersistence() {
             console.debug(`[asi_pos_options] Usando total extraído del DOM: ${total}`);
         }
 
-        // 2) setear input
-        const amountInput = getClosingAmountInput(closingPopup);
-        if (amountInput) {
-            amountInput.value = Number.isFinite(total) ? String(total) : amountInput.value;
-            amountInput.dispatchEvent(new Event('input', { bubbles: true }));
-            amountInput.dispatchEvent(new Event('change', { bubbles: true }));
-            console.debug(`[asi_pos_options] Input actualizado con valor: ${amountInput.value}`);
-        }
+        // 2) NO setear input para no interferir en contabilidad - solo registrar denominaciones
 
         // 3) habilitar cierre
         const confirmBtn = getConfirmCloseButton(closingPopup);

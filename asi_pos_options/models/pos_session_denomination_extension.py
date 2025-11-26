@@ -207,103 +207,6 @@ class PosSessionDenominationExtension(models.Model):
             'target': 'current',
         }
 
-    def get_closing_control_data(self):
-        """
-        Override del método estándar para corregir el campo 'opening' en default_cash_details.
-        En lugar de usar last_session.cash_register_balance_end_real, usa self.cash_register_balance_start.
-        """
-        if not self.env.user.has_group('point_of_sale.group_pos_user'):
-            raise AccessError(_("You don't have the access rights to get the point of sale closing control data."))
-        self.ensure_one()
-        orders = self.order_ids.filtered(lambda o: o.state == 'paid' or o.state == 'invoiced')
-        payments = orders.payment_ids.filtered(lambda p: p.payment_method_id.type != "pay_later")
-        pay_later_payments = orders.payment_ids - payments
-        cash_payment_method_ids = self.payment_method_ids.filtered(lambda pm: pm.type == 'cash')
-        default_cash_payment_method_id = cash_payment_method_ids[0] if cash_payment_method_ids else None
-        total_default_cash_payment_amount = sum(payments.filtered(lambda p: p.payment_method_id == default_cash_payment_method_id).mapped('amount')) if default_cash_payment_method_id else 0
-        other_payment_method_ids = self.payment_method_ids - default_cash_payment_method_id if default_cash_payment_method_id else self.payment_method_ids
-        cash_in_count = 0
-        cash_out_count = 0
-        cash_in_out_list = []
-        last_session = self.search([('config_id', '=', self.config_id.id), ('id', '!=', self.id)], limit=1)
-        for cash_move in self.sudo().statement_line_ids.sorted('create_date'):
-            if cash_move.amount > 0:
-                cash_in_count += 1
-                name = f'Cash in {cash_in_count}'
-            else:
-                cash_out_count += 1
-                name = f'Cash out {cash_out_count}'
-            cash_in_out_list.append({
-                'name': cash_move.payment_ref if cash_move.payment_ref else name,
-                'amount': cash_move.amount
-            })
-
-        return {
-            'orders_details': {
-                'quantity': len(orders),
-                'amount': sum(orders.mapped('amount_total'))
-            },
-            'payments_amount': sum(payments.mapped('amount')),
-            'pay_later_amount': sum(pay_later_payments.mapped('amount')),
-            'opening_notes': self.opening_notes,
-            'default_cash_details': {
-                'name': default_cash_payment_method_id.name,
-                'amount': self.cash_register_balance_start
-                           + total_default_cash_payment_amount
-                           + sum(self.sudo().statement_line_ids.mapped('amount')),
-                'opening': self.cash_register_balance_start,  # Corregido: usar el balance de apertura de la sesión actual
-                'payment_amount': total_default_cash_payment_amount,
-                'moves': cash_in_out_list,
-                'id': default_cash_payment_method_id.id
-            } if default_cash_payment_method_id else None,
-            'other_payment_methods': [{
-                'name': pm.name,
-                'amount': sum(orders.payment_ids.filtered(lambda p: p.payment_method_id == pm).mapped('amount')),
-                'number': len(orders.payment_ids.filtered(lambda p: p.payment_method_id == pm)),
-                'id': pm.id,
-                'type': pm.type,
-            } for pm in other_payment_method_ids],
-            'is_manager': self.user_has_groups("point_of_sale.group_pos_manager"),
-            'amount_authorized_diff': self.config_id.amount_authorized_diff if self.config_id.set_maximum_difference else None
-        }
-
-    def _post_statement_difference(self, difference, is_opening=False):
-        """
-        Override para asegurar que el movimiento contable tenga una fecha válida.
-        Esto soluciona el error de validación en asi_custom_sale que requiere fecha en los movimientos.
-        """
-        if not self.statement_line_ids:
-            return
-
-        # Determinar la fecha para la línea de estado de forma segura
-        if is_opening:
-            # Para apertura, usar start_at.date() si start_at existe y no es None, sino today
-            if self.start_at:
-                try:
-                    line_date = self.start_at.date()
-                except AttributeError:
-                    line_date = fields.Date.today()
-            else:
-                line_date = fields.Date.today()
-        else:
-            # Para cierre, usar today
-            line_date = fields.Date.today()
-
-        st_line_vals = {
-            'statement_id': self.statement_line_ids[0].statement_id.id,
-            'amount': difference,
-            'date': line_date,
-            'name': _('Cash difference observed during the counting (Loss)' if difference < 0 else 'Cash difference observed during the counting (Profit)'),
-            'counterpart_account_id': self.company_id.default_cash_difference_income_account_id.id or self.company_id.account_journal_suspense_account_id.id,
-        }
-
-        st_line = self.env['account.bank.statement.line'].create(st_line_vals)
-
-        # Asegurar que el movimiento tenga fecha antes de postear
-        if st_line.move_id and not st_line.move_id.date:
-            st_line.move_id.date = line_date
-
-        st_line.move_id.action_post()
 
     @api.model
     def save_denomination_control_from_ui(self, session_id, control_type, total_amount, denominations_data=None):
@@ -333,11 +236,6 @@ class PosSessionDenominationExtension(models.Model):
                 total_amount=total_amount,
                 denominations_data=denominations_data
             )
-
-            # Si es control de apertura, actualizar el balance de caja de apertura
-            if control_type == 'opening':
-                session.cash_register_balance_start = total_amount
-                _logger.info(f"Actualizado cash_register_balance_start a {total_amount} para sesión {session_id}")
 
             return {
                 'success': True,

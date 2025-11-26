@@ -39,8 +39,9 @@ Características técnicas:
             "/asi_pos_options/static/src/js/force_opening_by_denominations.js",
             "/asi_pos_options/static/src/js/force_closing_by_denominations.js",
             # "/asi_pos_options/static/src/js/show_product_stock.js",
-            "/asi_pos_options/static/src/hide_bank_payment.js",
+            "/asi_pos_options/static/src/js/hide_bank_payment.js",
             "/asi_pos_options/static/src/js/show_trm_qr_in_pos.js",
+            
         ]
     },
     'images': ['static/description/icon.png'],

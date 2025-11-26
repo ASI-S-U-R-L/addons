@@ -37,17 +37,19 @@ class PosSession(models.Model):
         """Acción para mostrar el reporte de balance de turno"""
         self.ensure_one()
 
-        # Leer la acción del wizard y crear el registro
+        # Crear el registro del wizard con defaults REALES
+        wiz = self.env['pos.shift.balance.wizard'].create({
+            'pos_config_id': self.config_id.id,
+            'report_date': self.start_at.date() if self.start_at else fields.Date.today(),
+            'session_id': self.id,
+        })
+
+        # Leer la acción del wizard y fijar res_id
         action = self.env.ref('asi_pos_reports.action_pos_shift_balance_wizard').read()[0]
         action.update({
-            'res_id': False,  # No pre-crear el wizard, dejar que se cree vacío
+            'res_id': wiz.id,
             'target': 'new',
             'type': 'ir.actions.act_window',
-            'context': {
-                'default_pos_config_id': self.config_id.id,
-                'default_report_date': self.start_at.date() if self.start_at else fields.Date.today(),
-                'default_session_id': self.id,
-            }
         })
         return action
 
@@ -55,10 +57,15 @@ class PosSession(models.Model):
         """Acción para mostrar el reporte de resumen de inventario"""
         self.ensure_one()
 
-        # Leer la acción del wizard de resumen de inventario
+        # Crear el registro del wizard con defaults REALES
+        wiz = self.env['inventory.summary.wizard'].create({
+            'warehouse_ids': [(6, 0, [self.config_id.warehouse_id.id])] if self.config_id.warehouse_id else [],
+        })
+
+        # Leer la acción del wizard y fijar res_id
         action = self.env.ref('asi_pos_reports.action_inventory_summary_wizard').read()[0]
         action.update({
-            'res_id': False,  # No pre-crear el wizard, dejar que se cree vacío
+            'res_id': wiz.id,
             'target': 'new',
             'type': 'ir.actions.act_window',
         })
