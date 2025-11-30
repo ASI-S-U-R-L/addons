@@ -23,5 +23,6 @@
         'data/payment_provider_data.xml',
         'views/payment_custom_templates.xml',
         'views/website_sale_templates.xml',
+        'views/res_users_views.xml',
     ],
 }

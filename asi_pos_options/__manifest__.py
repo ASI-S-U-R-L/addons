@@ -41,7 +41,7 @@ Características técnicas:
             # "/asi_pos_options/static/src/js/show_product_stock.js",
             "/asi_pos_options/static/src/js/hide_bank_payment.js",
             "/asi_pos_options/static/src/js/show_trm_qr_in_pos.js",
-            
+            "/asi_pos_options/static/src/js/remove_all_products.js",
         ]
     },
     'images': ['static/description/icon.png'],

@@ -34,38 +34,42 @@ function showTRMQrCode(root = document, ctx = null) {
     const order = pos.get_order();
     const selectedPaymentLine = order.selected_paymentline;
 
-    // Verificar si el método de pago seleccionado es "Banco" o "Transferencia"
-    const isBankPayment = selectedPaymentLine &&
-        (selectedPaymentLine.payment_method.type === 'bank' ||
-         selectedPaymentLine.payment_method.name.toLowerCase().includes('banco') ||
-         selectedPaymentLine.payment_method.name.toLowerCase().includes('Tranferencia') ||
-         selectedPaymentLine.payment_method.name.toLowerCase().includes('Transferencia'));
+    // Verificar el tipo de método de pago
+    const paymentName = selectedPaymentLine ? selectedPaymentLine.payment_method.name.toLowerCase() : '';
+    const isTransfermovilPagoEnLinea = paymentName.includes('transfermovil pago en linea');
+    const isTransfermovil = paymentName.includes('transfermovil') && !isTransfermovilPagoEnLinea;
 
     // Verificar si ya existe el QR
     const existingQr = paymentScreen.querySelector('.trm-qr-container');
 
-    if (isBankPayment && pos.config.show_trm_qr_in_pos) {
-        // Usar el importe de la línea de pago seleccionada (solo Transferencia)
-        const transferAmount = selectedPaymentLine ? selectedPaymentLine.amount : order.get_total_with_tax();
-              
-        // Generar QR básico para POS con el importe correcto
-        const qrData = {
-            'id_transaccion': "ESTATICO",
-            'importe': transferAmount,
-            'moneda': pos.currency.display_name || 'CUP',
-            'numero_proveedor': '0000000000', 
-            'version': 1,
-            'titulo': pos.config.display_name
-        };
-        const newQrString = JSON.stringify(qrData);
-        const qrUrl = `/report/barcode/?barcode_type=QR&value=${encodeURIComponent(newQrString)}&width=150&height=150`;
+    if ((isTransfermovilPagoEnLinea || isTransfermovil) && pos.config.show_trm_qr_in_pos) {
+        let qrData;
+         const phone_extra_val = pos.user.phone_extra || '';
+        if (isTransfermovilPagoEnLinea) {
+            // QR anterior para Transfermovil Pago en Linea
+            qrData = {
+                'id_transaccion': "ESTATICO",
+                'importe': order.get_total_with_tax(),
+                'moneda': pos.currency.display_name || 'CUP',
+                'numero_proveedor': phone_extra_val,
+                'version': 1,
+                'titulo': pos.config.display_name
+            };
+            qrData = JSON.stringify(qrData);
+        } else if (isTransfermovil) {
+            // QR del módulo transfermovil_trasnferencia para Transfermovil
+            const cc_number = pos.user.credit_card_number || '';
+           
+            qrData = `TRANSFERMOVIL_ETECSA,TRANSFERENCIA,${cc_number},${phone_extra_val}`;
+        }
+        const qrUrl = `/report/barcode/?barcode_type=QR&value=${encodeURIComponent(qrData)}&width=150&height=150`;
 
         if (existingQr) {
             // Si ya existe, verificar si necesita actualizarse
             const img = existingQr.querySelector('img');
             if (img && img.src !== qrUrl) {
                 img.src = qrUrl;
-                order.trm_qr_code_str = newQrString; // Actualizar el string en la orden
+                order.trm_qr_code_str = qrData; // Actualizar el string en la orden
             }
             found = true;
         } else {
@@ -84,7 +88,7 @@ function showTRMQrCode(root = document, ctx = null) {
                 const paymentControls = invoiceButton.closest('.payment-controls');
                 if (paymentControls) {
                     paymentControls.insertAdjacentElement('afterend', qrContainer);
-                    order.trm_qr_code_str = newQrString; // Guardar el string en la orden
+                    order.trm_qr_code_str = qrData; // Guardar el string en la orden
                     found = true;
                 }
             }
@@ -177,15 +181,30 @@ async function runTRMQrInit(ctx) {
 
 patch(PosGlobalState.prototype, "asi_pos_options.show_trm_qr_in_pos", {
     async loadServerData(...args) {
-        const out = await this._super?.(...args);
-        // Esperar un poco más para que el POS esté completamente inicializado
-        setTimeout(() => runTRMQrInit(this), 1000);
-        return out;
+        const result = await this._super(...args);
+
+        // Forzar la carga de campos personalizados del usuario logueado
+     
+
+        setTimeout(() => runTRMQrInit(this), 200);
+        return result;
     },
     async _processData(...args) {
         const out = await this._super?.(...args);
-        // Esperar un poco más para que el POS esté completamente inicializado
-        setTimeout(() => runTRMQrInit(this), 1000);
+           console.log("forzando carga");
+        if (this.user) {
+            const userFields = await this.env.services.rpc({
+                model: 'res.users',
+                method: 'read',
+                args: [[this.user.id], ['credit_card_number', 'phone_extra']],
+            });
+            if (userFields && userFields.length > 0) {
+                const userData = userFields[0];
+                this.user.credit_card_number = userData.credit_card_number || '';
+                this.user.phone_extra = userData.phone_extra || '';
+            }
+        }
+        setTimeout(() => runTRMQrInit(this), 200);
         return out;
     },
 });

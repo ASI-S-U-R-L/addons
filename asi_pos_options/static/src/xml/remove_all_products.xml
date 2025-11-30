@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-inherit="point_of_sale.ProductScreen" t-inherit-mode="extension" owl="1">
+        <xpath expr="//div[hasclass('rightpane')]" position="inside">
+            <div class="d-flex justify-content-center mb-2">
+                <button class="btn btn-danger btn-sm" t-on-click="removeAllProducts">
+                    <i class="fa fa-trash"></i> Eliminar Todos los Productos
+                </button>
+            </div>
+        </xpath>
+    </t>
+
+</templates>
