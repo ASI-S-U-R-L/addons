@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fleet_consumption_analysis_user,fleet.consumption.analysis.user,model_fleet_consumption_analysis,fleet.fleet_group_user,1,1,1,0
+access_fleet_consumption_analysis_manager,fleet.consumption.analysis.manager,model_fleet_consumption_analysis,fleet.fleet_group_manager,1,1,1,1
+access_fleet_consumption_standard_user,fleet.consumption.standard.user,model_fleet_consumption_standard,fleet.fleet_group_user,1,0,0,0
+access_fleet_consumption_standard_manager,fleet.consumption.standard.manager,model_fleet_consumption_standard,fleet.fleet_group_manager,1,1,1,1
+access_fleet_monthly_closure_admin_user,fleet.monthly.closure.admin.user,model_fleet_monthly_closure_admin,fleet.fleet_group_user,1,1,1,0
+access_fleet_monthly_closure_admin_manager,fleet.monthly.closure.admin.manager,model_fleet_monthly_closure_admin,fleet.fleet_group_manager,1,1,1,1
+access_fleet_route_sheet_user,fleet.route.sheet.user,model_fleet_route_sheet,fleet.fleet_group_user,1,1,1,0
+access_fleet_route_sheet_manager,fleet.route.sheet.manager,model_fleet_route_sheet,fleet.fleet_group_manager,1,1,1,1
+access_fleet_route_sheet_trip_user,fleet.route.sheet.trip.user,model_fleet_route_sheet_trip,fleet.fleet_group_user,1,1,1,0
+access_fleet_route_sheet_trip_manager,fleet.route.sheet.trip.manager,model_fleet_route_sheet_trip,fleet.fleet_group_manager,1,1,1,1

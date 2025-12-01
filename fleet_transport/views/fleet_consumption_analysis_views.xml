@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista de formulario para análisis de consumo -->
+    <record id="view_fleet_consumption_analysis_form" model="ir.ui.view">
+        <field name="name">fleet.consumption.analysis.form</field>
+        <field name="model">fleet.consumption.analysis</field>
+        <field name="arch" type="xml">
+            <form string="Análisis de Consumo">
+                <header>
+                    <button name="action_calculate_consumption" string="Calcular Consumo" type="object" 
+                            class="btn-primary" states="draft"/>
+                    <button name="action_validate" string="Validar" type="object" 
+                            class="btn-success" states="calculated"/>
+                    <button name="action_archive" string="Archivar" type="object" 
+                            states="validated" confirm="¿Está seguro de archivar este análisis?"/>
+                    <button name="action_draft" string="Volver a Borrador" type="object" 
+                            states="calculated,archived"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,calculated,validated"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_fuel_logs" 
+                                icon="fa-tint" attrs="{'invisible': [('fuel_logs_count', '=', 0)]}">
+                            <field string="Combustible" name="fuel_logs_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_route_sheets" 
+                                icon="fa-road" attrs="{'invisible': [('route_sheets_count', '=', 0)]}">
+                            <field string="Hojas de Ruta" name="route_sheets_count" widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <!-- Alertas de cumplimiento -->
+                    <div class="alert alert-danger" role="alert" attrs="{'invisible': [('compliance_status', '!=', 'critical')]}">
+                        <strong>🚨 CRÍTICO:</strong> El consumo excede significativamente la norma establecida. Justificación obligatoria.
+                    </div>
+                    
+                    <div class="alert alert-warning" role="alert" attrs="{'invisible': [('compliance_status', '!=', 'warning')]}">
+                        <strong>⚠️ ADVERTENCIA:</strong> El consumo está por encima del rango aceptable.
+                    </div>
+                    
+                    <div class="alert alert-success" role="alert" attrs="{'invisible': [('compliance_status', '!=', 'excellent')]}">
+                        <strong>✅ EXCELENTE:</strong> El consumo está por encima de la norma establecida.
+                    </div>
+
+                    <!-- Alertas generales -->
+                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('has_alerts', '=', False)]}">
+                        <strong>Alertas del Sistema:</strong><br/>
+                        <field name="alert_messages" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_name" readonly="1"/>
+                        </h1>
+                        <h3>
+                            <field name="period_description" readonly="1"/>
+                        </h3>
+                    </div>
+
+                    <group>
+                        <group string="Información Básica">
+                            <field name="vehicle_id" options="{'no_create': True}"/>
+                            <field name="license_plate" readonly="1"/>
+                            <field name="vehicle_type" readonly="1"/>
+                            <field name="driver_id" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Período de Análisis">
+                            <field name="analysis_type"/>
+                            <field name="period_start"/>
+                            <field name="period_end"/>
+                            <field name="has_alerts" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Datos de consumo -->
+                    <group string="Datos de Consumo">
+                        <group>
+                            <field name="total_fuel_consumed" widget="float" digits="[10,2]"/>
+                            <field name="total_kilometers" widget="float" digits="[10,2]" 
+                                   attrs="{'invisible': [('vehicle_type', '=', 'estacionario')]}"/>
+                            <field name="total_hours_operation" widget="float" digits="[10,2]" 
+                                   attrs="{'invisible': [('vehicle_type', '!=', 'estacionario')]}"/>
+                        </group>
+                        <group>
+                            <field name="odometer_start" attrs="{'invisible': [('vehicle_type', '=', 'estacionario')]}"/>
+                            <field name="odometer_end" attrs="{'invisible': [('vehicle_type', '=', 'estacionario')]}"/>
+                            <field name="odometer_method" attrs="{'invisible': [('vehicle_type', '=', 'estacionario')]}"/>
+                        </group>
+                    </group>
+
+                    <!-- Índices y normas -->
+                    <group string="Análisis de Eficiencia">
+                        <group>
+                            <field name="consumption_index_kml" widget="float" digits="[10,3]" 
+                                   attrs="{'invisible': [('vehicle_type', '=', 'estacionario')]}"/>
+                            <field name="consumption_index_lh" widget="float" digits="[10,3]" 
+                                   attrs="{'invisible': [('vehicle_type', '!=', 'estacionario')]}"/>
+                            <field name="compliance_status" widget="badge" 
+                                   attrs="{'decoration-success': [('compliance_status', '=', 'excellent')], 
+                                           'decoration-info': [('compliance_status', '=', 'good')],
+                                           'decoration-warning': [('compliance_status', 'in', ['acceptable', 'warning'])],
+                                           'decoration-danger': [('compliance_status', '=', 'critical')]}"/>
+                        </group>
+                        <group>
+                            <field name="standard_consumption_kml" widget="float" digits="[10,3]" 
+                                   attrs="{'invisible': [('vehicle_type', '=', 'estacionario')]}"/>
+                            <field name="standard_consumption_lh" widget="float" digits="[10,3]" 
+                                   attrs="{'invisible': [('vehicle_type', '!=', 'estacionario')]}"/>
+                            <field name="compliance_percentage_kml" widget="percentage" 
+                                   attrs="{'invisible': [('vehicle_type', '=', 'estacionario')]}"/>
+                            <field name="compliance_percentage_lh" widget="percentage" 
+                                   attrs="{'invisible': [('vehicle_type', '!=', 'estacionario')]}"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Observaciones" name="observations">
+                            <group>
+                                <field name="observations" nolabel="1" placeholder="Observaciones generales sobre el análisis..."/>
+                            </group>
+                        </page>
+                        
+                        <page string="Justificación de Desviaciones" name="justification" 
+                              attrs="{'invisible': ['!', ('compliance_status', 'in', ['critical', 'warning'])]}">
+                            <div class="alert alert-info" role="alert">
+                                <p><strong>Justificación Obligatoria:</strong> Según el Decreto 110/2024, las desviaciones significativas en el consumo deben ser justificadas documentalmente.</p>
+                            </div>
+                            <group>
+                                <field name="deviation_justification" nolabel="1" 
+                                       placeholder="Explique las razones de la desviación en el consumo (condiciones climáticas, tipo de carga, estado del vehículo, etc.)..."
+                                       attrs="{'required': [('compliance_status', 'in', ['critical', 'warning'])]}"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de lista para análisis de consumo -->
+    <record id="view_fleet_consumption_analysis_tree" model="ir.ui.view">
+        <field name="name">fleet.consumption.analysis.tree</field>
+        <field name="model">fleet.consumption.analysis</field>
+        <field name="arch" type="xml">
+            <tree string="Análisis de Consumo" 
+                  decoration-success="compliance_status == 'excellent'" 
+                  decoration-info="compliance_status == 'good'"
+                  decoration-warning="compliance_status in ['acceptable', 'warning']"
+                  decoration-danger="compliance_status == 'critical'"
+                  sample="1">
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="license_plate"/>
+                <field name="period_start"/>
+                <field name="period_end"/>
+                <field name="vehicle_type"/>
+                <field name="total_fuel_consumed" sum="Total Combustible"/>
+                <field name="total_kilometers" sum="Total Kilómetros" 
+                       attrs="{'column_invisible': [('parent.vehicle_type', '=', 'estacionario')]}"/>
+                <field name="total_hours_operation" sum="Total Horas" 
+                       attrs="{'column_invisible': [('parent.vehicle_type', '!=', 'estacionario')]}"/>
+                <field name="consumption_index_kml" 
+                       attrs="{'column_invisible': [('parent.vehicle_type', '=', 'estacionario')]}"/>
+                <field name="consumption_index_lh" 
+                       attrs="{'column_invisible': [('parent.vehicle_type', '!=', 'estacionario')]}"/>
+                <field name="compliance_percentage_kml" widget="percentage" optional="hide"
+                       attrs="{'column_invisible': [('parent.vehicle_type', '=', 'estacionario')]}"/>
+                <field name="compliance_percentage_lh" widget="percentage" optional="hide"
+                       attrs="{'column_invisible': [('parent.vehicle_type', '!=', 'estacionario')]}"/>
+                <field name="compliance_status" widget="badge" 
+                       decoration-success="compliance_status == 'excellent'" 
+                       decoration-info="compliance_status == 'good'"
+                       decoration-warning="compliance_status in ['acceptable', 'warning']"
+                       decoration-danger="compliance_status == 'critical'"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state == 'draft'" 
+                       decoration-warning="state == 'calculated'"
+                       decoration-success="state == 'validated'" 
+                       decoration-muted="state == 'archived'"/>
+                <field name="activity_exception_decoration" widget="activity_exception"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de búsqueda CORREGIDA -->
+    <record id="view_fleet_consumption_analysis_search" model="ir.ui.view">
+        <field name="name">fleet.consumption.analysis.search</field>
+        <field name="model">fleet.consumption.analysis</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Análisis de Consumo">
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="license_plate"/>
+                <field name="driver_id"/>
+                <field name="period_start"/>
+                <field name="period_end"/>
+                
+                <filter string="Mis Análisis" name="my_analysis" domain="[('create_uid', '=', uid)]"/>
+                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Calculados" name="calculated" domain="[('state', '=', 'calculated')]"/>
+                <filter string="Validados" name="validated" domain="[('state', '=', 'validated')]"/>
+                
+                <separator/>
+                <filter string="Excelente" name="excellent" domain="[('compliance_status', '=', 'excellent')]"/>
+                <filter string="Bueno" name="good" domain="[('compliance_status', '=', 'good')]"/>
+                <filter string="Aceptable" name="acceptable" domain="[('compliance_status', '=', 'acceptable')]"/>
+                <filter string="Advertencia" name="warning" domain="[('compliance_status', '=', 'warning')]"/>
+                <filter string="Crítico" name="critical" domain="[('compliance_status', '=', 'critical')]"/>
+                
+                <separator/>
+                <filter string="Con Alertas" name="with_alerts" domain="[('has_alerts', '=', True)]"/>
+                <filter string="Móviles" name="movil" domain="[('vehicle_type', '=', 'movil')]"/>
+                <filter string="Tecnológicos" name="tecnologico" domain="[('vehicle_type', '=', 'tecnologico')]"/>
+                <filter string="Estacionarios" name="estacionario" domain="[('vehicle_type', '=', 'estacionario')]"/>
+                
+                <separator/>
+                <filter string="Mensual" name="monthly" domain="[('analysis_type', '=', 'monthly')]"/>
+                <filter string="Personalizado" name="custom" domain="[('analysis_type', '=', 'custom')]"/>
+                
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Vehículo" name="group_by_vehicle" context="{'group_by': 'vehicle_id'}"/>
+                    <filter string="Tipo de Vehículo" name="group_by_vehicle_type" context="{'group_by': 'vehicle_type'}"/>
+                    <filter string="Estado de Cumplimiento" name="group_by_compliance" context="{'group_by': 'compliance_status'}"/>
+                    <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Mes" name="group_by_month" context="{'group_by': 'period_start:month'}"/>
+                    <filter string="Año" name="group_by_year" context="{'group_by': 'period_start:year'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Vista kanban -->
+    <record id="view_fleet_consumption_analysis_kanban" model="ir.ui.view">
+        <field name="name">fleet.consumption.analysis.kanban</field>
+        <field name="model">fleet.consumption.analysis</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="display_name"/>
+                <field name="vehicle_id"/>
+                <field name="license_plate"/>
+                <field name="period_description"/>
+                <field name="compliance_status"/>
+                <field name="consumption_index_kml"/>
+                <field name="consumption_index_lh"/>
+                <field name="vehicle_type"/>
+                <field name="state"/>
+                <field name="total_fuel_consumed"/>
+                <field name="total_kilometers"/>
+                <field name="has_alerts"/>
+                
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click 
+                                          #{record.compliance_status.raw_value == 'critical' ? 'border-danger' : 
+                                            record.compliance_status.raw_value == 'warning' ? 'border-warning' : 
+                                            record.compliance_status.raw_value == 'excellent' ? 'border-success' : ''}">
+                            
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="license_plate"/>
+                                    </strong>
+                                    <br/>
+                                    <span class="o_kanban_record_subtitle">
+                                        <field name="period_description"/>
+                                    </span>
+                                </div>
+                                <span class="float-right">
+                                    <field name="compliance_status" widget="label_selection" 
+                                           options="{'classes': {
+                                               'excellent': 'success', 
+                                               'good': 'info', 
+                                               'acceptable': 'secondary',
+                                               'warning': 'warning', 
+                                               'critical': 'danger'
+                                           }}"/>
+                                </span>
+                            </div>
+                            
+                            <div class="o_kanban_record_body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>Combustible:</strong><br/>
+                                        <span t-esc="record.total_fuel_consumed.value"/> L
+                                    </div>
+                                    <div class="col-6">
+                                        <t t-if="record.vehicle_type.raw_value != 'estacionario'">
+                                            <strong>Kilómetros:</strong><br/>
+                                            <span t-esc="record.total_kilometers.value"/> Km
+                                        </t>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <t t-if="record.vehicle_type.raw_value != 'estacionario'">
+                                            <strong>Eficiencia:</strong> <span t-esc="record.consumption_index_kml.value"/> Km/L
+                                        </t>
+                                        <t t-if="record.vehicle_type.raw_value == 'estacionario'">
+                                            <strong>Consumo:</strong> <span t-esc="record.consumption_index_lh.value"/> L/H
+                                        </t>
+                                    </div>
+                                </div>
+                                
+                                <t t-if="record.has_alerts.raw_value">
+                                    <div class="alert alert-warning mt-2 p-2">
+                                        <small><i class="fa fa-exclamation-triangle"/> Tiene alertas</small>
+                                    </div>
+                                </t>
+                            </div>
+                            
+                            <div class="o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left">
+                                    <field name="state" widget="label_selection" 
+                                           options="{'classes': {
+                                               'draft': 'secondary', 
+                                               'calculated': 'warning', 
+                                               'validated': 'success',
+                                               'archived': 'muted'
+                                           }}"/>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <field name="activity_ids" widget="kanban_activity"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vista pivot para análisis -->
+    <record id="view_fleet_consumption_analysis_pivot" model="ir.ui.view">
+        <field name="name">fleet.consumption.analysis.pivot</field>
+        <field name="model">fleet.consumption.analysis</field>
+        <field name="arch" type="xml">
+            <pivot string="Análisis de Consumo" sample="1">
+                <field name="vehicle_type" type="row"/>
+                <field name="vehicle_id" type="row"/>
+                <field name="period_start" interval="month" type="col"/>
+                <field name="total_fuel_consumed" type="measure"/>
+                <field name="total_kilometers" type="measure"/>
+                <field name="consumption_index_kml" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vista gráfica -->
+    <record id="view_fleet_consumption_analysis_graph" model="ir.ui.view">
+        <field name="name">fleet.consumption.analysis.graph</field>
+        <field name="model">fleet.consumption.analysis</field>
+        <field name="arch" type="xml">
+            <graph string="Análisis de Consumo" sample="1">
+                <field name="period_start" interval="month"/>
+                <field name="total_fuel_consumed" type="measure"/>
+                <field name="vehicle_id" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Acción principal CORREGIDA -->
+    <record id="action_fleet_consumption_analysis" model="ir.actions.act_window">
+        <field name="name">Análisis de Consumo</field>
+        <field name="res_model">fleet.consumption.analysis</field>
+        <field name="view_mode">kanban,tree,form,pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea tu primer análisis de consumo
+            </p>
+            <p>
+                El sistema correlaciona automáticamente los tickets de combustible con las hojas de ruta
+                para calcular índices de eficiencia y cumplimiento normativo según el Decreto 110/2024.
+            </p>
+        </field>
+    </record>
+
+</odoo>

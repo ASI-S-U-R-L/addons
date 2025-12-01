@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Menú "Combustible" dentro del menú Fleet principal -->
+        <menuitem name="Combustible"
+                  parent="fleet.menu_root"
+                  id="fleet_consumption_analysis_main_menu" 
+                  groups="fleet.fleet_group_user" 
+                  sequence="50"/>
+
+        <!-- Submenú: Análisis de Consumo -->
+        <menuitem name="Análisis de Consumo"
+                  parent="fleet_consumption_analysis_main_menu"
+                  action="action_fleet_consumption_analysis"
+                  id="fleet_consumption_analysis_menu" 
+                  groups="fleet.fleet_group_user" 
+                  sequence="10"/>
+
+        <!-- Submenú: Cierres Mensuales -->
+        <menuitem name="Cierres Mensuales"
+                  parent="fleet_consumption_analysis_main_menu"
+                  action="action_fleet_monthly_closure_admin"
+                  id="fleet_monthly_closure_admin_menu" 
+                  groups="fleet.fleet_group_user" 
+                  sequence="20"/>
+
+        <!-- Submenú: Normas de Consumo -->
+        <menuitem name="Normas de Consumo"
+                  parent="fleet_consumption_analysis_main_menu"
+                  action="action_fleet_consumption_standard"
+                  id="fleet_consumption_standard_menu" 
+                  groups="fleet.fleet_group_manager" 
+                  sequence="30"/>
+
+    </data>
+</odoo>

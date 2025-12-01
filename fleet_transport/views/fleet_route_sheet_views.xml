@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de formulario simplificada para Hojas de Ruta -->
+    <record id="view_fleet_route_sheet_form" model="ir.ui.view">
+        <field name="name">fleet.route.sheet.form</field>
+        <field name="model">fleet.route.sheet</field>
+        <field name="arch" type="xml">
+            <form string="Hoja de Ruta">
+                <header>
+                    <button name="action_confirm" string="Confirmar" type="object" class="oe_highlight" states="draft"/>
+                    <button name="action_cancel" string="Cancelar" type="object" states="draft,confirmed"/>
+                    <button name="action_draft" string="Volver a Borrador" type="object" states="cancelled"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_fuel_logs" 
+                                icon="fa-tint" attrs="{'invisible': [('fuel_logs_count', '=', 0)]}">
+                            <field string="Combustible" name="fuel_logs_count" widget="statinfo"/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <!-- Alertas informativas -->
+                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('state', '!=', 'draft')]}">
+                        <p><strong>Sistema Automatizado:</strong> Al seleccionar el vehículo se llenarán automáticamente todos sus datos y los del conductor asignado.</p>
+                    </div>
+                    
+                    <div class="alert alert-success" role="alert" attrs="{'invisible': [('fuel_logs_count', '=', 0)]}">
+                        <p><strong>Combustible Registrado:</strong> Se encontraron <field name="fuel_logs_count" readonly="1"/> registro(s) de combustible para este vehículo en esta fecha.</p>
+                    </div>
+
+                    <group>
+                        <group string="Selección de Vehículo">
+                            <field name="vehicle_id" options="{'no_create': True, 'no_open': True}" 
+                                   domain="[('has_route_sheet', '=', True)]" 
+                                   widget="selection"/>
+                            <field name="date"/>
+                        </group>
+                        <group string="Información de la Empresa">
+                            <field name="company_id" invisible="1"/>
+                            <field name="entity" readonly="1"/>
+                            <field name="company_vat" readonly="1"/>
+                            <field name="enabled_by" options="{'no_create': False}" 
+                                   placeholder="Seleccione quien habilita la hoja de ruta"/>
+                        </group>
+                    </group>
+
+                    <!-- Información automática del vehículo -->
+                    <group string="Información del Vehículo (Automática)" attrs="{'invisible': [('vehicle_id', '=', False)]}">
+                        <group>
+                            <field name="vehicle_custom_type" readonly="1"/>
+                            <field name="vehicle_brand" readonly="1"/>
+                            <field name="vehicle_model" readonly="1"/>
+                            <field name="license_plate" readonly="1"/>
+                            <field name="circulation_number" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="current_consumption_type" readonly="1"/>
+                            <field name="tank_capacity_main" readonly="1"/>
+                            <field name="tank_capacity_secondary" readonly="1" 
+                                   attrs="{'invisible': [('vehicle_custom_type', '!=', 'tecnologico')]}"/>
+                        </group>
+                    </group>
+
+                    <!-- Información automática del conductor -->
+                    <group string="Información del Conductor (Automática)" attrs="{'invisible': [('driver_id', '=', False)]}">
+                        <group>
+                            <field name="driver_id" readonly="1"/>
+                            <field name="driver_license_summary" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="driver_active_licenses" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Campos manuales principales -->
+                    <group string="Información de la Hoja de Ruta">
+                        <group>
+                            <field name="authorized_service" placeholder="Ej: Transporte de personal, Carga, etc."/>
+                            <field name="manual_total_trips" help="Cantidad total de viajes realizados"/>
+                            <field name="manual_total_kilometers" help="Total de kilómetros recorridos"/>
+                        </group>
+                        <group>
+                            <field name="cupo" placeholder="Opcional"/>
+                            <field name="parqueo" placeholder="Opcional"/>
+                        </group>
+                    </group>
+
+                    <!-- Análisis de combustible -->
+                    <group string="Análisis de Eficiencia" attrs="{'invisible': [('state', '!=', 'confirmed')]}">
+                        <group>
+                            <field name="total_fuel_consumed" readonly="1"/>
+                            <field name="fuel_efficiency" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <!-- Viajes detallados opcionales -->
+                        <page string="Viajes Detallados (Opcional)" name="detailed_trips">
+                            <div class="alert alert-info" role="alert">
+                                <p><strong>Opcional:</strong> Esta sección es para registrar viajes detallados. No es obligatoria para confirmar la hoja de ruta. Está preparada para futura integración con app móvil.</p>
+                            </div>
+                            
+                            <field name="trip_ids" attrs="{'readonly': [('state', '!=', 'draft')]}">
+                                <tree editable="bottom">
+                                    <field name="date"/>
+                                    <field name="origin"/>
+                                    <field name="destination"/>
+                                    <field name="authorized_route"/>
+                                    <field name="departure_time"/>
+                                    <field name="arrival_time"/>
+                                    <field name="travel_time"/>
+                                    <field name="departure_odometer"/>
+                                    <field name="arrival_odometer"/>
+                                    <field name="kilometers"/>
+                                    <field name="driver_number"/>
+                                    <field name="passenger_count"/>
+                                </tree>
+                            </field>
+                            
+                            <group class="oe_subtotal_footer" attrs="{'invisible': [('detailed_total_trips', '=', 0)]}">
+                                <field name="detailed_total_trips" class="oe_inline" readonly="1"/>
+                                <field name="detailed_total_kilometers" class="oe_inline" readonly="1"/>
+                            </group>
+                        </page>
+                        
+                        <!-- Firma -->
+                        <page string="Firma" name="signature">
+                            <group>
+                                <field name="signature" widget="image"/>
+                                <field name="signature_filename" invisible="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de lista mejorada -->
+    <record id="view_fleet_route_sheet_tree" model="ir.ui.view">
+        <field name="name">fleet.route.sheet.tree</field>
+        <field name="model">fleet.route.sheet</field>
+        <field name="arch" type="xml">
+            <tree string="Hojas de Ruta" 
+                  decoration-info="state=='draft'" 
+                  decoration-muted="state=='cancelled'" 
+                  decoration-success="state=='confirmed'"
+                  class="o_list_view">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="vehicle_id"/>
+                <field name="license_plate"/>
+                <field name="driver_id"/>
+                <field name="manual_total_trips"/>
+                <field name="manual_total_kilometers"/>
+                <field name="fuel_logs_count" optional="hide"/>
+                <field name="fuel_efficiency" optional="hide"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state == 'draft'" 
+                       decoration-success="state == 'confirmed'" 
+                       decoration-muted="state == 'cancelled'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de búsqueda -->
+    <record id="view_fleet_route_sheet_search" model="ir.ui.view">
+        <field name="name">fleet.route.sheet.search</field>
+        <field name="model">fleet.route.sheet</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Hojas de Ruta">
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="driver_id"/>
+                <field name="date"/>
+                <field name="authorized_service"/>
+                
+                <filter string="Mis Hojas de Ruta" name="my_route_sheets" domain="[('create_uid', '=', uid)]"/>
+                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmadas" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Canceladas" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                
+                <separator/>
+                <filter string="Con Combustible Registrado" name="with_fuel" domain="[('fuel_logs_count', '>', 0)]"/>
+                <filter string="Sin Combustible" name="without_fuel" domain="[('fuel_logs_count', '=', 0)]"/>
+                
+                <separator/>
+                <filter string="Hoy" name="today" domain="[('date', '=', context_today())]"/>
+                <filter string="Últimos 7 días" name="last_week" domain="[('date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Últimos 30 días" name="last_month" domain="[('date', '&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Vehículo" name="group_by_vehicle" context="{'group_by': 'vehicle_id'}"/>
+                    <filter string="Conductor" name="group_by_driver" context="{'group_by': 'driver_id'}"/>
+                    <filter string="Fecha" name="group_by_date" context="{'group_by': 'date'}"/>
+                    <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Tipo de Vehículo" name="group_by_vehicle_type" context="{'group_by': 'vehicle_custom_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción principal -->
+    <record id="action_fleet_route_sheet" model="ir.actions.act_window">
+        <field name="name">Hojas de Ruta</field>
+        <field name="res_model">fleet.route.sheet</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea una nueva hoja de ruta
+            </p>
+            <p>
+                Sistema automatizado: Solo selecciona el vehículo e ingresa los totales de viajes y kilómetros.
+                El sistema llenará automáticamente toda la información del vehículo y conductor.
+            </p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Submenú "Hojas de Ruta" dentro del menú Fleet principal -->
+        <menuitem name="Hojas de Ruta"
+                  parent="fleet.fleet_vehicles"
+                  action="action_fleet_route_sheet"
+                  id="fleet_route_sheet_submenu" 
+                  groups="fleet.fleet_group_user" 
+                  sequence="25"/>
+
+    </data>
+</odoo>

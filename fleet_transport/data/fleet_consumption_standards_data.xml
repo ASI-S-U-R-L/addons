@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Normas por defecto según normativa cubana -->
+        <record id="standard_movil_general" model="fleet.consumption.standard">
+            <field name="name">Norma General - Vehículos Móviles</field>
+            <field name="vehicle_type">movil</field>
+            <field name="standard_kml">12.0</field>
+            <field name="tolerance_percentage">5.0</field>
+            <field name="legal_reference">Decreto 110/2024</field>
+            <field name="notes">Norma general para vehículos móviles según normativa cubana</field>
+        </record>
+
+        <record id="standard_tecnologico_general" model="fleet.consumption.standard">
+            <field name="name">Norma General - Vehículos Tecnológicos</field>
+            <field name="vehicle_type">tecnologico</field>
+            <field name="standard_kml">8.0</field>
+            <field name="tolerance_percentage">5.0</field>
+            <field name="legal_reference">Decreto 110/2024</field>
+            <field name="notes">Norma general para vehículos tecnológicos según normativa cubana</field>
+        </record>
+
+        <record id="standard_estacionario_general" model="fleet.consumption.standard">
+            <field name="name">Norma General - Equipos Estacionarios</field>
+            <field name="vehicle_type">estacionario</field>
+            <field name="standard_lh">5.0</field>
+            <field name="tolerance_percentage">5.0</field>
+            <field name="legal_reference">Decreto 110/2024</field>
+            <field name="notes">Norma general para equipos estacionarios según normativa cubana</field>
+        </record>
+
+    </data>
+</odoo>

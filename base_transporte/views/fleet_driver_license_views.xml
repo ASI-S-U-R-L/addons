@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista de formulario para licencias de conducir -->
+    <record id="fleet_driver_license_view_form" model="ir.ui.view">
+        <field name="name">fleet.driver.license.form</field>
+        <field name="model">fleet.driver.license</field>
+        <field name="arch" type="xml">
+            <form string="Licencia de Conducir">
+                <header>
+                    <button name="action_activate_license" string="Activar" type="object" 
+                            class="btn-primary" attrs="{'invisible': [('state', '!=', 'suspended')]}"/>
+                    <button name="action_suspend_license" string="Suspender" type="object" 
+                            class="btn-warning" attrs="{'invisible': [('state', '!=', 'active')]}"/>
+                    <button name="action_renew_license" string="Renovar" type="object" 
+                            class="btn-success" attrs="{'invisible': [('state', '!=', 'expired')]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="active,expired,suspended"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_partner_licenses" icon="fa-id-card">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Otras Licencias</span>
+                                <span class="o_stat_text">del Chofer</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="alert alert-danger" role="alert" attrs="{'invisible': [('is_expired', '=', False)]}">
+                        <strong>¡Licencia Vencida!</strong> Esta licencia venció el <field name="expiry_date" readonly="1"/>.
+                    </div>
+                    
+                    <div class="alert alert-warning" role="alert" attrs="{'invisible': [('is_expiring_soon', '=', False)]}">
+                        <strong>¡Licencia por Vencer!</strong> Esta licencia vence en <field name="days_to_expiry" readonly="1"/> días.
+                    </div>
+
+                    <group>
+                        <group string="Información del Chofer">
+                            <field name="partner_id" options="{'no_create': True}"/>
+                            <field name="partner_name" invisible="1"/>
+                        </group>
+                        <group string="Información de la Licencia">
+                            <field name="license_number"/>
+                            <field name="license_type"/>
+                            <field name="issuing_authority"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Fechas">
+                            <field name="issue_date"/>
+                            <field name="expiry_date"/>
+                            <field name="days_to_expiry" readonly="1"/>
+                        </group>
+                        <group string="Estado">
+                            <field name="is_expired" invisible="1"/>
+                            <field name="is_expiring_soon" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Información Adicional">
+                        <field name="restrictions" placeholder="Ej: Solo vehículos automáticos, uso de lentes, etc."/>
+                        <field name="notes" placeholder="Observaciones adicionales sobre la licencia"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de lista para licencias de conducir -->
+    <record id="fleet_driver_license_view_tree" model="ir.ui.view">
+        <field name="name">fleet.driver.license.tree</field>
+        <field name="model">fleet.driver.license</field>
+        <field name="arch" type="xml">
+            <tree string="Licencias de Conducir" decoration-danger="is_expired" decoration-warning="is_expiring_soon">
+                <field name="partner_name"/>
+                <field name="license_number"/>
+                <field name="license_type"/>
+                <field name="issue_date"/>
+                <field name="expiry_date"/>
+                <field name="days_to_expiry"/>
+                <field name="state" widget="badge" decoration-success="state == 'active'" 
+                       decoration-danger="state == 'expired'" decoration-warning="state == 'suspended'"/>
+                <field name="issuing_authority" optional="hide"/>
+                <field name="is_expired" invisible="1"/>
+                <field name="is_expiring_soon" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de búsqueda para licencias -->
+    <record id="fleet_driver_license_view_search" model="ir.ui.view">
+        <field name="name">fleet.driver.license.search</field>
+        <field name="model">fleet.driver.license</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Licencias">
+                <field name="partner_name" string="Chofer"/>
+                <field name="license_number"/>
+                <field name="license_type"/>
+                <field name="issuing_authority"/>
+                
+                <filter string="Vigentes" name="active" domain="[('state', '=', 'active')]"/>
+                <filter string="Vencidas" name="expired" domain="[('state', '=', 'expired')]"/>
+                <filter string="Suspendidas" name="suspended" domain="[('state', '=', 'suspended')]"/>
+                <separator/>
+                <filter string="Por Vencer (30 días)" name="expiring_soon" domain="[('is_expiring_soon', '=', True)]"/>
+                <filter string="Vencidas" name="is_expired" domain="[('is_expired', '=', True)]"/>
+                
+                <separator/>
+                <filter string="Tipo A" name="type_a" domain="[('license_type', '=', 'a')]"/>
+                <filter string="Tipo B" name="type_b" domain="[('license_type', '=', 'b')]"/>
+                <filter string="Tipo C" name="type_c" domain="[('license_type', '=', 'c')]"/>
+                <filter string="Tipo D" name="type_d" domain="[('license_type', '=', 'd')]"/>
+
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Chofer" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Tipo de Licencia" name="group_type" context="{'group_by': 'license_type'}"/>
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Autoridad Emisora" name="group_authority" context="{'group_by': 'issuing_authority'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Vista kanban para licencias -->
+    <record id="fleet_driver_license_view_kanban" model="ir.ui.view">
+        <field name="name">fleet.driver.license.kanban</field>
+        <field name="model">fleet.driver.license</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="partner_name"/>
+                <field name="license_number"/>
+                <field name="license_type"/>
+                <field name="expiry_date"/>
+                <field name="state"/>
+                <field name="is_expired"/>
+                <field name="is_expiring_soon"/>
+                <field name="days_to_expiry"/>
+                
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click #{record.is_expired.raw_value ? 'oe_kanban_color_2' : record.is_expiring_soon.raw_value ? 'oe_kanban_color_3' : ''}">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="license_number"/>
+                                    </strong>
+                                    <br/>
+                                    <span class="o_kanban_record_subtitle">
+                                        <field name="license_type"/>
+                                    </span>
+                                </div>
+                                <span class="float-right">
+                                    <field name="state" widget="label_selection" 
+                                           options="{'classes': {'active': 'success', 'expired': 'danger', 'suspended': 'warning'}}"/>
+                                </span>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <field name="partner_name"/>
+                                <br/>
+                                <span>Vence: <field name="expiry_date"/></span>
+                                <t t-if="record.days_to_expiry.raw_value >= 0">
+                                    <br/><span>(<field name="days_to_expiry"/> días)</span>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Acción para licencias de conducir -->
+    <record id="fleet_driver_license_action" model="ir.actions.act_window">
+        <field name="name">Licencias de Conducir</field>
+        <field name="res_model">fleet.driver.license</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Crea la primera licencia de conducir!
+            </p>
+            <p>
+                Gestiona las licencias de conducir de todos los choferes.
+                Puedes registrar múltiples licencias por chofer y controlar
+                sus fechas de vencimiento.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú para licencias de conducir -->
+    <menuitem id="fleet_driver_license_menu" 
+              name="Licencias de Conducir" 
+              parent="fleet.fleet_vehicles" 
+              action="fleet_driver_license_action" 
+              sequence="15"/>
+
+</odoo>

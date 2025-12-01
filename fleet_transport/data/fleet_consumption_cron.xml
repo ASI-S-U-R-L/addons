@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Cron job para crear análisis mensuales automáticos -->
+        <record id="cron_create_monthly_consumption_analysis" model="ir.cron">
+            <field name="name">Crear Análisis Mensuales de Consumo</field>
+            <field name="model_id" ref="model_fleet_consumption_analysis"/>
+            <field name="state">code</field>
+            <field name="code">
+# Crear análisis del mes anterior automáticamente
+today = fields.Date.today()
+last_month_date = today.replace(day=1) - datetime.timedelta(days=1)
+
+# Crear análisis para todos los vehículos activos
+model.create_monthly_analysis(
+    month=last_month_date.month, 
+    year=last_month_date.year
+)
+            </field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">months</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+            <field name="doall" eval="False"/>
+        </record>
+
+    </data>
+</odoo>
