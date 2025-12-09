@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Reporte de análisis de consumo -->
+    <record id="action_report_fleet_consumption_analysis" model="ir.actions.report">
+        <field name="name">Reporte de Análisis de Consumo</field>
+        <field name="model">fleet.consumption.analysis</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">fleet_transport_system.report_consumption_analysis</field>
+        <field name="report_file">fleet_transport_system.report_consumption_analysis</field>
+        <field name="binding_model_id" ref="model_fleet_consumption_analysis"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template del reporte -->
+    <template id="report_consumption_analysis">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <!-- Header del reporte -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h2 class="text-center">
+                                    <strong>ANÁLISIS DE CONSUMO DE COMBUSTIBLE</strong>
+                                </h2>
+                                <h4 class="text-center text-muted">
+                                    Según Decreto 110/2024 - Normativa Cubana
+                                </h4>
+                            </div>
+                        </div>
+
+                        <!-- Información de la empresa -->
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <strong>Empresa:</strong> <span t-field="doc.company_id.name"/><br/>
+                                <strong>NIT/RUC:</strong> <span t-field="doc.company_id.vat"/><br/>
+                                <strong>Dirección:</strong> <span t-field="doc.company_id.street"/>
+                            </div>
+                            <div class="col-6 text-right">
+                                <strong>Fecha del Reporte:</strong> <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y %H:%M')"/><br/>
+                                <strong>Código:</strong> <span t-field="doc.name"/><br/>
+                                <strong>Estado:</strong> 
+                                <span t-field="doc.state" 
+                                      t-options="{'widget': 'badge', 'classes': {'validated': 'badge-success', 'calculated': 'badge-warning', 'draft': 'badge-secondary'}}"/>
+                            </div>
+                        </div>
+
+                        <!-- Información del vehículo -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th colspan="4" class="text-center">INFORMACIÓN DEL VEHÍCULO</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Matrícula:</strong></td>
+                                            <td><span t-field="doc.license_plate"/></td>
+                                            <td><strong>Tipo:</strong></td>
+                                            <td><span t-field="doc.vehicle_type"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Conductor:</strong></td>
+                                            <td><span t-field="doc.driver_id.name"/></td>
+                                            <td><strong>Período:</strong></td>
+                                            <td><span t-field="doc.period_start" t-options="{'widget': 'date'}"/> - <span t-field="doc.period_end" t-options="{'widget': 'date'}"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Datos de consumo -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th colspan="4" class="text-center">DATOS DE CONSUMO</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Combustible Consumido:</strong></td>
+                                            <td><span t-field="doc.total_fuel_consumed" t-options="{'widget': 'float', 'precision': 2}"/> L</td>
+                                            <td><strong>Tickets de Combustible:</strong></td>
+                                            <td><span t-field="doc.fuel_logs_count"/></td>
+                                        </tr>
+                                        <tr t-if="doc.vehicle_type != 'estacionario'">
+                                            <td><strong>Kilómetros Recorridos:</strong></td>
+                                            <td><span t-field="doc.total_kilometers" t-options="{'widget': 'float', 'precision': 2}"/> Km</td>
+                                            <td><strong>Hojas de Ruta:</strong></td>
+                                            <td><span t-field="doc.route_sheets_count"/></td>
+                                        </tr>
+                                        <tr t-if="doc.vehicle_type == 'estacionario'">
+                                            <td><strong>Horas de Operación:</strong></td>
+                                            <td><span t-field="doc.total_hours_operation" t-options="{'widget': 'float', 'precision': 2}"/> H</td>
+                                            <td><strong>Método de Control:</strong></td>
+                                            <td>Horómetro/Manual</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Odómetro Inicial:</strong></td>
+                                            <td><span t-field="doc.odometer_start" t-options="{'widget': 'float', 'precision': 2}"/> Km</td>
+                                            <td><strong>Odómetro Final:</strong></td>
+                                            <td><span t-field="doc.odometer_end" t-options="{'widget': 'float', 'precision': 2}"/> Km</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Análisis de eficiencia -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th colspan="4" class="text-center">ANÁLISIS DE EFICIENCIA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-if="doc.vehicle_type != 'estacionario'">
+                                            <td><strong>Índice Real (Km/L):</strong></td>
+                                            <td>
+                                                <span t-field="doc.consumption_index_kml" t-options="{'widget': 'float', 'precision': 3}"/>
+                                            </td>
+                                            <td><strong>Norma Establecida (Km/L):</strong></td>
+                                            <td>
+                                                <span t-field="doc.standard_consumption_kml" t-options="{'widget': 'float', 'precision': 3}"/>
+                                            </td>
+                                        </tr>
+                                        <tr t-if="doc.vehicle_type == 'estacionario'">
+                                            <td><strong>Índice Real (L/H):</strong></td>
+                                            <td>
+                                                <span t-field="doc.consumption_index_lh" t-options="{'widget': 'float', 'precision': 3}"/>
+                                            </td>
+                                            <td><strong>Norma Establecida (L/H):</strong></td>
+                                            <td>
+                                                <span t-field="doc.standard_consumption_lh" t-options="{'widget': 'float', 'precision': 3}"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>% de Cumplimiento:</strong></td>
+                                            <td>
+                                                <span t-if="doc.vehicle_type != 'estacionario'" 
+                                                      t-field="doc.compliance_percentage_kml" 
+                                                      t-options="{'widget': 'percentage'}"/>
+                                                <span t-if="doc.vehicle_type == 'estacionario'" 
+                                                      t-field="doc.compliance_percentage_lh" 
+                                                      t-options="{'widget': 'percentage'}"/>
+                                            </td>
+                                            <td><strong>Estado de Cumplimiento:</strong></td>
+                                            <td>
+                                                <span t-field="doc.compliance_status" 
+                                                      t-att-class="'badge ' + ('badge-success' if doc.compliance_status == 'excellent' else 
+                                                                              'badge-info' if doc.compliance_status == 'good' else
+                                                                              'badge-warning' if doc.compliance_status in ['acceptable', 'warning'] else
+                                                                              'badge-danger')"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Alertas si existen -->
+                        <div class="row mb-4" t-if="doc.has_alerts">
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <h5><i class="fa fa-exclamation-triangle"/> ALERTAS DEL SISTEMA</h5>
+                                    <pre t-field="doc.alert_messages"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="row mb-4" t-if="doc.observations">
+                            <div class="col-12">
+                                <h5>OBSERVACIONES</h5>
+                                <p t-field="doc.observations"/>
+                            </div>
+                        </div>
+
+                        <!-- Justificación de desviaciones -->
+                        <div class="row mb-4" t-if="doc.deviation_justification">
+                            <div class="col-12">
+                                <h5>JUSTIFICACIÓN DE DESVIACIONES</h5>
+                                <p t-field="doc.deviation_justification"/>
+                            </div>
+                        </div>
+
+                        <!-- Footer con firmas -->
+                        <div class="row mt-5">
+                            <div class="col-4 text-center">
+                                <hr style="border-top: 1px solid black;"/>
+                                <strong>Elaborado por</strong><br/>
+                                <span t-field="doc.create_uid.name"/>
+                            </div>
+                            <div class="col-4 text-center">
+                                <hr style="border-top: 1px solid black;"/>
+                                <strong>Revisado por</strong><br/>
+                                Jefe de Transporte
+                            </div>
+                            <div class="col-4 text-center">
+                                <hr style="border-top: 1px solid black;"/>
+                                <strong>Aprobado por</strong><br/>
+                                Director
+                            </div>
+                        </div>
+
+                        <!-- Nota legal -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    <strong>Nota Legal:</strong> Este reporte cumple con las disposiciones del Decreto 110/2024 
+                                    sobre el control de portadores energéticos en el sector transporte de la República de Cuba.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

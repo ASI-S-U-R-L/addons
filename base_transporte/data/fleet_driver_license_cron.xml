@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Cron job para actualizar licencias vencidas -->
+        <record id="cron_update_expired_licenses" model="ir.cron">
+            <field name="name">Actualizar Licencias Vencidas</field>
+            <field name="model_id" ref="model_fleet_driver_license"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_update_expired_licenses()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+            <field name="doall" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

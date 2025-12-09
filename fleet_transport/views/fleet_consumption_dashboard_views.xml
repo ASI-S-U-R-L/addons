@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Dashboard de consumo -->
+    <record id="view_fleet_consumption_dashboard" model="ir.ui.view">
+        <field name="name">fleet.consumption.dashboard</field>
+        <field name="model">fleet.consumption.analysis</field>
+        <field name="arch" type="xml">
+            <dashboard string="Dashboard de Consumo">
+                <view type="graph" ref="view_fleet_consumption_analysis_graph"/>
+                <group expand="1" string="Filtros Rápidos">
+                    <filter string="Este Mes" name="this_month" 
+                            domain="[('period_start', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+                    <filter string="Últimos 3 Meses" name="last_3_months" 
+                            domain="[('period_start', '&gt;=', (context_today() - datetime.timedelta(days=90)).strftime('%Y-%m-%d'))]"/>
+                    <filter string="Críticos" name="critical" domain="[('compliance_status', '=', 'critical')]"/>
+                    <filter string="Con Alertas" name="with_alerts" domain="[('has_alerts', '=', True)]"/>
+                </group>
+                <group expand="1" string="KPIs">
+                    <aggregate name="total_fuel" string="Total Combustible (L)" field="total_fuel_consumed" widget="float"/>
+                    <aggregate name="total_km" string="Total Kilómetros" field="total_kilometers" widget="float"/>
+                    <aggregate name="avg_efficiency" string="Eficiencia Promedio" field="consumption_index_kml" widget="float"/>
+                    <aggregate name="critical_count" string="Análisis Críticos" field="id" widget="integer" 
+                              domain="[('compliance_status', '=', 'critical')]"/>
+                </group>
+            </dashboard>
+        </field>
+    </record>
+
+</odoo>

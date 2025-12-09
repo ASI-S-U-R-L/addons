@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Extender la vista de formulario del vehículo para el sistema integral -->
+    <record id="fleet_vehicle_view_form_transport_system" model="ir.ui.view">
+        <field name="name">fleet.vehicle.form.transport.system</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
+        <field name="arch" type="xml">
+            
+            <!-- Añadir botón de dashboard en el button_box -->
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" type="object" name="action_view_transport_dashboard" 
+                        icon="fa-dashboard">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Dashboard</span>
+                        <span class="o_stat_text">Transporte</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Añadir información integral en una nueva página -->
+            <notebook position="inside">
+                <page string="Sistema de Transporte" name="transport_system">
+                    <group string="Resumen Integral">
+                        <field name="transport_summary" readonly="1"/>
+                        <field name="transport_notes" placeholder="Notas generales sobre el uso del vehículo en el sistema de transporte"/>
+                    </group>
+                </page>
+            </notebook>
+
+        </field>
+    </record>
+
+    <!-- Extender la vista de lista para mostrar información integral -->
+    <record id="fleet_vehicle_view_tree_transport_system" model="ir.ui.view">
+        <field name="name">fleet.vehicle.tree.transport.system</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_tree"/>
+        <field name="arch" type="xml">
+            <field name="driver_id" position="after">
+                <field name="transport_summary" optional="hide"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Extender la vista de búsqueda para el sistema integral -->
+    <record id="fleet_vehicle_view_search_transport_system" model="ir.ui.view">
+        <field name="name">fleet.vehicle.search.transport.system</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_search"/>
+        <field name="arch" type="xml">
+            <field name="tag_ids" position="after">
+                <field name="transport_summary"/>
+            </field>
+            
+            <filter name="cars" position="after">
+                <separator/>
+                <filter string="Sistema de Transporte" name="transport_system" domain="[('transport_summary', '!=', 'Sin información')]"/>
+            </filter>
+        </field>
+    </record>
+    
+    <!-- Extender la vista de formulario del vehículo -->
+    <record id="fleet_vehicle_view_form_custom" model="ir.ui.view">
+        <field name="name">fleet.vehicle.form.custom</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
+        <field name="arch" type="xml">
+            
+            <!-- Hacer la matrícula opcional para estacionarios -->
+            <field name="license_plate" position="attributes">
+                <attribute name="attrs">{'required': [('vehicle_custom_type', '!=', 'estacionario')]}</attribute>
+            </field>
+
+            <!-- Ocultar campos de conductor para estacionarios -->
+            <field name="driver_id" position="attributes">
+                <attribute name="attrs">{'invisible': [('vehicle_custom_type', '=', 'estacionario')]}</attribute>
+            </field>
+            
+            <field name="future_driver_id" position="attributes">
+                <attribute name="attrs">{'invisible': [('vehicle_custom_type', '=', 'estacionario')]}</attribute>
+            </field>
+
+            <field name="plan_to_change_car" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', ('vehicle_type', '!=', 'car'), ('vehicle_custom_type', '=', 'estacionario')]}</attribute>
+            </field>
+
+            <field name="plan_to_change_bike" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', ('vehicle_type', '!=', 'bike'), ('vehicle_custom_type', '=', 'estacionario')]}</attribute>
+            </field>
+
+            <!-- Añadir campos personalizados en la sección Vehículo -->
+            <field name="location" position="after">
+                <field name="vehicle_custom_type"/>
+                
+                <!-- Nuevos campos: Número de circulación y Hoja de ruta -->
+                <field name="circulation_number" attrs="{'invisible': [('vehicle_custom_type', '=', 'estacionario')]}"/>
+                <field name="has_route_sheet" attrs="{'invisible': [('vehicle_custom_type', '=', 'estacionario')]}"/>
+                
+                <!-- Campo para vencimiento del FICAV -->
+                <field name="ficav_expiry_date" attrs="{'invisible': [('vehicle_custom_type', '=', 'estacionario')]}"/>
+                <field name="ficav_state" readonly="1" attrs="{'invisible': [('vehicle_custom_type', '=', 'estacionario')]}"/>
+                <field name="ficav_days_to_expiry" readonly="1" attrs="{'invisible': ['|', ('vehicle_custom_type', '=', 'estacionario'), ('ficav_expiry_date', '=', False)]}"/>
+                
+                <!-- Campos para vehículo móvil -->
+                <field name="consumption_type_movil" attrs="{'invisible': [('vehicle_custom_type', '!=', 'movil')], 'required': [('vehicle_custom_type', '=', 'movil')]}"/>
+                <field name="tank_capacity_main" attrs="{'invisible': [('vehicle_custom_type', 'not in', ['movil', 'estacionario'])], 'required': [('vehicle_custom_type', 'in', ['movil', 'estacionario'])]}"/>
+                
+                <!-- Campos para vehículo tecnológico -->
+                <field name="consumption_type_main_engine" readonly="1" attrs="{'invisible': [('vehicle_custom_type', '!=', 'tecnologico')]}"/>
+                <field name="tank_capacity_main" attrs="{'invisible': [('vehicle_custom_type', '!=', 'tecnologico')], 'required': [('vehicle_custom_type', '=', 'tecnologico')]}"/>
+                <field name="consumption_type_secondary_engine" readonly="1" attrs="{'invisible': [('vehicle_custom_type', '!=', 'tecnologico')]}"/>
+                <field name="tank_capacity_secondary" attrs="{'invisible': [('vehicle_custom_type', '!=', 'tecnologico')], 'required': [('vehicle_custom_type', '=', 'tecnologico')]}"/>
+                
+                <!-- Campos para vehículo estacionario -->
+                <field name="consumption_type_stationary" readonly="1" attrs="{'invisible': [('vehicle_custom_type', '!=', 'estacionario')]}"/>
+                <field name="tank_capacity_main" attrs="{'invisible': [('vehicle_custom_type', '!=', 'estacionario')], 'required': [('vehicle_custom_type', '=', 'estacionario')]}"/>
+            </field>
+
+            <!-- Añadir información adicional en una nueva página -->
+            <notebook position="inside">
+                <page string="Información de Combustible" name="fuel_info">
+                    <!-- Campos computados movidos aquí -->
+                    <group string="Resumen de Configuración">
+                        <group>
+                            <field name="current_consumption_type" readonly="1"/>
+                            <field name="tank_info" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Estado del FICAV" attrs="{'invisible': [('vehicle_custom_type', '=', 'estacionario')]}">
+                        <group>
+                            <field name="ficav_expiry_date"/>
+                            <field name="ficav_state" readonly="1" widget="badge" 
+                                   decoration-success="ficav_state == 'valid'" 
+                                   decoration-danger="ficav_state == 'expired'" 
+                                   decoration-warning="ficav_state == 'expiring_soon'"
+                                   decoration-muted="ficav_state == 'not_set'"/>
+                        </group>
+                        <group>
+                            <field name="ficav_days_to_expiry" readonly="1" attrs="{'invisible': [('ficav_expiry_date', '=', False)]}"/>
+                            <field name="is_ficav_expired" invisible="1"/>
+                            <field name="is_ficav_expiring_soon" invisible="1"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Información de Consumo">
+                        <div colspan="2" class="alert alert-info" role="alert" attrs="{'invisible': [('vehicle_custom_type', '!=', 'movil')]}">
+                            <strong>Vehículo Móvil:</strong> Posee un solo motor y un tanque. Puedes elegir el tipo de consumo: Kilómetros/Litro o Horas/Litro según tus necesidades.
+                        </div>
+                        <div colspan="2" class="alert alert-warning" role="alert" attrs="{'invisible': [('vehicle_custom_type', '!=', 'tecnologico')]}">
+                            <strong>Vehículo Tecnológico:</strong> Posee dos motores:
+                            <ul>
+                                <li><strong>Motor Principal:</strong> Motor móvil que consume por kilómetros/litro</li>
+                                <li><strong>Motor Secundario:</strong> Motor de trabajo que consume por horas/litro</li>
+                            </ul>
+                            Cada motor tiene su propio tanque de combustible.
+                        </div>
+                        <div colspan="2" class="alert alert-success" role="alert" attrs="{'invisible': [('vehicle_custom_type', '!=', 'estacionario')]}">
+                            <strong>Vehículo Estacionario:</strong> Generador o turbina que consume por horas/litro. No requiere matrícula, conductor, número de circulación ni hoja de ruta.
+                        </div>
+                        
+                        <!-- Alertas para FICAV -->
+                        <div class="alert alert-danger" role="alert" attrs="{'invisible': [('is_ficav_expired', '=', False)]}">
+                            <strong>¡FICAV Vencido!</strong> El FICAV de este vehículo venció el <field name="ficav_expiry_date" readonly="1"/>.
+                        </div>
+
+                        <div class="alert alert-warning" role="alert" attrs="{'invisible': [('is_ficav_expiring_soon', '=', False)]}">
+                            <strong>¡FICAV por Vencer!</strong> El FICAV de este vehículo vence en <field name="ficav_days_to_expiry" readonly="1"/> días.
+                        </div>
+
+                        <div class="alert alert-info" role="alert" attrs="{'invisible': [('ficav_state', '!=', 'not_set')]}">
+                            <strong>FICAV no configurado:</strong> Configure la fecha de vencimiento del FICAV para este vehículo.
+                        </div>
+                    </group>
+
+                    <!-- Información del chofer (simplificada) -->
+                    <group string="Información del Chofer" attrs="{'invisible': [('driver_id', '=', False)]}">
+                        <field name="driver_id" string="Chofer Asignado" readonly="1"/>
+                    </group>
+                </page>
+            </notebook>
+
+        </field>
+    </record>
+
+    <!-- Extender la vista de lista para mostrar los nuevos campos -->
+    <record id="fleet_vehicle_view_tree_custom" model="ir.ui.view">
+        <field name="name">fleet.vehicle.tree.custom</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_tree"/>
+        <field name="arch" type="xml">
+            <!-- Hacer la matrícula opcional en la vista lista -->
+            <field name="license_plate" position="attributes">
+                <attribute name="optional">show</attribute>
+            </field>
+            
+            <field name="category_id" position="after">
+                <field name="vehicle_custom_type" optional="show"/>
+                <field name="circulation_number" optional="hide"/>
+                <field name="has_route_sheet" widget="boolean_toggle" optional="hide"/>
+                <field name="current_consumption_type" optional="hide"/>
+                <field name="ficav_expiry_date" optional="hide"/>
+                <field name="ficav_state" widget="badge" optional="hide"
+                       decoration-success="ficav_state == 'valid'" 
+                       decoration-danger="ficav_state == 'expired'" 
+                       decoration-warning="ficav_state == 'expiring_soon'"
+                       decoration-muted="ficav_state == 'not_set'"/>
+                <field name="ficav_days_to_expiry" optional="hide"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Extender la vista de búsqueda -->
+    <record id="fleet_vehicle_view_search_custom" model="ir.ui.view">
+        <field name="name">fleet.vehicle.search.custom</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_search"/>
+        <field name="arch" type="xml">
+            <field name="tag_ids" position="after">
+                <field name="vehicle_custom_type"/>
+                <field name="circulation_number"/>
+                <field name="ficav_expiry_date"/>
+                <field name="ficav_state"/>
+            </field>
+            
+            <filter name="cars" position="after">
+                <separator/>
+                <filter string="Móviles" name="movil" domain="[('vehicle_custom_type', '=', 'movil')]"/>
+                <filter string="Tecnológicos" name="tecnologico" domain="[('vehicle_custom_type', '=', 'tecnologico')]"/>
+                <filter string="Estacionarios" name="estacionario" domain="[('vehicle_custom_type', '=', 'estacionario')]"/>
+                <separator/>
+                <filter string="Con Hoja de Ruta" name="with_route_sheet" domain="[('has_route_sheet', '=', True)]"/>
+                <filter string="Sin Hoja de Ruta" name="without_route_sheet" domain="[('has_route_sheet', '=', False)]"/>
+                <separator/>
+                <filter string="FICAV Vigente" name="ficav_valid" domain="[('ficav_state', '=', 'valid')]"/>
+                <filter string="FICAV Vencido" name="ficav_expired" domain="[('ficav_state', '=', 'expired')]"/>
+                <filter string="FICAV por Vencer" name="ficav_expiring" domain="[('ficav_state', '=', 'expiring_soon')]"/>
+                <filter string="FICAV no Configurado" name="ficav_not_set" domain="[('ficav_state', '=', 'not_set')]"/>
+            </filter>
+
+            <filter name="groupby_fueltype" position="after">
+                <filter string="Tipo Personalizado" name="groupby_custom_type" context="{'group_by': 'vehicle_custom_type'}"/>
+                <filter string="Hoja de Ruta" name="groupby_route_sheet" context="{'group_by': 'has_route_sheet'}"/>
+                <filter string="Estado FICAV" name="groupby_ficav_state" context="{'group_by': 'ficav_state'}"/>
+            </filter>
+        </field>
+    </record>
+
+    <!-- Extender la vista kanban -->
+    <record id="fleet_vehicle_view_kanban_custom" model="ir.ui.view">
+        <field name="name">fleet.vehicle.kanban.custom</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_kanban"/>
+        <field name="arch" type="xml">
+            <!-- Añadir los campos necesarios para el kanban -->
+            <field name="activity_state" position="after">
+                <field name="vehicle_custom_type"/>
+                <field name="tank_info"/>
+                <field name="circulation_number"/>
+                <field name="has_route_sheet"/>
+                <field name="ficav_state"/>
+                <field name="ficav_expiry_date"/>
+                <field name="ficav_days_to_expiry"/>
+                <field name="is_ficav_expired"/>
+                <field name="is_ficav_expiring_soon"/>
+            </field>
+            
+            <!-- Añadir información en el contenido del kanban -->
+            <div class="oe_kanban_details" position="inside">
+                <ul>
+                    <li t-if="record.vehicle_custom_type.raw_value">
+                        <small><i class="fa fa-cog" title="Tipo"></i> <field name="vehicle_custom_type"/></small>
+                    </li>
+                    <li t-if="record.circulation_number.raw_value">
+                        <small><i class="fa fa-road" title="Circulación"></i> <field name="circulation_number"/></small>
+                    </li>
+                    <li t-if="record.has_route_sheet.raw_value">
+                        <small><i class="fa fa-map" title="Hoja de Ruta"></i> Con Hoja de Ruta</small>
+                    </li>
+                    <li t-if="record.tank_info.raw_value">
+                        <small><i class="fa fa-tint" title="Tanques"></i> <field name="tank_info"/></small>
+                    </li>
+                    <li t-if="record.ficav_expiry_date.raw_value">
+                        <small>
+                            <i class="fa fa-certificate" title="FICAV"></i> 
+                            FICAV: <field name="ficav_expiry_date"/>
+                            <t t-if="record.is_ficav_expired.raw_value"> (Vencido)</t>
+                            <t t-if="record.is_ficav_expiring_soon.raw_value"> (Por vencer)</t>
+                        </small>
+                    </li>
+                </ul>
+            </div>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Menú principal "Hojas de Ruta" (independiente, entre Fleet e Informes) -->
+    <menuitem id="fleet_route_sheet_main_menu" 
+              name="Hojas de Ruta" 
+              sequence="21"
+              web_icon="fleet,static/description/icon.png"/>
+
+    <!-- Submenú "Registrar Hojas de Ruta" dentro del menú principal -->
+    <menuitem id="fleet_route_sheet_register_menu" 
+              name="Registrar Hojas de Ruta" 
+              parent="fleet_route_sheet_main_menu" 
+              action="action_fleet_route_sheet" 
+              sequence="10"/>
+
+</odoo>
