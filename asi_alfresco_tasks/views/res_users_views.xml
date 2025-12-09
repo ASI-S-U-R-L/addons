@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Heredar la vista del formulario de usuarios para agregar el campo alfresco_user -->
+    <record id="view_users_form_alfresco_tasks" model="ir.ui.view">
+        <field name="name">res.users.form.alfresco.tasks</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='preferences']" position="after">
+                <page string="Alfresco" name="alfresco_tasks">
+                    <group string="Configuración de Alfresco Tasks">
+                        <field name="alfresco_user" 
+                               placeholder="Ej: juan.perez"
+                               help="Ingrese el nombre de usuario en Alfresco. Este debe coincidir exactamente con el campo 'assignee' de las tareas."/>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Nota:</strong> Configure aquí el usuario de Alfresco para recibir automáticamente 
+                        actividades cuando tenga tareas asignadas en el sistema Alfresco.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista tree de usuarios mostrando alfresco_user -->
+    <record id="view_users_tree_alfresco_tasks" model="ir.ui.view">
+        <field name="name">res.users.tree.alfresco.tasks</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='login']" position="after">
+                <field name="alfresco_user" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

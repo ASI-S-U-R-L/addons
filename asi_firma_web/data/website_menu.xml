@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="menu_firmar_documentos" model="website.menu">
+            <field name="name">Firmar documento/s</field>
+            <field name="url">/firmar-documentos</field>
+            <field name="website_id" ref="website.default_website"/>
+            <field name="parent_id" ref="website.main_menu"/>
+            <field name="sequence" eval="4"/>
+        </record>
+    </data>
+</odoo>

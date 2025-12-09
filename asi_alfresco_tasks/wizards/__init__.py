@@ -1,0 +1,1 @@
+from . import alfresco_task_firma_wizard

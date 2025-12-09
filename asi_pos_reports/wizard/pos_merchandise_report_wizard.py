@@ -22,11 +22,11 @@ class PosMerchandiseReportWizard(models.TransientModel):
     def action_print_report(self):
         """Acción para imprimir el reporte principal (ahora usa el mejorado)"""
         self.ensure_one()
-        
+
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
-        
-        # Generar el reporte mejorado
+
+        # Generar el reporte usando el método estándar de Odoo
         return self.env.ref('asi_pos_reports.action_report_pos_merchandise_sales').report_action(
             self.session_id.ids
         )
@@ -34,40 +34,32 @@ class PosMerchandiseReportWizard(models.TransientModel):
     def action_preview_ticket(self):
         """Acción para previsualizar el formato de ticket"""
         self.ensure_one()
-        
+
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
-        
+
         # Generar la previsualización del ticket
         return self.env.ref('asi_pos_reports.action_report_pos_merchandise_ticket_preview').report_action(
             self.session_id.ids
         )
     
     def action_print_ticket(self):
-        """Intenta impresión directa, falla a PDF"""
+        """Acción para imprimir ticket en impresora Epson"""
         self.ensure_one()
-    
-        if not self.session_id:
-            raise UserError(_('Debe seleccionar una sesión POS'))
-    
-        # Intentar impresión directa
-        success = self.session_id.print_ticket_direct('merchandise')  # o 'shift_balance', 'coins'
-    
-        if success:
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': _('Impresión exitosa'),
-                    'message': _('Ticket enviado a la impresora del POS'),
-                    'type': 'success',
-                }
-            }
-        else:
-            # Fallback: abrir PDF para impresión manual
-            _logger.info("Fallback a PDF - No hay IoT configurado")
-            return self.env.ref('asi_pos_reports.action_report_pos_merchandise_ticket').report_action(self.session_id.ids)
         
+        report_data = self.session_id._prepare_merchandise_report_data()
+        self.session_id._try_print_to_epson_printer(report_data)
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Impresión de Ticket'),
+                'message': _('Se ha enviado el ticket a la impresora Epson'),
+                'type': 'success',
+            }
+        }
+
     def action_generate_excel(self):
         """Generar reporte Excel"""
         self.ensure_one()

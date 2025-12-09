@@ -1,0 +1,524 @@
+/**
+ * Estilos para el módulo asi_signature_validator
+ * Incluye estilos para:
+ * - Áreas de drag and drop
+ * - Tarjetas de resultados
+ * - Tablas de firmas
+ * - Estados de validación
+ * - Mensajes de error detallados
+ */
+
+/* =====================================================
+   ÁREA DE DRAG AND DROP
+   ===================================================== */
+.asi-dnd {
+  border: 2px dashed #ccc !important;
+  border-radius: 8px !important;
+  padding: 30px 20px !important;
+  text-align: center !important;
+  background-color: #f9f9f9 !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
+  position: relative !important;
+  min-height: 120px !important;
+}
+
+.asi-dnd:hover {
+  border-color: #007bff !important;
+  background-color: #f0f8ff !important;
+}
+
+.asi-dnd.is-dragover {
+  border-color: #007bff !important;
+  background-color: #e3f2fd !important;
+  transform: scale(1.02) !important;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2) !important;
+}
+
+.asi-dnd.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  background-color: #e9ecef !important;
+}
+
+.asi-dnd__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.asi-dnd__icon {
+  color: #6c757d;
+  transition: color 0.3s ease;
+}
+
+.asi-dnd:hover .asi-dnd__icon,
+.asi-dnd.is-dragover .asi-dnd__icon {
+  color: #007bff;
+}
+
+.asi-dnd__text strong {
+  display: block;
+  color: #495057;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.asi-dnd__text .text-muted {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* =====================================================
+   LISTA DE ARCHIVOS
+   ===================================================== */
+.asi-dnd__files-list {
+  width: 100%;
+  margin-top: 15px;
+  text-align: left;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.file-item:hover {
+  background-color: #f8f9fa;
+}
+
+.file-item .file-icon {
+  color: #dc3545;
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.file-item .file-name {
+  flex: 1;
+  margin-right: 10px;
+  word-break: break-all;
+}
+
+.file-item .file-size {
+  color: #6c757d;
+  font-size: 12px;
+  margin-right: 10px;
+}
+
+.file-item .remove-file {
+  color: #dc3545;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.file-item .remove-file:hover {
+  background-color: #f8d7da;
+}
+
+.asi-dnd__file-info {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.asi-dnd__file-info .file-item {
+  justify-content: center;
+  background-color: #e8f5e9;
+  border-color: #c8e6c9;
+}
+
+/* =====================================================
+   RESULTADOS DE VALIDACIÓN
+   ===================================================== */
+.validation-result {
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.validation-result.valid {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.validation-result.invalid {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+.validation-result.warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+}
+
+.validation-result h4 {
+  margin-bottom: 15px;
+}
+
+.validation-result .result-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.validation-result.valid .result-icon {
+  color: #28a745;
+}
+
+.validation-result.invalid .result-icon {
+  color: #dc3545;
+}
+
+.validation-result.warning .result-icon {
+  color: #ffc107;
+}
+
+/* =====================================================
+   SECCIONES DE ERRORES Y ADVERTENCIAS
+   ===================================================== */
+.validation-errors-section,
+.validation-warnings-section {
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.validation-errors-section h5,
+.validation-warnings-section h5 {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.validation-errors-list,
+.validation-warnings-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.validation-errors-list li,
+.validation-warnings-list li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.validation-errors-list li:last-child,
+.validation-warnings-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* =====================================================
+   ESTADO DE CADENA DE CONFIANZA
+   ===================================================== */
+.chain-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.chain-status.valid {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.chain-status.invalid {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.chain-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.chain-info.valid {
+  color: #28a745;
+}
+
+.chain-info.invalid {
+  color: #dc3545;
+}
+
+/* =====================================================
+   INFORMACIÓN DEL CERTIFICADO
+   ===================================================== */
+.cert-info-section {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.cert-info-section h5 {
+  color: #495057;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.cert-info-row {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.cert-info-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.cert-info-value {
+  color: #212529;
+  word-break: break-word;
+}
+
+/* =====================================================
+   TABLA DE RESULTADOS PDF
+   ===================================================== */
+.pdf-result-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.pdf-result-header {
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pdf-result-header h5 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdf-result-header .file-icon {
+  color: #dc3545;
+  font-size: 24px;
+}
+
+.pdf-result-body {
+  padding: 20px;
+}
+
+.signature-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.signature-badge.has-signatures {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.signature-badge.no-signatures {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Tabla de firmas */
+.signatures-table {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.signatures-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 15px;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.signatures-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: top;
+}
+
+.signatures-table tr:last-child td {
+  border-bottom: none;
+}
+
+.signatures-table tr:hover td {
+  background-color: #f8f9fa;
+}
+
+/* Filas coloreadas según estado */
+.signatures-table tr.signature-valid td {
+  background-color: rgba(212, 237, 218, 0.3);
+}
+
+.signatures-table tr.signature-invalid td {
+  background-color: rgba(248, 215, 218, 0.3);
+}
+
+.signatures-table tr.signature-expired td {
+  background-color: rgba(255, 243, 205, 0.3);
+}
+
+/* Estados de validez en tabla */
+.validity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.validity-badge.valid {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.validity-badge.invalid {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.validity-badge.expired {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.validity-badge.unknown {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+/* Errores y advertencias en firmas */
+.signature-errors,
+.signature-warnings {
+  font-size: 12px;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.signature-errors {
+  background-color: rgba(248, 215, 218, 0.5);
+}
+
+.signature-warnings {
+  background-color: rgba(255, 243, 205, 0.5);
+}
+
+.error-list,
+.warning-list {
+  margin: 5px 0 0 0;
+  padding-left: 18px;
+}
+
+.error-list li,
+.warning-list li {
+  margin-bottom: 4px;
+}
+
+/* =====================================================
+   MENSAJE SIN FIRMAS
+   ===================================================== */
+.no-signatures-message {
+  text-align: center;
+  padding: 30px;
+  color: #6c757d;
+}
+
+.no-signatures-message .icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: #adb5bd;
+}
+
+/* =====================================================
+   ESTADO DE CARGA
+   ===================================================== */
+.loading-overlay {
+  position: relative;
+}
+
+.loading-overlay::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.spinner-container {
+  text-align: center;
+  padding: 40px;
+}
+
+.spinner-container .fa-spinner {
+  font-size: 32px;
+  color: #007bff;
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 768px) {
+  .cert-info-row {
+    flex-direction: column;
+  }
+
+  .cert-info-label {
+    min-width: auto;
+    margin-bottom: 4px;
+  }
+
+  .signatures-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .pdf-result-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .signature-errors,
+  .signature-warnings {
+    font-size: 11px;
+  }
+}

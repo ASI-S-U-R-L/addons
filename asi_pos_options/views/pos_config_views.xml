@@ -1,0 +1,30 @@
+<odoo>
+  <record id="view_pos_config_form_hide_customer_cfg_fixed" model="ir.ui.view">
+    <field name="name">pos.config.form.hide.customer.cfg.fixed</field>
+    <field name="model">pos.config</field>
+    <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//sheet" position="inside">
+        <group string="Restricciones POS" class="row mt16">
+          <field name="hide_customer_button" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Si está activo, los botones no se muestran en la pantalla del POS."/>
+          <!-- <field name="show_product_stock" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Si está activo, muestra el stock actual de los productos en la vista del POS."/> -->
+          <field name="hide_bank_payment" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Si está activo, oculta el botón de pago por banco (transferencia) en la pantalla de pagos del POS."/>
+          <field name="show_trm_qr_in_pos" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Si está activo, muestra el código QR de Transfermovil en la pantalla de pago del POS para pagos por transferencia."/>
+        </group>
+      </xpath>
+    </field>
+  </record>
+ 
+  <record id="view_pos_config_form_inherit_force_denom" model="ir.ui.view">
+    <field name="name">pos.config.form.force.denom</field>
+    <field name="model">pos.config</field>
+    <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//sheet" position="inside">
+        <group string="Apertura y cierre de caja" class="row mt16">
+          <field name="force_opening_by_denominations" widget="boolean" class="o_field_widget o_field_boolean col-12 col-lg-6" help="Obliga a usar el conteo por monedas/billetes para fijar el efectivo de apertura/cierre y desactiva la edición manual."/>
+        </group>
+      </xpath>
+    </field>
+  </record>
+</odoo>

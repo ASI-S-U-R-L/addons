@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_certificate_authority_user,asi.certificate.authority.user,model_asi_certificate_authority,base.group_user,1,0,0,0
+access_certificate_authority_admin,asi.certificate.authority.admin,model_asi_certificate_authority,base.group_system,1,1,1,1

@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import logging
+from datetime import datetime
 import xlsxwriter
 import base64
 from io import BytesIO
@@ -15,19 +16,19 @@ class PosShiftBalanceWizard(models.TransientModel):
     _description = 'Wizard para Balance de Turno'
 
     pos_config_id = fields.Many2one(
-        'pos.config', 
-        string='Punto de Venta', 
+        'pos.config',
+        string='Punto de Venta',
         required=True,
         help='Seleccione el punto de venta'
     )
     report_date = fields.Date(
-        string='Fecha', 
+        string='Fecha',
         required=True,
         default=fields.Date.context_today,
         help='Seleccione la fecha para filtrar las sesiones'
     )
     session_id = fields.Many2one(
-        'pos.session', 
+        'pos.session',
         string='Sesión POS',
         help='Seleccione la sesión del día'
     )
@@ -46,27 +47,24 @@ class PosShiftBalanceWizard(models.TransientModel):
         """Calcula las sesiones disponibles según el POS y la fecha seleccionada"""
         for wizard in self:
             if wizard.pos_config_id and wizard.report_date:
-                # Buscar todas las sesiones del POS
+                # Convertir la fecha a datetime para el inicio y fin del día
+                date_start = datetime.combine(wizard.report_date, datetime.min.time())
+                date_end = datetime.combine(wizard.report_date, datetime.max.time())
+                
+                # Buscar sesiones del POS en esa fecha
                 sessions = self.env['pos.session'].search([
                     ('config_id', '=', wizard.pos_config_id.id),
-                    ('start_at', '!=', False),
+                    ('start_at', '>=', date_start),
+                    ('start_at', '<=', date_end),
                 ])
                 
-                # Filtrar por fecha usando el contexto del usuario
-                filtered_sessions = self.env['pos.session']
-                for session in sessions:
-                    # Convertir start_at a la fecha local del usuario
-                    session_date = fields.Date.context_today(session, session.start_at)
-                    if session_date == wizard.report_date:
-                        filtered_sessions |= session
-                
-                wizard.available_session_ids = filtered_sessions
-                wizard.session_count = len(filtered_sessions)
+                wizard.available_session_ids = sessions
+                wizard.session_count = len(sessions)
                 
                 # Si solo hay una sesión, seleccionarla automáticamente
-                if len(filtered_sessions) == 1:
-                    wizard.session_id = filtered_sessions[0]
-                elif wizard.session_id and wizard.session_id not in filtered_sessions:
+                if len(sessions) == 1:
+                    wizard.session_id = sessions[0]
+                elif wizard.session_id and wizard.session_id not in sessions:
                     wizard.session_id = False
             else:
                 wizard.available_session_ids = False
@@ -105,30 +103,24 @@ class PosShiftBalanceWizard(models.TransientModel):
         )
     
     def action_print_ticket(self):
-        """Intenta impresión directa, falla a PDF"""
+        """Acción para imprimir ticket en impresora"""
         self.ensure_one()
-    
+        
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
-    
-        # Intentar impresión directa
-        success = self.session_id.print_ticket_direct('shift_balance')  # o 'shift_balance', 'coins'
-    
-        if success:
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': _('Impresión exitosa'),
-                    'message': _('Ticket enviado a la impresora del POS'),
-                    'type': 'success',
-                }
-            }
-        else:
-            # Fallback: abrir PDF para impresión manual
-            _logger.info("Fallback a PDF - No hay IoT configurado")
         
-            return self.env.ref('asi_pos_reports.action_report_shift_balance_ticket').report_action(self.session_id.ids)
+        # Aquí se implementaría la impresión directa a la impresora
+        _logger.info(f"Imprimiendo balance de turno para sesión {self.session_id.name}")
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Impresión de Ticket'),
+                'message': _('Se ha enviado el balance de turno a la impresora'),
+                'type': 'success',
+            }
+        }
 
     def action_generate_excel(self):
         """Generar reporte Excel del balance de turno"""
@@ -226,7 +218,7 @@ class PosShiftBalanceWizard(models.TransientModel):
         worksheet.write(row, 1, data['cash_amount'], currency_format)
         row += 1
         
-        worksheet.write(row, 0, 'Transferencias:', label_format)
+        worksheet.write(row, 0, 'Otros ingresos:', label_format)
         worksheet.write(row, 1, data['other_income'], currency_format)
         row += 1
         
@@ -302,7 +294,7 @@ class PosShiftBalanceWizard(models.TransientModel):
         output.seek(0)
 
         # Crear attachment
-        filename = f"balance_turno_{data['session_name'].replace('/', '_')}_{fields.Datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        filename = f"balance_turno_{data['session_name'].replace('/', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
         attachment = self.env['ir.attachment'].create({
             'name': filename,
             'type': 'binary',

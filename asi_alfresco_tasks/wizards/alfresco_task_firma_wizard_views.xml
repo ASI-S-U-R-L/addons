@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista del wizard de firma para tareas Alfresco -->
+    <record id="view_alfresco_task_firma_wizard_form" model="ir.ui.view">
+        <field name="name">alfresco.task.firma.wizard.form</field>
+        <field name="model">alfresco.task.firma.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Firma Digital de Documentos de Tarea Alfresco">
+                <!-- Campos ocultos para lógica -->
+                <field name="status" invisible="1" />
+                <field name="document_count" invisible="1" />
+                <field name="has_certificate" invisible="1" />
+                <field name="has_password" invisible="1" />
+                <field name="has_image" invisible="1" />
+                <field name="certificate_wizard_name" invisible="1" />
+                <field name="show_sign_button" invisible="1" />
+                <field name="has_password_error" invisible="1" />
+                <field name="documents_with_error_ids" invisible="1" />
+
+                <!-- Estado: Configuración -->
+                <div attrs="{'invisible': [('status', '!=', 'configuracion')]}">
+                    <div class="alert alert-info" role="alert">
+                        <h4><i class="fa fa-pen" /> Configuración de Firma Digital</h4>
+                        <p>Configure los parámetros para firmar <strong><field name="document_count"
+                                    readonly="1" /> documento(s) PDF</strong> de la tarea.</p>
+                        <p>Los documentos firmados se actualizarán como nuevas versiones en Alfresco
+                            manteniendo el mismo archivo.</p>
+                    </div>
+
+                    <div class="alert alert-danger" role="alert"
+                        attrs="{'invisible': [('has_password_error', '=', False)]}">
+                        <h5><i class="fa fa-exclamation-triangle" /> Error de Contraseña</h5>
+                        <p>La contraseña del certificado PKCS#12 es incorrecta. Por favor, ingrese
+                            la contraseña correcta.</p>
+                    </div>
+
+                    <!-- Estado del usuario -->
+                    <div class="alert alert-warning" role="alert" style="margin-bottom: 15px;">
+                        <h5><i class="fa fa-user" /> Estado de su Configuración:</h5>
+                        <div class="row">
+                            <div class="col-4">
+                                <span attrs="{'invisible': [('has_certificate', '=', True)]}">
+                                    <i class="fa fa-times text-danger" /> Sin certificado </span>
+                                <span attrs="{'invisible': [('has_certificate', '=', False)]}">
+                                    <i class="fa fa-check text-success" /> Certificado configurado </span>
+                            </div>
+                            <div class="col-4">
+                                <span attrs="{'invisible': [('has_password', '=', True)]}">
+                                    <i class="fa fa-times text-danger" /> Sin contraseña guardada </span>
+                                <span attrs="{'invisible': [('has_password', '=', False)]}">
+                                    <i class="fa fa-check text-success" /> Contraseña guardada </span>
+                            </div>
+                            <div class="col-4">
+                                <span attrs="{'invisible': [('has_image', '=', True)]}">
+                                    <i class="fa fa-times text-danger" /> Sin imagen de firma </span>
+                                <span attrs="{'invisible': [('has_image', '=', False)]}">
+                                    <i class="fa fa-check text-success" /> Imagen configurada </span>
+                            </div>
+                        </div>
+                        <p style="margin-top: 10px; margin-bottom: 0;"
+                            attrs="{'invisible': [('has_image', '=', True)]}">
+                            <strong>
+                                Nota: Se recomienda que la imagen de su firma tenga un tamaño de
+                                300x150 o superior manteniendo relación 2:1.
+                            </strong>
+                        </p>
+                    </div>
+
+                    <group>
+                        <group string="Parámetros de Firma">
+                            <field name="signature_role"
+                                placeholder="ej: Aprobado por:, Contabilizado por:, etc."
+                                required="1" />
+                            <field name="signature_position" widget="Select2" />
+                        </group>
+                        <group attrs="{'invisible': [('has_password', '=', True)]}"
+                            string="Contraseña del Certificado">
+                            <field name="signature_password" password="True"
+                                attrs="{'required': [('has_password', '=', False)]}" />
+                        </group>
+                    </group>
+
+                    <!-- Opciones de firma -->
+                    <group string="Opciones de Firma" col="2">
+                        <group>
+                            <field name="signature_opaque_background" />
+                        </group>
+                        <group>
+                            <field name="sign_all_pages" />
+                        </group>
+                    </group>
+
+                    <!-- Campos temporales para certificado e imagen -->
+                    <group string="Datos Temporales" col="2">
+                        <group attrs="{'invisible': [('has_certificate', '=', True)]}">
+                            <field name="certificate_wizard" filename="certificate_wizard_name"
+                                widget="binary"
+                                attrs="{'required': [('has_certificate', '=', False)]}" />
+                        </group>
+                        <group attrs="{'invisible': [('has_image', '=', True)]}">
+                            <field name="wizard_signature_image" widget="image"
+                                options="{'size': [200, 100]}"
+                                attrs="{'required': [('has_image', '=', False)]}" />
+                        </group>
+                    </group>
+
+                    <!-- Lista de documentos de la tarea -->
+                    <group string="📄 Documentos de la Tarea" col="1">
+                        <div class="alert alert-info" role="alert"
+                            attrs="{'invisible': [('document_count', '>', 0)]}">
+                            No hay documentos en esta tarea.
+                        </div>
+                        <field name="document_ids" nolabel="1"
+                            attrs="{'invisible': [('document_count', '=', 0)]}"
+                            readonly="1">
+                            <tree create="false" edit="false" delete="false">
+                                <field name="name" />
+                                <field name="mime_type" />
+                                <field name="size" widget="integer" />
+                                <field name="created_by" />
+                                <field name="modified_at" />
+                            </tree>
+                        </field>
+                    </group>
+
+                    <footer>
+                        <button name="action_firmar_documentos"
+                            string="🖊️ Firmar Documentos"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('show_sign_button', '=', False)]}" />
+                    </footer>
+                </div>
+
+                <!-- Estado: Procesando -->
+                <div attrs="{'invisible': [('status', '!=', 'procesando')]}">
+                    <div class="alert alert-warning" role="alert">
+                        <h4><i class="fa fa-spinner fa-spin" /> Procesando Firma Digital</h4>
+                        <p>Por favor espere mientras se procesan los documentos...</p>
+                        <field name="message_result" readonly="1" />
+                    </div>
+
+                    <div class="progress" style="margin: 20px 0;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                            role="progressbar"
+                            t-att-style="'width: ' + str(record.documents_processed.raw_value * 100 / record.document_count.raw_value) + '%'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado: Completado -->
+                <div attrs="{'invisible': [('status', '!=', 'completado')]}">
+                    <div class="alert alert-success" role="alert">
+                        <h4><i class="fa fa-check-circle" /> ¡Proceso Completado!</h4>
+                        <field name="message_result" readonly="1" nolabel="1" />
+                    </div>
+
+                    <div class="row text-center" style="margin: 20px 0;">
+                        <div class="col-6">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h3>
+                                        <field name="documents_processed" />
+                                    </h3>
+                                    <p>Documentos Firmados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h3>
+                                        <field name="document_count" />
+                                    </h3>
+                                    <p>Total Procesados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado: Error -->
+                <div attrs="{'invisible': [('status', '!=', 'error')]}">
+                    <div class="alert alert-danger" role="alert">
+                        <h4><i class="fa fa-exclamation-triangle" /> Error en el Proceso</h4>
+                        <field name="message_result" readonly="1" nolabel="1" />
+                    </div>
+
+                    <div class="row text-center" style="margin: 20px 0;"
+                        attrs="{'invisible': [('documents_processed', '=', 0)]}">
+                        <div class="col-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h3>
+                                        <field name="documents_processed" />
+                                    </h3>
+                                    <p>Exitosos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h3>
+                                        <field name="documents_with_error" />
+                                    </h3>
+                                    <p>Con Error</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h3>
+                                        <field name="document_count" />
+                                    </h3>
+                                    <p>Total</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer>
+                        <button name="action_firmar_documentos"
+                            string="🔄 Reintentar Documentos con Error"
+                            type="object"
+                            class="btn-warning"
+                            attrs="{'invisible': [('documents_with_error', '=', 0)]}" />
+                        <button name="action_cerrar_wizard" string="Cerrar" type="object"
+                            class="btn-secondary" />
+                    </footer>
+
+                </div>
+
+            </form>
+
+        </field>
+
+    </record>
+
+    <!-- Acción para abrir el wizard -->
+    <record id="action_alfresco_task_firma_wizard" model="ir.actions.act_window">
+        <field name="name">Firmar Documentos de Tarea Alfresco</field>
+        <field name="res_model">alfresco.task.firma.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

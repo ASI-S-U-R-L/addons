@@ -1,7 +1,6 @@
-odoo.define("firma_digital.firma_digital", (require) => {
+odoo.define("firma_digital.firma_digital", ["web.core", "web.AbstractAction"], (require) => {
   var core = require("web.core")
   var AbstractAction = require("web.AbstractAction")
-  var $ = require("jquery")
   var _t = core._t
 
   // Acción personalizada para descargar múltiples PDFs

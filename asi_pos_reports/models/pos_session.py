@@ -9,60 +9,67 @@ _logger = logging.getLogger(__name__)
 
 class PosSession(models.Model):
     _inherit = 'pos.session'
-    
-    def print_ticket_direct(self, ticket_type):
-        """Impresión directa usando IoT del POS"""
-        self.ensure_one()
-    
-        _logger.info(f"Impresión directa para {ticket_type} - Sesión: {self.name}")
-    
-        # Verificar configuración IoT
-        if not self.config_id.iface_print_via_proxy:
-            _logger.warning("IoT no configurado - usando PDF")
-            return False
-    
-        try:
-            # Generar contenido según el tipo
-            content_generators = {
-            'merchandise': self._generate_merchandise_ticket_content,
-            'shift_balance': self._generate_shift_balance_ticket_content,
-            'coins': self._generate_coins_ticket_content,
-            }
-        
-            if ticket_type in content_generators:
-                ticket_content = content_generators[ticket_type]()
-            
-                # Odoo se encarga de la comunicación con IoT Box
-                # La IoT Box maneja el formato y envío a la impresora física
-                self.env['pos.config']._print_ticket_via_proxy(ticket_content)
-            
-                _logger.info(f"✅ Ticket {ticket_type} enviado vía IoT")
-                return True
-            
-        except Exception as e:
-            _logger.error(f"Error en impresión IoT: {str(e)}")
-    
-        return False
 
     def action_merchandise_sales_report(self):
-        """Acción para mostrar el reporte de ventas por mercancías"""
+        """Acción para mostrar el wizard de Ventas por Mercancías"""
         self.ensure_one()
-        
-        # Crear el wizard para el reporte
-        wizard = self.env['pos.merchandise.report.wizard'].create({
+
+        date_start = self.start_at or self.create_date
+        date_stop = self.stop_at or fields.Datetime.now()
+
+        # 1) Crear el registro del wizard con defaults REALES
+        wiz = self.env['pos.merchandise.report.wizard'].create({
             'session_id': self.id,
-            'date_start': self.start_at,
-            'date_stop': self.stop_at or fields.Datetime.now(),
+            'date_start': date_start,
+            'date_stop': date_stop,
         })
-        
-        return {
-            'name': _('Ventas por Mercancías'),
+
+        # 2) Leer la ACCIÓN (no la vista) del wizard y fijar res_id
+        action = self.env.ref('asi_pos_reports.action_pos_merchandise_report_wizard').read()[0]
+        action.update({
+            'res_id': wiz.id,
+            'target': 'new',  # modal en webclient; en POS caerá en el fallback a nueva pestaña
             'type': 'ir.actions.act_window',
-            'res_model': 'pos.merchandise.report.wizard',
-            'res_id': wizard.id,
-            'view_mode': 'form',
+        })
+        return action
+
+    def action_shift_balance_report(self):
+        """Acción para mostrar el reporte de balance de turno"""
+        self.ensure_one()
+
+        # Crear el registro del wizard con defaults REALES
+        wiz = self.env['pos.shift.balance.wizard'].create({
+            'pos_config_id': self.config_id.id,
+            'report_date': self.start_at.date() if self.start_at else fields.Date.today(),
+            'session_id': self.id,
+        })
+
+        # Leer la acción del wizard y fijar res_id
+        action = self.env.ref('asi_pos_reports.action_pos_shift_balance_wizard').read()[0]
+        action.update({
+            'res_id': wiz.id,
             'target': 'new',
-        }
+            'type': 'ir.actions.act_window',
+        })
+        return action
+
+    def action_inventory_summary_report(self):
+        """Acción para mostrar el reporte de resumen de inventario"""
+        self.ensure_one()
+
+        # Crear el registro del wizard con defaults REALES
+        wiz = self.env['inventory.summary.wizard'].create({
+            'warehouse_ids': [(6, 0, [self.config_id.warehouse_id.id])] if self.config_id.warehouse_id else [],
+        })
+
+        # Leer la acción del wizard y fijar res_id
+        action = self.env.ref('asi_pos_reports.action_inventory_summary_wizard').read()[0]
+        action.update({
+            'res_id': wiz.id,
+            'target': 'new',
+            'type': 'ir.actions.act_window',
+        })
+        return action
 
 
     def _generate_merchandise_report_on_close(self):
@@ -389,7 +396,7 @@ class PosSession(models.Model):
         company = self.company_id
         company_address = f"{company.street or ''} {company.street2 or ''}, {company.city or ''}, {company.state_id.name or ''} {company.zip or ''}".strip()
         company_phone = company.phone or ''
-        pos_name = self.config_id.name
+        pos_name = self.config_id.name  # Nombre del punto de venta
         
         return {
             'session_name': self.name,
@@ -415,62 +422,3 @@ class PosSession(models.Model):
             'remaining': remaining,
             'total': total_payments,
         }
-
-    def _get_coins_data(self):
-        """Prepara los datos para el reporte de Monedas"""
-        self.ensure_one()
-        
-        _logger.info("="*80)
-        _logger.info(f"[COINS REPORT] Sesión: {self.name} | Estado: {self.state}")
-        
-        opening_balance = self.cash_register_balance_start or 0.0
-        
-        # Calcular total de efectivo manejado (pagos en efectivo de todas las órdenes)
-        orders = self.order_ids.filtered(lambda o: o.state in ['paid', 'done', 'invoiced'])
-        cash_total = 0.0
-        
-        _logger.info(f"[COINS REPORT] Órdenes pagadas encontradas: {len(orders)}")
-        
-        for order in orders:
-            for payment in order.payment_ids:
-                if payment.payment_method_id.is_cash_count:
-                    cash_total += payment.amount
-                    _logger.info(f"[COINS REPORT]   Pago en efectivo: {payment.amount} (Orden: {order.name})")
-        
-        # Retiro = Total efectivo manejado - Efectivo de apertura
-        withdrawal = 0.0
-        
-        if self.cash_real_transaction < 0: withdrawal = -1 * self.cash_real_transaction
-        
-        ending_cash = self.cash_register_balance_end_real
-        
-        _logger.info(f"[COINS REPORT] Balance apertura: {opening_balance}")
-        _logger.info(f"[COINS REPORT] Total efectivo manejado: {cash_total}")
-        _logger.info(f"[COINS REPORT] Retiro calculado: {withdrawal}")
-        _logger.info(f"[COINS REPORT] Balance final: {ending_cash}")
-        _logger.info(f"[COINS REPORT] Transaccion total: {self.cash_real_transaction}")
-        
-        company = self.company_id
-        company_address = f"{company.street or ''} {company.street2 or ''}, {company.city or ''}, {company.state_id.name or ''} {company.zip or ''}".strip()
-        company_phone = company.phone or ''
-        pos_name = self.config_id.name
-        
-        result = {
-            'session_name': self.name,
-            'date': self.start_at.strftime('%d/%m/%Y') if self.start_at else '',
-            'user_name': self.user_id.name,
-            'empresa_name': company.name,
-            'company_name': pos_name,
-            'company_address': company_address,
-            'company_phone': company_phone,
-            'start_date': self.start_at.strftime('%d/%m/%Y %H:%M') if self.start_at else '',
-            'end_date': self.stop_at.strftime('%d/%m/%Y %H:%M') if self.stop_at else 'En curso',
-            'opening_balance': opening_balance,
-            'withdrawal': withdrawal,
-            'ending_cash': ending_cash,
-        }
-        
-        _logger.info(f"[COINS REPORT] Resultado final - Apertura: {opening_balance} | Retiro: {withdrawal}")
-        _logger.info("="*80)
-        
-        return result

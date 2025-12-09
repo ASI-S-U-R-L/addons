@@ -29,7 +29,7 @@ class FirmaDigitalController(http.Controller):
             # Preparar la respuesta HTTP con el PDF
             pdf_content = base64.b64decode(firma_wizard.pdf_signed)
             pdfhttpheaders = [
-                ('Content-Type', 'application/octet-stream'),  # Cambiar a octet-stream
+                ('Content-Type', 'application/pdf'),  # Usar application/pdf para PDFs
                 ('Content-Length', len(pdf_content)),
                 ('Content-Disposition', f'attachment; filename="{nombre_firmado}"'),
                 ('Cache-Control', 'no-cache, no-store, must-revalidate'),
@@ -75,14 +75,16 @@ class FirmaDigitalController(http.Controller):
             if not documento.pdf_signed:
                 return request.not_found()
             
-            # Obtener el nombre
+            # Obtener el nombre como en el ZIP
             nombre_base, extension = os.path.splitext(documento.document_name)
-            nombre_firmado = f"{nombre_base}{extension}"
+            if not extension:
+                extension = '.pdf'
+            nombre_firmado = f"{nombre_base} - firmado{extension}"
             
             # Preparar la respuesta HTTP con el PDF - FORZAR DESCARGA
             pdf_content = base64.b64decode(documento.pdf_signed)
             pdf_headers = [
-                ('Content-Type', 'application/octet-stream'),  # Cambiar a octet-stream para forzar descarga
+                ('Content-Type', 'application/pdf'),  # Usar application/pdf para PDFs
                 ('Content-Length', len(pdf_content)),
                 ('Content-Disposition', f'attachment; filename="{nombre_firmado}"'),
                 ('Cache-Control', 'no-cache, no-store, must-revalidate'),

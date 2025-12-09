@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista Form para Tarea Alfresco -->
+    <record id="view_alfresco_task_form" model="ir.ui.view">
+        <field name="name">alfresco.task.form</field>
+        <field name="model">alfresco.task</field>
+        <field name="arch" type="xml">
+            <form string="Tarea Alfresco">
+                <header>
+                    <!-- Botón de Firmar - Solo visible si hay documentos -->
+                    <button name="action_sign"
+                        type="object"
+                        string="Firmar"
+                        class="btn-primary"
+                        icon="fa-pencil"
+                        attrs="{'invisible': ['|', '|', '|', ('is_completed', '=', True), ('is_rejected', '=', True), ('state', '=', 'completed'), ('document_count', '=', 0)]}" />
+
+                    <!-- Botón de Rechazar - Visible siempre que no esté completada/rechazada -->
+                    <button name="action_reject"
+                        type="object"
+                        string="Rechazar"
+                        class="btn-danger"
+                        icon="fa-times"
+                        attrs="{'invisible': ['|', '|', ('is_completed', '=', True), ('is_rejected', '=', True), ('state', '=', 'completed')]}" />
+
+                    <!-- Botón de Completar para tareas rechazadas - Visible solo para tareas
+                    rechazadas no completadas -->
+                    <button name="action_complete"
+                        type="object"
+                        string="Completar"
+                        class="btn-success"
+                        icon="fa-check"
+                        attrs="{'invisible': ['|', ('is_rejected', '=', False), ('is_completed', '=', True)]}" />
+                </header>
+                <sheet>
+                    <!-- Campos ocultos para lógica -->
+                    <field name="is_completed" invisible="1" />
+                    <field name="document_count" invisible="1" />
+                    <field name="is_rejected" invisible="1" />
+
+                    <!-- Banner si la tarea está
+                    completada y NO rechazada -->
+                    <div class="alert alert-success" role="alert"
+                        attrs="{'invisible': ['|', ('is_rejected', '=', True), ('is_completed', '=', False)]}">
+                        <strong>Tarea Procesada:</strong> Esta tarea ya ha sido procesada desde
+                        Odoo. </div>
+
+                    <!-- Banner si la tarea está rechazada y NO completada -->
+                    <div class="alert alert-danger" role="alert"
+                        attrs="{'invisible': ['|', ('is_rejected', '=', False), ('is_completed', '=', True)]}">
+                        <strong>Tarea Rechazada:</strong> Esta tarea ha sido rechazada. Puede
+                        marcarla como completada usando el botón "Completar". </div>
+
+                    <!-- Banner si la tarea está rechazada y completada -->
+                    <div class="alert alert-warning" role="alert"
+                        attrs="{'invisible': ['|', ('is_rejected', '=', False), ('is_completed', '=', False)]}">
+                        <strong>Tarea Rechazada y Completada:</strong> Esta tarea fue rechazada y
+                        luego marcada como completada. </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" />
+                        </h1>
+                        <field name="description" readonly="1" placeholder="Sin descripción" />
+                    </div>
+
+                    <!-- Badges de estado -->
+                    <div class="mb-3">
+                        <span class="badge bg-info me-2"> Estado: <field name="state_display"
+                                readonly="1" />
+                        </span>
+                        <span class="badge bg-danger"
+                            attrs="{'invisible': [('is_rejected', '=', False)]}">
+                            Rechazada
+                        </span>
+                        <span class="badge bg-success"
+                            attrs="{'invisible': [('is_completed', '=', False)]}">
+                            Completada
+                        </span>
+                    </div>
+
+                    <group>
+                        <group string="Información de la Tarea">
+                            <field name="alfresco_task_id" readonly="1" />
+                            <field name="process_id" readonly="1" />
+                            <field name="process_definition_id" readonly="1" />
+                            <field name="activity_definition_id" readonly="1" />
+                            <field name="form_resource_key" readonly="1" />
+                            <field name="state" readonly="1" string="Estado Alfresco" />
+                        </group>
+                        <group string="Asignación">
+                            <field name="assignee" readonly="1" />
+                            <field name="user_id" readonly="1" />
+                            <field name="priority" readonly="1" />
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Fechas">
+                            <field name="started_at" readonly="1" />
+                            <field name="due_at" readonly="1" />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Documentos" name="documents">
+                            <div class="alert alert-info" role="alert"
+                                attrs="{'invisible': [('document_count', '>', 0)]}">
+                                No hay documentos adjuntos a esta tarea.
+                            </div>
+                            <field name="document_ids" readonly="1" nolabel="1"
+                                attrs="{'invisible': [('document_count', '=', 0)]}">
+                                <tree string="Documentos Adjuntos" create="false" delete="false">
+                                    <field name="name" />
+                                    <field name="mime_type" />
+                                    <field name="size" widget="integer" />
+                                    <field name="created_by" />
+                                    <field name="modified_at" />
+                                    <button name="action_download"
+                                        type="object"
+                                        string="Descargar"
+                                        icon="fa-download"
+                                        class="btn-primary" />
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" />
+                    <field name="activity_ids" />
+                    <field name="message_ids" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista Tree simplificada -->
+    <record id="view_alfresco_task_tree" model="ir.ui.view">
+        <field name="name">alfresco.task.tree</field>
+        <field name="model">alfresco.task</field>
+        <field name="arch" type="xml">
+            <tree string="Tareas Alfresco" decoration-success="state == 'completed'"
+                decoration-muted="is_completed == True">
+                <field name="state" invisible="1" />
+                <field name="name" />
+                <field name="description" optional="show" />
+                <field name="assignee" />
+                <field name="user_id" />
+                <field name="state_display" string="Estado" />
+                <field name="is_completed" string="Procesada" widget="boolean" />
+                <field name="is_rejected" string="Rechazada" widget="boolean" />
+                <field name="priority" optional="hide" />
+                <field name="process_id" optional="hide" />
+                <field name="document_count" string="Docs" />
+                <field name="due_at" />
+                <field name="activity_ids" widget="list_activity" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista Search -->
+    <record id="view_alfresco_task_search" model="ir.ui.view">
+        <field name="name">alfresco.task.search</field>
+        <field name="model">alfresco.task</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Tareas Alfresco">
+                <field name="name" />
+                <field name="description" />
+                <field name="alfresco_task_id" />
+                <field name="assignee" />
+                <field name="user_id" />
+                <field name="process_id" />
+
+                <filter string="Mis Tareas" name="my_tasks" domain="[('user_id', '=', uid)]" />
+                <separator />
+                <filter string="Pendientes" name="pending"
+                    domain="[('is_completed', '=', False), ('state', '!=', 'completed')]" />
+                <filter string="Procesadas" name="completed_odoo"
+                    domain="[('is_completed', '=', True)]" />
+                <filter string="Rechazadas" name="rejected"
+                    domain="[('is_rejected', '=', True)]" />
+                <separator />
+                <filter string="Con Actividad Pendiente" name="with_activity"
+                    domain="[('activity_ids', '!=', False)]" />
+                <filter string="Con Documentos" name="with_documents"
+                    domain="[('document_count', '>', 0)]" />
+
+                <group expand="1" string="Agrupar por">
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}" />
+                    <filter string="Usuario Odoo" name="group_user"
+                        context="{'group_by': 'user_id'}" />
+                    <filter string="Proceso" name="group_process"
+                        context="{'group_by': 'process_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción principal -->
+    <record id="action_alfresco_task" model="ir.actions.act_window">
+        <field name="name">Tareas Alfresco</field>
+        <field name="res_model">alfresco.task</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_alfresco_task_search" />
+        <field name="context">{
+            'search_default_my_tasks': 1,
+            'search_default_pending': 1
+            }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay tareas de Alfresco sincronizadas
+            </p>
+            <p>
+                Las tareas se sincronizan automáticamente cada 5 minutos desde Alfresco.
+                Asegúrese de tener configurado su usuario de Alfresco en su perfil.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú raíz como aplicación independiente -->
+    <menuitem id="menu_alfresco_tasks_root"
+        name="Tareas Alfresco"
+        sequence="100" />
+
+    <menuitem id="menu_alfresco_tasks_all"
+        name="Todas las Tareas"
+        parent="menu_alfresco_tasks_root"
+        action="action_alfresco_task"
+        sequence="10" />
+</odoo>

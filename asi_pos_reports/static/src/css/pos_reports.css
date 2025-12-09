@@ -1,0 +1,125 @@
+/* Estilos para los botones de reportes en POS */
+.control-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px !important;
+    margin: 5px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+    min-height: 80px;
+    cursor: pointer;
+}
+
+.control-button:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.control-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.control-button i {
+    font-size: 24px;
+    margin-bottom: 5px;
+    color: #495057;
+}
+
+.control-button span {
+    font-size: 12px;
+    font-weight: 500;
+    color: #495057;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Estilos para el botón de informes en el header del POS */
+
+.pos-branding .reports-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 0 8px;
+    background-color: #714B67;
+    border: 1px solid #714B67;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    color: white;
+}
+
+.pos-branding .reports-button:hover {
+    background-color: #5a3d53;
+    border-color: #5a3d53;
+}
+
+.pos-branding .reports-button i.fa-bar-chart {
+    margin-right: 8px;
+    color: white;
+}
+
+.pos-branding .reports-button .dropdown-arrow {
+    margin-left: 8px;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.pos-branding .reports-button .reports-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    margin-top: 2px;
+    min-width: 200px;
+}
+
+.pos-branding .reports-button .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f8f9fa;
+    color: black;
+}
+
+.pos-branding .reports-button .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.pos-branding .reports-button .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.pos-branding .reports-button .dropdown-item i {
+    margin-right: 10px;
+    width: 16px;
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pos-branding .reports-button {
+        padding: 6px 8px;
+        margin: 0 4px;
+        font-size: 12px;
+    }
+
+    .pos-branding .reports-button .reports-dropdown {
+        min-width: 180px;
+    }
+}

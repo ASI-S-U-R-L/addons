@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Tipo de actividad para tareas de Alfresco -->
+        <record id="mail_activity_type_alfresco_task" model="mail.activity.type">
+            <field name="name">Tarea Alfresco</field>
+            <field name="icon">fa-tasks</field>
+            <field name="delay_count">0</field>
+            <field name="delay_unit">days</field>
+            <field name="summary">Tarea asignada desde Alfresco</field>
+        </record>
+    </data>
+</odoo>

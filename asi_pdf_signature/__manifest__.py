@@ -24,7 +24,8 @@
     'assets': {
         'web.assets_backend': [
             'asi_pdf_signature/static/src/js/firma_digital.js',
-            'asi_pdf_signature/static/src/css/firma_digital.css',
+            'asi_pdf_signature/static/src/js/drag_drop_widget.js',
+            'asi_pdf_signature/static/src/css/firma_digital.css'
         ],
     },
     'installable': True,

@@ -1,0 +1,140 @@
+/* Estilos para el área de drag and drop */
+.asi-dnd {
+  border: 2px dashed #ccc !important;
+  border-radius: 8px !important;
+  padding: 10px !important;
+  text-align: center !important;
+  background-color: #f9f9f9 !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
+  position: relative !important;
+  min-height: 40px !important;
+  margin-bottom: 20px !important;
+}
+
+.asi-dnd:hover {
+  border-color: #007bff !important;
+  background-color: #f0f8ff !important;
+}
+
+.asi-dnd.is-dragover {
+  border-color: #007bff !important;
+  background-color: #e3f2fd !important;
+  transform: scale(1.02) !important;
+}
+
+.asi-dnd__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.asi-dnd__icon {
+  font-size: 24px;
+  color: #6c757d;
+  transition: color 0.3s ease;
+}
+
+.asi-dnd:hover .asi-dnd__icon,
+.asi-dnd.is-dragover .asi-dnd__icon {
+  color: #007bff;
+}
+
+.asi-dnd__text strong {
+  display: block;
+  color: #495057;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.asi-dnd__text .text-muted {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.asi-dnd__files-list {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.file-item .file-name {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.file-item .file-size {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.file-item .remove-file {
+  color: #dc3545;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.file-item .remove-file:hover {
+  background-color: #f8d7da;
+}
+
+/* Barra de progreso */
+.asi-dnd__progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #e9ecef;
+  border-radius: 0 0 6px 6px;
+  overflow: hidden;
+}
+
+.asi-progress__bar {
+  height: 100%;
+  background-color: #007bff;
+  width: 0%;
+  transition: width 0.3s ease;
+  opacity: 0;
+}
+
+.asi-progress__text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Estado de carga */
+.asi-dnd.is-loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Estilos para botones de archivo */
+.input-group .btn {
+  border-radius: 8px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 1rem !important;
+}
+
+.input-group .btn i {
+  font-size: 1.2rem !important;
+}

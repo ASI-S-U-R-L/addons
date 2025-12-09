@@ -4,15 +4,15 @@
     <record id="view_pos_session_form_inherit" model="ir.ui.view">
         <field name="name">pos.session.form.inherit.asi</field>
         <field name="model">pos.session</field>
-        <field name="inherit_id" ref="point_of_sale.view_pos_session_form" />
+        <field name="inherit_id" ref="point_of_sale.view_pos_session_form"/>
         <field name="arch" type="xml">
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_merchandise_sales_report"
-                    type="object"
-                    class="oe_stat_button"
-                    icon="fa-shopping-cart"
-                    string="Ventas por Mercancías"
-                    attrs="{'invisible': [('state', '=', 'opening_control')]}" />
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-shopping-cart"
+                        string="Ventas por Mercancías"
+                        attrs="{'invisible': [('state', '=', 'opening_control')]}"/>
             </xpath>
         </field>
     </record>
@@ -21,14 +21,14 @@
     <record id="view_pos_session_tree_inherit" model="ir.ui.view">
         <field name="name">pos.session.tree.inherit.asi</field>
         <field name="model">pos.session</field>
-        <field name="inherit_id" ref="point_of_sale.view_pos_session_tree" />
+        <field name="inherit_id" ref="point_of_sale.view_pos_session_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='state']" position="after">
                 <button name="action_merchandise_sales_report"
-                    type="object"
-                    string="Ventas por Mercancías"
-                    icon="fa-shopping-cart"
-                    attrs="{'invisible': [('state', '=', 'opening_control')]}" />
+                        type="object"
+                        string="Ventas por Mercancías"
+                        icon="fa-shopping-cart"
+                        attrs="{'invisible': [('state', '=', 'opening_control')]}"/>
             </xpath>
         </field>
     </record>

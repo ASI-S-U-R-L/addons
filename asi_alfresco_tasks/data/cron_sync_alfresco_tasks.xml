@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Cron que sincroniza tareas de Alfresco cada 5 minutos -->
+        <record id="ir_cron_sync_alfresco_tasks" model="ir.cron">
+            <field name="name">Sincronizar Tareas de Alfresco</field>
+            <field name="model_id" ref="model_alfresco_task"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_sync_alfresco_tasks()</field>
+            <field name="interval_number">5</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="priority">50</field>
+        </record>
+    </data>
+</odoo>

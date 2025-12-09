@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Vista formulario para Control de Denominaciones -->
+    <record id="view_pos_session_denomination_control_form" model="ir.ui.view">
+        <field name="name">pos.session.denomination.control.form</field>
+        <field name="model">pos.session.denomination.control</field>
+        <field name="arch" type="xml">
+            <form string="Control de Denominaciones">
+                <header>
+                    <field name="control_type" widget="statusbar" statusbar_visible="opening,closing"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_session" icon="fa-info-circle">
+                            <field string="Sesión" name="session_id" widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group name="session_info">
+                            <field name="session_id" readonly="1"/>
+                            <field name="config_id" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="control_date" readonly="1"/>
+                        </group>
+                        <group name="amount_info">
+                            <field name="total_amount" readonly="1"/>
+                            <field name="denominations_count" readonly="1"/>
+                            <field name="has_denominations_data" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Datos de Denominaciones" name="denominations_data">
+                        <field name="denominations_data" readonly="1"
+                                widget="denominations_table"
+                                attrs="{'invisible': [('has_denominations_data', '=', False)]}"/>
+                        <div attrs="{'invisible': [('has_denominations_data', '=', True)]}" class="alert alert-info">
+                            <strong>Información:</strong> No hay datos detallados de denominaciones disponibles.
+                        </div>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista lista para Controles de Denominaciones -->
+    <record id="view_pos_session_denomination_control_tree" model="ir.ui.view">
+        <field name="name">pos.session.denomination.control.tree</field>
+        <field name="model">pos.session.denomination.control</field>
+        <field name="arch" type="xml">
+            <tree string="Controles de Denominaciones" decoration-muted="control_type=='opening'"
+                  decoration-bf="control_type=='closing'" sample="1">
+                <field name="display_name"/>
+                <field name="session_id" optional="show"/>
+                <field name="config_id" optional="show"/>
+                <field name="control_type" optional="hide"/>
+                <field name="total_amount" sum="Total"/>
+                <field name="denominations_count" optional="hide"/>
+                <field name="control_date" optional="show"/>
+                <field name="user_id" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista pivote para análisis de denominaciones -->
+    <record id="view_pos_session_denomination_control_pivot" model="ir.ui.view">
+        <field name="name">pos.session.denomination.control.pivot</field>
+        <field name="model">pos.session.denomination.control</field>
+        <field name="arch" type="xml">
+            <pivot string="Análisis de Denominaciones">
+                <field name="control_date" interval="day"/>
+                <field name="total_amount" type="measure"/>
+                <field name="control_type" type="col"/>
+                <field name="config_id" type="row"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vista gráfica para tendencias -->
+    <record id="view_pos_session_denomination_control_graph" model="ir.ui.view">
+        <field name="name">pos.session.denomination.control.graph</field>
+        <field name="model">pos.session.denomination.control</field>
+        <field name="arch" type="xml">
+            <graph string="Tendencias de Denominaciones" type="line">
+                <field name="control_date" interval="day"/>
+                <field name="total_amount" type="measure"/>
+                <field name="control_type"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vista de búsqueda y filtros -->
+    <record id="view_pos_session_denomination_control_search" model="ir.ui.view">
+        <field name="name">pos.session.denomination.control.search</field>
+        <field name="model">pos.session.denomination.control</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Controles de Denominaciones">
+                <field name="session_id"/>
+                <field name="config_id"/>
+                <field name="user_id"/>
+                <field name="control_type"/>
+
+                <separator/>
+
+                <filter string="Aperturas" name="filter_opening"
+                        domain="[('control_type', '=', 'opening')]"/>
+                <filter string="Cierres" name="filter_closing"
+                        domain="[('control_type', '=', 'closing')]"/>
+                <filter string="Con Denominaciones" name="filter_with_denominations"
+                        domain="[('has_denominations_data', '=', True)]"/>
+
+                <separator/>
+
+                <filter string="Hoy" name="filter_today"
+                        domain="[('control_date', '>=', context_today())]"/>
+                <filter string="Esta Semana" name="filter_this_week"
+                        domain="[('control_date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Este Mes" name="filter_this_month"
+                        domain="[('control_date', '>=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+
+                <separator/>
+
+                <group expand="0" string="Agrupar por">
+                    <filter string="Sesión" name="groupby_session"
+                            context="{'group_by': 'session_id'}"/>
+                    <filter string="Configuración" name="groupby_config"
+                            context="{'group_by': 'config_id'}"/>
+                    <filter string="Usuario" name="groupby_user"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter string="Tipo de Control" name="groupby_type"
+                            context="{'group_by': 'control_type'}"/>
+                    <filter string="Fecha" name="groupby_date"
+                            context="{'group_by': 'control_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de ventana para Controles de Denominaciones -->
+    <record id="action_pos_session_denomination_control" model="ir.actions.act_window">
+        <field name="name">Controles de Denominaciones</field>
+        <field name="res_model">pos.session.denomination.control</field>
+        <field name="view_mode">tree,form,pivot,graph</field>
+        <field name="context">{
+            'search_default_groupby_session': 1,
+            'search_default_groupby_date': 1,
+            'search_default_filter_with_denominations': 1
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay controles de denominaciones registrados
+            </p>
+            <p>
+                Los controles de denominaciones se registran automáticamente cuando se realiza
+                el conteo por denominaciones en la apertura o cierre de caja del POS.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú para Controles de Denominaciones -->
+    <menuitem id="menu_pos_session_denomination_control"
+              name="Controles de Denominaciones"
+              parent="point_of_sale.menu_point_of_sale"
+              action="action_pos_session_denomination_control"
+              sequence="25"/>
+
+    <!-- Integración con vista de Sesión POS - Agregar campos en vista formulario -->
+    <record id="view_pos_session_form_inherit_denomination_control" model="ir.ui.view">
+        <field name="name">pos.session.form.inherit.denomination.control</field>
+        <field name="model">pos.session</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_session_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="object"
+                        name="action_view_denomination_controls"
+                        icon="fa-calculator"
+                        attrs="{'invisible': [('has_denomination_control', '=', False)]}">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Denominaciones</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <xpath expr="//sheet" position="inside">
+                <field name="has_denomination_control" invisible="1"/>
+                <group string="Control de Denominaciones"
+                        attrs="{'invisible': [('has_denomination_control', '=', False)]}">
+                    <group>
+                        <field name="denomination_opening_total" readonly="1"
+                               attrs="{'invisible': [('opening_denomination_control', '=', False)]}"/>
+                        <field name="opening_denomination_control" readonly="1"
+                               attrs="{'invisible': [('opening_denomination_control', '=', False)]}"
+                               options="{'no_open': True, 'no_create': True}"/>
+                    </group>
+                    <group>
+                        <field name="denomination_closing_total" readonly="1"
+                               attrs="{'invisible': [('closing_denomination_control', '=', False)]}"/>
+                        <field name="closing_denomination_control" readonly="1"
+                               attrs="{'invisible': [('closing_denomination_control', '=', False)]}"
+                               options="{'no_open': True, 'no_create': True}"/>
+                    </group>
+                    <group>
+                        <field name="denomination_difference" readonly="1"
+                               attrs="{'invisible': [('denomination_difference', '=', 0)]}"
+                               decoration-danger="denomination_difference &lt; 0"
+                               decoration-success="denomination_difference &gt; 0"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+<!--     
+    <record id="view_pos_session_tree_inherit_denomination_control" model="ir.ui.view">
+        <field name="name">pos.session.tree.inherit.denomination.control</field>
+        <field name="model">pos.session</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_session_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='cash_register_balance_end']" position="after">
+                <field name="has_denomination_control" invisible="1"/>
+                <field name="denomination_difference" optional="show"
+                    decoration-danger="denomination_difference &lt; 0"
+                    decoration-success="denomination_difference &gt; 0"/>
+                <field name="denomination_closing_total" optional="hide"/>
+                <field name="denomination_opening_total" optional="hide"/>
+            </xpath>
+        </field>
+    </record> -->
+
+</odoo>

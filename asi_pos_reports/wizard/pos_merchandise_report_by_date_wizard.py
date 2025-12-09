@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 import logging
+from datetime import datetime, timedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -43,34 +44,31 @@ class PosMerchandiseReportByDateWizard(models.TransientModel):
         """Calcula las sesiones disponibles según el POS y la fecha seleccionada"""
         for wizard in self:
             if wizard.pos_config_id and wizard.report_date:
-                # Buscar todas las sesiones del POS
+                # Convertir la fecha a datetime para el inicio y fin del día
+                date_start = datetime.combine(wizard.report_date, datetime.min.time())
+                date_end = datetime.combine(wizard.report_date, datetime.max.time())
+                
+                # Buscar sesiones del POS en esa fecha
                 sessions = self.env['pos.session'].search([
                     ('config_id', '=', wizard.pos_config_id.id),
-                    ('start_at', '!=', False),
+                    ('start_at', '>=', date_start),
+                    ('start_at', '<=', date_end),
                 ])
                 
-                # Filtrar por fecha usando el contexto del usuario
-                filtered_sessions = self.env['pos.session']
-                for session in sessions:
-                    # Convertir start_at a la fecha local del usuario
-                    session_date = fields.Date.context_today(session, session.start_at)
-                    if session_date == wizard.report_date:
-                        filtered_sessions |= session
-                
-                wizard.available_session_ids = filtered_sessions
-                wizard.session_count = len(filtered_sessions)
+                wizard.available_session_ids = sessions
+                wizard.session_count = len(sessions)
                 
                 # Si solo hay una sesión, seleccionarla automáticamente
-                if len(filtered_sessions) == 1:
-                    wizard.session_id = filtered_sessions[0]
-                elif wizard.session_id and wizard.session_id not in filtered_sessions:
+                if len(sessions) == 1:
+                    wizard.session_id = sessions[0]
+                elif wizard.session_id and wizard.session_id not in sessions:
                     # Si la sesión seleccionada ya no está en las disponibles, limpiarla
                     wizard.session_id = False
             else:
                 wizard.available_session_ids = False
                 wizard.session_count = 0
                 wizard.session_id = False
-        
+
     @api.onchange('pos_config_id', 'report_date')
     def _onchange_filters(self):
         """Limpia la sesión seleccionada cuando cambian los filtros"""
@@ -105,29 +103,24 @@ class PosMerchandiseReportByDateWizard(models.TransientModel):
         )
     
     def action_print_ticket(self):
-        """Intenta impresión directa, falla a PDF"""
+        """Acción para imprimir ticket en impresora Epson"""
         self.ensure_one()
-    
+        
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
-    
-        # Intentar impresión directa
-        success = self.session_id.print_ticket_direct('merchandise')  # o 'shift_balance', 'coins'
-    
-        if success:
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': _('Impresión exitosa'),
-                    'message': _('Ticket enviado a la impresora del POS'),
-                    'type': 'success',
-                }
+        
+        report_data = self.session_id._prepare_merchandise_report_data()
+        self.session_id._try_print_to_epson_printer(report_data)
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Impresión de Ticket'),
+                'message': _('Se ha enviado el ticket a la impresora Epson'),
+                'type': 'success',
             }
-        else:
-            # Fallback: abrir PDF para impresión manual
-            _logger.info("Fallback a PDF - No hay IoT configurado")
-            return self.env.ref('asi_pos_reports.action_report_pos_merchandise_ticket').report_action(self.session_id.ids)
+        }
 
     def action_generate_excel(self):
         """Generar reporte Excel"""

@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_alfresco_task_user,alfresco.task.user,model_alfresco_task,base.group_user,1,0,0,0
+access_alfresco_task_manager,alfresco.task.manager,model_alfresco_task,base.group_system,1,1,1,1
+access_alfresco_task_document_user,alfresco.task.document.user,model_alfresco_task_document,base.group_user,1,0,0,0
+access_alfresco_task_document_manager,alfresco.task.document.manager,model_alfresco_task_document,base.group_system,1,1,1,1
+access_alfresco_task_firma_wizard_user,alfresco.task.firma.wizard.user,model_alfresco_task_firma_wizard,base.group_user,1,1,1,1

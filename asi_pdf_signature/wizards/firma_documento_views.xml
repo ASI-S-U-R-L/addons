@@ -13,8 +13,6 @@
                 <field name="has_password" invisible="1" />
                 <field name="has_image" invisible="1" />
                 <field name="certificate_wizard_name" invisible="1" />
-                <field name="show_sign_button" invisible="1" />
-                <field name="has_password_error" invisible="1" />
 
                 <!-- Estado: Configuración -->
                 <div attrs="{'invisible': [('status', '!=', 'borrador')]}">
@@ -27,12 +25,6 @@
                     </div>
 
                     <!-- Estado del usuario -->
-                    <div class="alert alert-danger" role="alert"
-                        attrs="{'invisible': [('has_password_error', '=', False)]}">
-                        <h5><i class="fa fa-exclamation-triangle" /> Error de Contraseña</h5>
-                        <p>La contraseña del certificado PKCS#12 es incorrecta. Por favor, ingrese
-                            la contraseña correcta.</p>
-                    </div>
                     <div class="alert alert-warning" role="alert" style="margin-bottom: 15px;">
                         <h5><i class="fa fa-user" /> Estado de su Configuración:</h5>
                         <div class="row">
@@ -105,14 +97,37 @@
                         </group>
                     </group>
 
+<!-- Subida rápida por arrastrar y soltar -->
+<group string="Subida rápida por arrastrar y soltar" col="1">
+  <div class="asi-dnd o_drag_drop_area">
+    <field name="temp_pdf_uploads"
+           widget="many2many_binary"
+           options="{'accept': 'application/pdf,.pdf', 'max_upload_size': 10485760}"/>
+
+    <div class="asi-dnd__help o_form_label text-muted">
+      Arrastra y suelta archivos PDF aquí o haz clic para seleccionar (máx. 10 MB por archivo).
+    </div>
+
+    <!-- Progreso (mostrar/ocultar por JS) -->
+    <div class="asi-dnd__progress" style="display:none;">
+      <div class="asi-progress">
+        <div class="asi-progress__bar" style="width:0%"></div>
+      </div>
+      <div class="asi-progress__text o_form_label text-muted">Subiendo…</div>
+    </div>
+  </div>
+</group>
+
+
+
+
                     <!-- Lista de documentos seleccionados -->
                     <group string="Archivos Seleccionados" col="1">
                         <field name="document_ids" nolabel="1" widget="one2many" mode="tree,form">
-                            <tree create="true" edit="false" delete="true">
+                            <tree create="false" edit="false" delete="true">
                                 <field name="document_name" />
                                 <field name="document_size" />
                                 <field name="signature_status" />
-                                <field name="needs_retry" invisible="1" />
                                 <button name="action_descargar_individual" string="Descargar"
                                     type="object" icon="fa-download"
                                     attrs="{'invisible': [('signature_status', '!=', 'firmado')]}" />
@@ -135,13 +150,7 @@
                             string="🖊️ Firmar Documentos"
                             type="object"
                             class="btn-primary"
-                            attrs="{'invisible': ['|', '|', '|', '|', ('show_sign_button', '=', False), ('signature_role', '=', False), ('signature_role', '=', ''), '&amp;', ('signature_password', '=', False), ('has_password', '=', False), ('document_count', '=', 0)]}" />
-                        <button
-                            name="action_firmar_documentos"
-                            string="🔄 Reintentar Documentos con Error"
-                            type="object"
-                            class="btn-warning"
-                            attrs="{'invisible': ['|', '|', ('status', 'not in', ['completado', 'error']), ('documents_with_error', '=', 0), ('show_sign_button', '=', False)]}" />
+                            attrs="{'invisible': ['|', '|', ('signature_role', '=', False), ('signature_role', '=', ''), ('document_count', '=', 0)]}" />
                     </footer>
                 </div>
 
