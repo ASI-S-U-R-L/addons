@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="report_ncif" model="ir.ui.view">
+        <field name="name">Reporte Financiero Externo</field>
+        <field name="model">accounting.report</field>
+        <field name="arch" type="xml">
+            <form string="Report Options">
+                <group col="4">
+                    <field name="date_to"/>
+                    <field name="target_move" widget="radio"/>
+                    <field name="display_account" widget="radio"/>
+                    <field name="display_detail" widget="radio"/>
+                    <field name="account_report_id" invisible="1"/>
+                </group>
+                <footer>
+                    <button name="check_report" string="Print" type="object" context="{'type': 'pdf'}" default_focus="1" class="oe_highlight"/>
+                    <button name="check_report" string="XLSX" type="object" context="{'type': 'xlsx'}" class="oe_highlight"/>
+                    <button string="Cancel" class="btn btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="accounting_pdf_reports.action_account_report_bs" model="ir.actions.act_window">
+        <field name="res_model">accounting.report</field>
+        <field name="view_id" ref="report_ncif"/>
+        <field name="context" eval="{'default_account_report_id':ref('ncc_financial_report_es'), 'efe': '5920-04'}"/>
+    </record>
+    <record id="accounting_pdf_reports.action_account_report_pl" model="ir.actions.act_window">
+        <field name="res_model">accounting.report</field>
+        <field name="view_id" ref="report_ncif"/>
+        <field name="context" eval="{'default_account_report_id':ref('ncc_financial_report_er'), 'efe': '5921-04'}"/>
+    </record>
+    <record id="action_account_report_ege" model="ir.actions.act_window">
+        <field name="name">Estado de Gastos por Elementos (5924-04)</field>
+        <field name="res_model">accounting.report</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="report_ncif"/>
+        <field name="target">new</field>
+        <field name="context" eval="{'default_account_report_id':ref('ncc_financial_report_ege'), 'efe': '5924-04'}"/>
+    </record>
+    <record id="action_account_report_evab" model="ir.actions.act_window">
+        <field name="name">Estado de Valor Agregado Bruto (5926-04)</field>
+        <field name="res_model">accounting.report</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="report_ncif"/>
+        <field name="target">new</field>
+        <field name="context" eval="{'default_account_report_id':ref('financial_report_evab'), 'efe': '5926-04'}"/>
+    </record>
+    <record id="action_account_report_5927_00" model="ir.actions.act_window">
+        <field name="name">Estado de pagos a personas naturales y otras formas de gestión no estatal (5927-00)</field>
+        <field name="res_model">accounting.report</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="report_ncif"/>
+        <field name="target">new</field>
+        <field name="context" eval="{'default_account_report_id':ref('financial_report_5927_00'), 'efe': '5927-00'}"/>
+    </record>
+
+<!--    Overwrite menu-->
+    <delete id="accounting_pdf_reports.menu_account_report_bs" model="ir.ui.menu"/>
+    <menuitem id="accounting_pdf_reports.menu_account_report_bs"
+              name="Estado de Situación (5920-04)"
+              sequence="5"
+              action="accounting_pdf_reports.action_account_report_bs"
+              parent="accounting_pdf_reports.menu_finance_legal_statement"
+              groups="account.group_account_user,account.group_account_manager"/>
+    <delete id="accounting_pdf_reports.menu_account_report_pl" model="ir.ui.menu"/>
+    <menuitem id="accounting_pdf_reports.menu_account_report_pl"
+              name="Estado de Rendimiento Financiero (5921-04)"
+              sequence="6"
+              action="accounting_pdf_reports.action_account_report_pl"
+              parent="accounting_pdf_reports.menu_finance_legal_statement"
+              groups="account.group_account_user,account.group_account_manager"/>
+
+    <menuitem id="menu_account_report_ege"
+              action="action_account_report_ege"
+              parent="accounting_pdf_reports.menu_finance_legal_statement"
+              groups="account.group_account_user"/>
+
+    <menuitem id="menu_account_report_evab"
+              action="action_account_report_evab"
+              parent="accounting_pdf_reports.menu_finance_legal_statement"
+              groups="account.group_account_user"/>
+
+    <menuitem id="menu_account_report_5927_00"
+              action="action_account_report_5927_00"
+              parent="accounting_pdf_reports.menu_finance_legal_statement"
+              groups="account.group_account_user"/>
+
+    <menuitem id="accounting_pdf_reports.menu_finance_partner_reports"
+              name="Reporte de Empresas"
+              sequence="20"
+              parent="account.menu_finance_reports"/>
+
+    <menuitem id="accounting_pdf_reports.menu_aged_receivable"
+              name="Saldo vencido por cobrar"
+              sequence="20"
+              action="accounting_pdf_reports.action_account_aged_receivable"
+              parent="accounting_pdf_reports.menu_finance_partner_reports"/>
+
+    <menuitem id="accounting_pdf_reports.menu_aged_payable"
+              name="Saldo vencido por pagar"
+              sequence="30"
+              action="accounting_pdf_reports.action_account_aged_payable"
+              parent="accounting_pdf_reports.menu_finance_partner_reports"/>
+
+    <menuitem id="accounting_pdf_reports.menu_finance_audit_reports"
+              name="Informes de Auditoría"
+              sequence="30"
+              parent="account.menu_finance_reports"/>
+
+    <menuitem id="accounting_pdf_reports.menu_general_balance_report"
+              name="Balance de comprobación"
+              sequence="20"
+              parent="accounting_pdf_reports.menu_finance_audit_reports"
+              action="accounting_pdf_reports.action_account_balance_menu"
+              groups="account.group_account_user,account.group_account_manager"/>
+</odoo>

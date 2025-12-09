@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_horizontal" model="report.paperformat">
+        <field name="name">Reporte Simple Horizontal</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">68</field>
+        <field name="margin_bottom">10</field>
+        <field name="header_spacing">58</field>
+        <field name="format">A4</field>
+    </record>
+    <record id="action_ncc_accounting_pdf_reports_report_bs" model="ir.actions.report">
+        <field name="name">Estado de Situación</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_cu_reports.report_financial_bs</field>
+        <field name="report_file">l10n_cu_reports.report_financial_bs</field>
+        <field name="paperformat_id" ref="paperformat_horizontal"/>
+    </record>
+    <record id="action_ncc_accounting_pdf_reports_report_pl" model="ir.actions.report">
+        <field name="name">Pérdidas y Ganancias</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_cu_reports.report_financial_pl</field>
+        <field name="report_file">l10n_cu_reports.report_financial_pl</field>
+        <field name="paperformat_id" ref="paperformat_horizontal"/>
+    </record>
+    <record id="action_ncc_accounting_pdf_reports_report_ege" model="ir.actions.report">
+        <field name="name">Estado de Gasto por Elemento</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_cu_reports.report_financial_ege</field>
+        <field name="report_file">l10n_cu_reports.report_financial_ege</field>
+        <field name="paperformat_id" ref="paperformat_horizontal"/>
+    </record>
+    <record id="action_ncc_accounting_pdf_reports_report_evab" model="ir.actions.report">
+        <field name="name">Estado de Valor Agregado Bruto</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_cu_reports.report_financial_evab</field>
+        <field name="report_file">l10n_cu_reports.report_financial_evab</field>
+        <field name="paperformat_id" ref="paperformat_horizontal"/>
+    </record>
+    <record id="action_ncc_accounting_pdf_reports_report_5927_00" model="ir.actions.report">
+        <field name="name">Estado de pagos a personas naturales y otras formas de gestión no estatal</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_cu_reports.report_financial_5927_00</field>
+        <field name="report_file">l10n_cu_reports.report_financial_5927_00</field>
+        <field name="paperformat_id" ref="paperformat_horizontal"/>
+    </record>
+
+    <record id="action_ncc_accounting_xls_reports_report_bs" model="ir.actions.report">
+        <field name="name">Estado de Situación XLSX</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">l10n_cu_reports_xlsx.report_financial_xls_bs</field>
+        <field name="report_file">l10n_cu_reports_xlsx.report_financial_xls_bs</field>
+<!--        <field name="attachment_use">True</field>-->
+    </record>
+    <record id="action_ncc_accounting_xls_reports_report_pl" model="ir.actions.report">
+        <field name="name">Estado de Rendimiento Financiero XLSX</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">l10n_cu_reports_xlsx.report_financial_xls_pl</field>
+        <field name="report_file">l10n_cu_reports_xlsx.report_financial_xls_pl</field>
+<!--        <field name="attachment_use">True</field>-->
+    </record>
+    <record id="action_ncc_accounting_xls_reports_report_ege" model="ir.actions.report">
+        <field name="name">Estado de Rendimiento Financiero XLSX</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">l10n_cu_reports_xlsx.report_financial_xls_ege</field>
+        <field name="report_file">l10n_cu_reports_xlsx.report_financial_xls_ege</field>
+<!--        <field name="attachment_use">True</field>-->
+    </record>
+
+    <record id="action_ncc_accounting_xls_reports_report_evab" model="ir.actions.report">
+        <field name="name">Estado de Valor Agregado Bruto XLSX</field>
+        <field name="model">account.financial.report</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">l10n_cu_reports_xlsx.report_financial_xls_evab</field>
+        <field name="report_file">l10n_cu_reports_xlsx.report_financial_xls_evab</field>
+<!--        <field name="attachment_use">True</field>-->
+    </record>
+</odoo>

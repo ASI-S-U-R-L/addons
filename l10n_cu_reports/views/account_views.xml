@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_financial_report_form_inherit" model="ir.ui.view">
+        <field name="name">view.account.financial.report.form.inherit</field>
+        <field name="model">account.financial.report</field>
+        <field name="inherit_id" ref="accounting_pdf_reports.view_account_financial_report_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="General">
+                    <group>
+                        <field name="plan_anual"/>
+                        <field name="apertura"/>
+                        <field name="visible"/>
+                    </group>
+                </page>
+            </xpath>
+            <xpath expr="//notebook" position="attributes">
+                <attribute name="attrs">{'invisible': [('type','not in',['accounts','account_type', 'account_report', 'account_reports'])]}</attribute>
+            </xpath>
+            <xpath expr="//notebook/page/group" position="inside">
+                <field name="account_report_ids" attrs="{'invisible': [('type', '!=', 'account_reports')]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
