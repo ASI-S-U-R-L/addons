@@ -37,7 +37,7 @@ function showTRMQrCode(root = document, ctx = null) {
     // Verificar el tipo de método de pago
     const paymentName = selectedPaymentLine ? selectedPaymentLine.payment_method.name.toLowerCase() : '';
     const isTransfermovilPagoEnLinea = paymentName.includes('transfermovil pago en linea');
-    const isTransfermovil = paymentName.includes('transfermovil') && !isTransfermovilPagoEnLinea;
+    const isTransfermovil = (paymentName.includes('transfermovil') || paymentName.includes('transferencia')) && !isTransfermovilPagoEnLinea;
 
     // Verificar si ya existe el QR
     const existingQr = paymentScreen.querySelector('.trm-qr-container');
