@@ -344,10 +344,14 @@ class SubscriptionPackage(models.Model):
                 if pending_subscription.plan_id.invoice_mode == 'draft_invoice':
                     this_products_line = []
                     for rec in pending_subscription.product_line_ids:
-                        rec_list = Command.create({'product_id': rec.product_id.id,
-                                           'quantity': 1, 'sale_line_ids': [Command.set(rec.order_line_id.mapped('id'))]})                                          
-                        this_products_line.append(rec_list)
-                    
+					    rec_list = Command.create({
+					        'product_id': rec.product_id.id,
+					        'quantity': rec.product_qty or 1,
+					        'price_unit': rec.unit_price,  
+					        'discount': rec.discount or 0.0,
+					        'sale_line_ids': [Command.set(rec.order_line_id.mapped('id'))],
+					    })
+					    this_products_line.append(rec_list)
                     invoice_partner = pending_subscription.partner_id 
                     if not invoice_partner.id in subscriptions_to_invoice_by_partner:
                         subscriptions_to_invoice_by_partner[invoice_partner.id] = dict(subscriptions=pending_subscription, lines=this_products_line, currency=pending_subscription.partner_id.currency_id.id)
