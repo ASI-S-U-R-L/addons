@@ -370,7 +370,7 @@ class SubscriptionPackage(models.Model):
                     'invoice_date': fields.Date.today(), 
                     'state': 'draft',
                     'partner_id': partner_id,
-                    #'team_id': partner_id.team_id,
+                    'team_id': partner_id.team_id.id if partner_id.team_id else False,
                     'currency_id': invoice_data.get('currency'),
                     'invoice_line_ids': invoice_data.get('lines')
                 })
