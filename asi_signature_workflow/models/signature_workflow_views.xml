@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!--Vista de formulario para flujos de
-    firma-->
-    <record id="view_signature_workflow_form"
-        model="ir.ui.view">
+    <!-- Vista de formulario para flujos de firma -->
+    <record id="view_signature_workflow_form" model="ir.ui.view">
         <field name="name">signature.workflow.form</field>
         <field name="model">signature.workflow</field>
         <field name="arch" type="xml">
@@ -28,7 +26,7 @@
                         type="object" class="btn-info"
                         attrs="{'invisible': [('state', '!=', 'completed')]}" />
                     <field name="state" widget="statusbar"
-                        statusbar_visible="draft,sent,signed,completed,rejected" />
+                        statusbar_visible="draft,sent,completed,rejected" />
                 </header>
 
                 <sheet>
@@ -59,10 +57,32 @@
                         </group>
                     </group>
 
-                    <!--Nueva
-                    sección para mostrar destinatarios de forma clara-->
-                    <h3>Destinatarios de la Solicitud</h3>
+                    <!-- Carpeta de destino -->
+                    <group string="Carpeta de Destino"
+                        attrs="{'invisible': [('destination_folder_id', '=', False)]}">
+                        <group>
+                            <field name="destination_folder_id" readonly="1" />
+                            <field name="destination_folder_path" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="documents_moved" widget="boolean_toggle" readonly="1" />
+                            <field name="move_status" readonly="1"
+                                attrs="{'invisible': [('move_status', '=', False)]}" />
+                        </group>
+                    </group>
+
+                    <!-- Sección para mostrar destinatarios y su estado -->
+                    <h3>Destinatarios de la Solicitud (Orden Secuencial)</h3>
                     <hr></hr>
+
+                    <!-- Indicador del destinatario actual -->
+                    <div class="alert alert-primary" role="alert"
+                        attrs="{'invisible': [('state', '!=', 'sent')]}">
+                        <strong><i class="fa fa-clock-o" /> Turno actual de firma:</strong>
+                        Destinatario <field name="current_recipient_index" readonly="1" nolabel="1"
+                            class="d-inline" />
+                    </div>
+
                     <group string="Destinatario 1"
                         attrs="{'invisible': [('target_user_id_1', '=', False)]}">
                         <group>
@@ -139,10 +159,9 @@
                                 attrs="{'invisible': [('signed_date_4', '=', False)]}" />
                         </group>
                     </group>
-                    <!--Campos
-                    de opciones de firma-->
-                    <group
-                        string="Opciones de Firma">
+
+                    <!-- Campos de opciones de firma -->
+                    <group string="Opciones de Firma">
                         <group>
                             <field name="signature_opaque_background" readonly="1" />
                         </group>
@@ -160,6 +179,9 @@
                                     <field name="alfresco_file_id" />
                                     <field name="is_signed" widget="boolean_toggle" readonly="1" />
                                     <field name="signed_date" />
+                                    <field name="moved_to_destination" widget="boolean_toggle"
+                                        readonly="1"
+                                        string="Movido" />
                                     <button name="action_download_document"
                                         string="Descargar" type="object" icon="fa-download"
                                         attrs="{'invisible': [('is_signed', '=', False)]}" />
@@ -181,10 +203,9 @@
                             </group>
                         </page>
                     </notebook>
-                    <!--Ocultar
-                    campos deprecados-->
-                    <group
-                        invisible="1">
+
+                    <!-- Ocultar campos deprecados -->
+                    <group invisible="1">
                         <field name="target_user_id" />
                         <field name="signature_role_id" />
                         <field name="signature_position" />
@@ -199,84 +220,68 @@
             </form>
         </field>
     </record>
-    <!--Vista
-    de lista para flujos de firma-->
-    <record
-        id="view_signature_workflow_tree" model="ir.ui.view">
+
+    <!-- Vista de lista para flujos de firma -->
+    <record id="view_signature_workflow_tree" model="ir.ui.view">
         <field name="name">signature.workflow.tree</field>
         <field name="model">signature.workflow</field>
         <field name="arch" type="xml">
             <tree string="Solicitudes de Firma Digital">
                 <field name="name" />
                 <field name="creator_id" />
-                <!--Mostrar
-                primer destinatario en la lista-->
                 <field name="target_user_id_1" string="Destinatario(s)" />
+                <field name="current_recipient_index" string="Turno" />
                 <field name="document_count" />
-                <field
-                    name="document_source" />
+                <field name="document_source" />
+                <field name="destination_folder_id" optional="hide" />
                 <field name="state" widget="badge"
                     decoration-info="state == 'draft'"
                     decoration-warning="state == 'sent'"
-                    decoration-primary="state == 'signed'"
+                    decoration-primary="state in ['signed']"
                     decoration-success="state == 'completed'"
-                    decoration-danger="state == 'rejected'" />
+                    decoration-danger="state in ['rejected', 'cancelled']" />
                 <field name="sent_date" />
-                <field
-                    name="completed_date" />
+                <field name="completed_date" />
             </tree>
         </field>
     </record>
-    <!--Vista
-    de búsqueda-->
-    <record
-        id="view_signature_workflow_search" model="ir.ui.view">
+
+    <!-- Vista de búsqueda -->
+    <record id="view_signature_workflow_search" model="ir.ui.view">
         <field name="name">signature.workflow.search</field>
         <field name="model">signature.workflow</field>
         <field name="arch" type="xml">
             <search string="Buscar Solicitudes de Firma">
                 <field name="name" />
                 <field name="creator_id" />
-                <!--Buscar
-                por cualquier destinatario-->
-                <field
-                    name="target_user_id_1" string="Destinatario" />
-                <field name="target_user_id_2"
-                    string="Destinatario" />
+                <field name="target_user_id_1" string="Destinatario" />
+                <field name="target_user_id_2" string="Destinatario" />
                 <field name="target_user_id_3" string="Destinatario" />
-                <field
-                    name="target_user_id_4" string="Destinatario" />
-                <field
-                    name="signature_role_id_1" string="Rol de Firma" />
+                <field name="target_user_id_4" string="Destinatario" />
+                <field name="signature_role_id_1" string="Rol de Firma" />
+                <field name="destination_folder_id" />
 
-                <filter
-                    string="Mis Solicitudes Creados" name="my_created"
+                <filter string="Mis Solicitudes Creados" name="my_created"
                     domain="[('creator_id', '=', uid)]" />
-                <!--Filtro
-                mejorado para flujos asignados-->
-                <filter
-                    string="Solicitudes Asignados a Mí" name="assigned_to_me"
+                <filter string="Solicitudes Asignados a Mí" name="assigned_to_me"
                     domain="['|', '|', '|', ('target_user_id_1', '=', uid), ('target_user_id_2', '=', uid), ('target_user_id_3', '=', uid), ('target_user_id_4', '=', uid)]" />
+                <filter string="Mi Turno de Firmar" name="my_turn"
+                    domain="['&amp;', ('state', '=', 'sent'), '|', '|', '|', '&amp;', ('target_user_id_1', '=', uid), ('current_recipient_index', '=', 1), '&amp;', ('target_user_id_2', '=', uid), ('current_recipient_index', '=', 2), '&amp;', ('target_user_id_3', '=', uid), ('current_recipient_index', '=', 3), '&amp;', ('target_user_id_4', '=', uid), ('current_recipient_index', '=', 4)]" />
 
                 <separator />
-                <filter
-                    string="Completados" name="completed" domain="[('state', '=', 'completed')]" />
-                <filter
-                    string="Enviados" name="sent" domain="[('state', '=', 'sent')]" />
-                <filter
-                    string="Borradores" name="draft" domain="[('state', '=', 'draft')]" />
-                <filter
-                    string="Rechazados" name="rejected" domain="[('state', '=', 'rejected')]" />
+                <filter string="Completados" name="completed" domain="[('state', '=', 'completed')]" />
+                <filter string="Enviados" name="sent" domain="[('state', '=', 'sent')]" />
+                <filter string="Borradores" name="draft" domain="[('state', '=', 'draft')]" />
+                <filter string="Rechazados" name="rejected" domain="[('state', '=', 'rejected')]" />
                 <separator />
-                <filter
-                    string="Documentos Locales" name="local_docs"
+                <filter string="Con Carpeta de Destino" name="with_destination"
+                    domain="[('destination_folder_id', '!=', False)]" />
+                <filter string="Documentos Locales" name="local_docs"
                     domain="[('document_source', '=', 'local')]" />
-                <filter
-                    string="Documentos Alfresco" name="alfresco_docs"
+                <filter string="Documentos Alfresco" name="alfresco_docs"
                     domain="[('document_source', '=', 'alfresco')]" />
 
-                <group expand="0"
-                    string="Agrupar Por">
+                <group expand="0" string="Agrupar Por">
                     <filter string="Estado" name="group_state" context="{'group_by': 'state'}" />
                     <filter string="Creador" name="group_creator"
                         context="{'group_by': 'creator_id'}" />
@@ -286,11 +291,9 @@
             </search>
         </field>
     </record>
-    <!--Acción
-    para la vista de flujos-->
-    <record
-        id="action_signature_workflow"
-        model="ir.actions.act_window">
+
+    <!-- Acción para la vista de flujos -->
+    <record id="action_signature_workflow" model="ir.actions.act_window">
         <field name="name">Solicitudes de Firma Digital</field>
         <field name="res_model">signature.workflow</field>
         <field name="view_mode">tree,form</field>
@@ -302,6 +305,7 @@
             <p>
                 Las solicitudes de firma le permiten enviar documentos a otros usuarios
                 para que los firmen digitalmente de manera organizada y controlada.
+                El flujo es secuencial: cada destinatario firma en orden.
             </p>
         </field>
     </record>

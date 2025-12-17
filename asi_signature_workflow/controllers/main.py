@@ -18,7 +18,7 @@ class SignatureWorkflowController(http.Controller):
                 return request.not_found()
             
             # Verificar permisos (solo creador o destinatario pueden descargar)
-            if request.env.user not in (workflow.creator_id, workflow.target_user_id):
+            if request.env.user not in (workflow.creator_id, workflow.target_user_id_1, workflow.target_user_id_2, workflow.target_user_id_3, workflow.target_user_id_4):
                 return request.redirect('/web/login')
             
             if workflow.state != 'completed':
@@ -54,7 +54,7 @@ class SignatureWorkflowController(http.Controller):
             _logger.info(f"[DESCARGA_SIMPLE] Workflow: {workflow.name}, Source: {workflow.document_source}")
             
             # Verificar permisos
-            if request.env.user not in (workflow.creator_id, workflow.target_user_id):
+            if request.env.user not in (workflow.creator_id, workflow.target_user_id_1, workflow.target_user_id_2, workflow.target_user_id_3, workflow.target_user_id_4):
                 _logger.error(f"[DESCARGA_SIMPLE] Usuario sin permisos")
                 return request.redirect('/web/login')
             
@@ -203,8 +203,9 @@ class SignatureWorkflowController(http.Controller):
                 return request.not_found()
             
             # Verificar permisos (solo creador o destinatario pueden descargar)
-            if request.env.user not in (workflow.creator_id, workflow.target_user_id):
+            if request.env.user not in (workflow.creator_id, workflow.target_user_id_1, workflow.target_user_id_2, workflow.target_user_id_3, workflow.target_user_id_4):
                 _logger.error(f"[DESCARGA_MULTIPLE] Usuario sin permisos")
+                
                 return request.redirect('/web/login')
             
             # Obtener documentos firmados

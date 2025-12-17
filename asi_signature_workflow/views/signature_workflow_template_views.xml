@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de formulario para plantillas -->
+    <record id="view_signature_workflow_template_form" model="ir.ui.view">
+        <field name="name">signature.workflow.template.form</field>
+        <field name="model">signature.workflow.template</field>
+        <field name="arch" type="xml">
+            <form string="Plantilla de Flujo de Firma">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nombre de la Plantilla" />
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="document_source" />
+                            <field name="active" widget="boolean_toggle" />
+                        </group>
+                        <group>
+                            <field name="signature_opaque_background" widget="boolean_toggle" />
+                            <field name="sign_all_pages" widget="boolean_toggle" />
+                        </group>
+                    </group>
+
+                    <group string="Información">
+                        <group>
+                            <field name="creator_id" readonly="1" />
+                            <field name="create_date" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="recipient_count" />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Destinatarios" name="recipients">
+                            <field name="recipient_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle" />
+                                    <!-- Agregado campo de usuario destinatario -->
+                                    <field name="target_user_id" options="{'no_create': True}" />
+                                    <field name="signature_role_id" options="{'no_create': True}" />
+                                    <field name="signature_position" />
+                                </tree>
+                            </field>
+                            <div class="alert alert-info" role="alert">
+                                <!-- Actualizado mensaje informativo para indicar que ahora sí se
+                                guarda el usuario -->
+                                <p><i class="fa fa-info-circle" /> Los destinatarios configurados en
+                                    esta plantilla se cargarán automáticamente al crear una
+                                    solicitud. Puede modificar los usuarios antes de crear el flujo
+                                    si es necesario.</p>
+                            </div>
+                        </page>
+
+                        <page string="Descripción" name="description">
+                            <field name="description" nolabel="1"
+                                placeholder="Descripción de la plantilla..." />
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de lista para plantillas -->
+    <record id="view_signature_workflow_template_tree" model="ir.ui.view">
+        <field name="name">signature.workflow.template.tree</field>
+        <field name="model">signature.workflow.template</field>
+        <field name="arch" type="xml">
+            <tree string="Plantillas de Flujo de Firma">
+                <field name="name" />
+                <field name="document_source" />
+                <field name="recipient_count" />
+                <field name="signature_opaque_background" widget="boolean_toggle" />
+                <field name="sign_all_pages" widget="boolean_toggle" />
+                <field name="creator_id" />
+                <field name="active" widget="boolean_toggle" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de búsqueda para plantillas -->
+    <record id="view_signature_workflow_template_search" model="ir.ui.view">
+        <field name="name">signature.workflow.template.search</field>
+        <field name="model">signature.workflow.template</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Plantillas">
+                <field name="name" />
+                <field name="creator_id" />
+                <filter string="Activas" name="active" domain="[('active', '=', True)]" />
+                <filter string="Archivadas" name="archived" domain="[('active', '=', False)]" />
+                <filter name="creator" string="Creada por mí" domain="[('creator_id', '=', uid)]" />
+                <separator />
+                <filter string="Documentos Locales" name="local"
+                    domain="[('document_source', '=', 'local')]" />
+                <filter string="Documentos Alfresco" name="alfresco"
+                    domain="[('document_source', '=', 'alfresco')]" />
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Origen de Documentos" name="group_source"
+                        context="{'group_by': 'document_source'}" />
+                    <filter string="Creador" name="group_creator"
+                        context="{'group_by': 'creator_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción para plantillas -->
+    <record id="action_signature_workflow_template" model="ir.actions.act_window">
+        <field name="name">Plantillas de Flujo</field>
+        <field name="res_model">signature.workflow.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_creator': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Cree su primera plantilla de flujo de firma!
+            </p>
+            <p>
+                Las plantillas le permiten guardar configuraciones de flujo predefinidas
+                para reutilizarlas al crear nuevas solicitudes de firma.
+            </p>
+        </field>
+    </record>
+</odoo>

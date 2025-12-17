@@ -6,3 +6,7 @@ access_pdf_selection_wizard_user,pdf.selection.wizard.user,model_pdf_selection_w
 access_pdf_selection_local_document_user,pdf.selection.local.document.user,model_pdf_selection_local_document,base.group_user,1,1,1,1
 access_signature_workflow_document_temp_user,signature.workflow.document.temp.user,model_signature_workflow_document_temp,base.group_user,1,1,1,1
 access_signature_workflow_reject_wizard_user,signature.workflow.reject.wizard.user,model_signature_workflow_reject_wizard,base.group_user,1,1,1,1
+access_signature_workflow_template_user,signature.workflow.template.user,model_signature_workflow_template,base.group_user,1,1,1,1
+access_signature_workflow_template_recipient_user,signature.workflow.template.recipient.user,model_signature_workflow_template_recipient,base.group_user,1,1,1,1
+access_folder_selection_wizard_user,folder.selection.wizard.user,model_folder_selection_wizard,base.group_user,1,1,1,1
+access_save_template_wizard_user,save.template.wizard.user,model_save_template_wizard,base.group_user,1,1,1,1

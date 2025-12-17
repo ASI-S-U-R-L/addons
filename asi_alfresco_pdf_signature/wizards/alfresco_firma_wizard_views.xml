@@ -120,7 +120,7 @@
                             string="🖊️ Firmar Documentos"
                             type="object"
                             class="btn-primary"
-                            attrs="{'invisible': ['|', '|', '|', '|', ('show_sign_button', '=', False), ('signature_role', '=', False), ('signature_role', '=', ''), '&amp;', ('signature_password', '=', False), ('has_password', '=', False), ('file_count', '=', 0)]}" />
+                            attrs="{'invisible': ['|', ('status', 'in', ['completado', 'error']), '|', '|', '|', '|', ('show_sign_button', '=', False), ('signature_role', '=', False), ('signature_role', '=', ''), '&amp;', ('signature_password', '=', False), ('has_password', '=', False), ('file_count', '=', 0)]}" />
                         <button
                             name="action_firmar_documentos"
                             string="🔄 Reintentar Archivos con Error"

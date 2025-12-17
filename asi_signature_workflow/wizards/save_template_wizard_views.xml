@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_save_template_wizard_form" model="ir.ui.view">
+        <field name="name">save.template.wizard.form</field>
+        <field name="model">save.template.wizard</field>
+        <field name="arch" type="xml">
+            <form string="¿Guardar como Plantilla?">
+                <field name="workflow_wizard_id" invisible="1" />
+
+                <div class="alert alert-info" role="alert">
+                    <h4><i class="fa fa-save" /> Guardar Configuración como Plantilla</h4>
+                    <p>Antes de crear la solicitud, puede guardar la configuración actual como
+                        una plantilla para reutilizarla en el futuro.</p>
+                </div>
+
+                <!-- Resumen de la configuración -->
+                <group string="Resumen de Configuración" col="2">
+                    <group>
+                        <field name="document_source_display" readonly="1" />
+                        <field name="sign_all_pages_display" readonly="1" widget="boolean_toggle" />
+                    </group>
+                    <group>
+                        <field name="opaque_background_display" readonly="1" widget="boolean_toggle" />
+                    </group>
+                </group>
+
+                <group string="Destinatarios" col="1">
+                    <field name="recipients_display" nolabel="1" readonly="1" />
+                </group>
+
+                <separator />
+
+                <!-- Opción de guardar -->
+                <group>
+                    <field name="save_as_template" widget="boolean_toggle" />
+                </group>
+
+                <!-- Campos para la plantilla (visibles solo si se marca guardar) -->
+                <group attrs="{'invisible': [('save_as_template', '=', False)]}">
+                    <field name="template_name"
+                        attrs="{'required': [('save_as_template', '=', True)]}"
+                        placeholder="Ej: Plantilla Contratos Mensuales" />
+                    <field name="template_description"
+                        placeholder="Descripción opcional de la plantilla..." />
+                </group>
+
+                <footer>
+                    <button name="action_save_and_continue"
+                        string="Guardar Plantilla y Crear Solicitud"
+                        type="object" class="btn-primary"
+                        attrs="{'invisible': [('save_as_template', '=', False)]}" />
+                    <button name="action_continue_without_saving"
+                        string="Crear Solicitud sin Guardar"
+                        type="object" class="btn-success"
+                        attrs="{'invisible': [('save_as_template', '=', True)]}" />
+                    <button string="Cancelar" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_save_template_wizard" model="ir.actions.act_window">
+        <field name="name">¿Guardar como Plantilla?</field>
+        <field name="res_model">save.template.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -13,6 +13,12 @@ class SignatureWorkflowWizard(models.TransientModel):
     name = fields.Char(string='Nombre de la Solicitud', 
                       default=lambda self: f'Solicitud de Firma - {fields.Datetime.now().strftime("%Y-%m-%d - %H-%M")}')
     
+    template_id = fields.Many2one(
+        'signature.workflow.template',
+        string='Plantilla',
+        help='Seleccione una plantilla para cargar configuración predefinida'
+    )
+    
     # Destinatario 1
     target_user_id_1 = fields.Many2one('res.users', string='Usuario Destinatario 1')
     signature_role_id_1 = fields.Many2one('document.signature.tag', string='Rol de Firma 1',
@@ -84,6 +90,16 @@ class SignatureWorkflowWizard(models.TransientModel):
         ('alfresco', 'Documentos de Alfresco')
     ], string='Origen de Documentos')
     
+    destination_folder_id = fields.Many2one(
+        'alfresco.folder',
+        string='Carpeta de Destino',
+        help='Carpeta en Alfresco donde se moverán los documentos firmados al completar el flujo. Si se deja vacío, los documentos permanecerán en su ubicación original.'
+    )
+    destination_folder_path = fields.Char(
+        string='Ruta de Carpeta de Destino',
+        compute='_compute_destination_folder_path'
+    )
+    
     # Documentos seleccionados
     selected_document_ids = fields.Many2many('signature.workflow.document.temp', 
                                            string='Documentos Seleccionados')
@@ -100,6 +116,14 @@ class SignatureWorkflowWizard(models.TransientModel):
     # Campos para mostrar información
     target_user_info = fields.Html(string='Información del Usuario', 
                                  compute='_compute_target_user_info')
+
+    @api.depends('destination_folder_id')
+    def _compute_destination_folder_path(self):
+        for record in self:
+            if record.destination_folder_id:
+                record.destination_folder_path = record.destination_folder_id.complete_path or record.destination_folder_id.name
+            else:
+                record.destination_folder_path = ''
 
     @api.depends('selected_document_ids')
     def _compute_document_count(self):
@@ -134,21 +158,18 @@ class SignatureWorkflowWizard(models.TransientModel):
             user = None
             pwd = None
             
-            # Try to find URL parameter
             for param in url_params:
                 url = config.get_param(param)
                 if url:
                     _logger.info("[ALFRESCO_CONFIG] Found URL with param: %s = %s", param, url)
                     break
             
-            # Try to find username parameter
             for param in user_params:
                 user = config.get_param(param)
                 if user:
                     _logger.info("[ALFRESCO_CONFIG] Found username with param: %s = %s", param, user)
                     break
             
-            # Try to find password parameter
             for param in pwd_params:
                 pwd = config.get_param(param)
                 if pwd:
@@ -216,7 +237,6 @@ class SignatureWorkflowWizard(models.TransientModel):
                     position = getattr(record, f'signature_position_{i}')
                     role = getattr(record, f'signature_role_id_{i}')
                     
-                    # Validar posición
                     if position:
                         if position in positions:
                             raise ValidationError(_(
@@ -225,7 +245,6 @@ class SignatureWorkflowWizard(models.TransientModel):
                             ))
                         positions.append(position)
                     
-                    # Validar rol
                     if role:
                         if role.id in [r.id for r in roles]:
                             raise ValidationError(_(
@@ -234,12 +253,36 @@ class SignatureWorkflowWizard(models.TransientModel):
                             ))
                         roles.append(role)
 
+    @api.onchange('template_id')
+    def _onchange_template_id(self):
+        """Carga los datos de la plantilla seleccionada"""
+        if self.template_id:
+            template = self.template_id
+            
+            # Cargar configuración general
+            self.document_source = template.document_source
+            self.signature_opaque_background = template.signature_opaque_background
+            self.sign_all_pages = template.sign_all_pages
+            
+            # Limpiar destinatarios actuales
+            for i in range(1, 5):
+                setattr(self, f'target_user_id_{i}', False)
+                setattr(self, f'signature_role_id_{i}', False)
+                setattr(self, f'signature_position_{i}', False)
+            
+            for idx, recipient in enumerate(template.recipient_ids.sorted('sequence'), start=1):
+                if idx <= 4:
+                    if recipient.target_user_id:
+                        setattr(self, f'target_user_id_{idx}', recipient.target_user_id.id)
+                    setattr(self, f'signature_role_id_{idx}', recipient.signature_role_id.id)
+                    setattr(self, f'signature_position_{idx}', recipient.signature_position)
+
     @api.onchange('target_user_id_1','target_user_id_2','target_user_id_3','target_user_id_4')
     def _onchange_target_user_id_1(self):
         """Set domain to exclude current user"""
         return {
             'domain': {
-                'target_user_id_1': [('id', '!=', self.env.user.id), ('id', '!=', self.target_user_id_2.id), ('id', '!=', self.target_user_id_3.id), ('id', '!=', self.target_user_id_4.id), ('active', '=', True)]
+                'target_user_id_1': [('id', '!=', self.target_user_id_2.id), ('id', '!=', self.target_user_id_3.id), ('id', '!=', self.target_user_id_4.id), ('active', '=', True)]
             }
         }
 
@@ -248,7 +291,7 @@ class SignatureWorkflowWizard(models.TransientModel):
         """Set domain to exclude current user"""
         return {
             'domain': {
-                'target_user_id_2': [('id', '!=', self.env.user.id), ('id', '!=', self.target_user_id_1.id), ('id', '!=', self.target_user_id_3.id), ('id', '!=', self.target_user_id_4.id), ('active', '=', True)]
+                'target_user_id_2': [('id', '!=', self.target_user_id_1.id), ('id', '!=', self.target_user_id_3.id), ('id', '!=', self.target_user_id_4.id), ('active', '=', True)]
             }
         }
 
@@ -257,7 +300,7 @@ class SignatureWorkflowWizard(models.TransientModel):
         """Set domain to exclude current user"""
         return {
             'domain': {
-                'target_user_id_3': [('id', '!=', self.env.user.id), ('id', '!=', self.target_user_id_1.id), ('id', '!=', self.target_user_id_2.id), ('id', '!=', self.target_user_id_4.id), ('active', '=', True)]
+                'target_user_id_3': [('id', '!=', self.target_user_id_1.id), ('id', '!=', self.target_user_id_2.id), ('id', '!=', self.target_user_id_4.id), ('active', '=', True)]
             }
         }
 
@@ -266,7 +309,7 @@ class SignatureWorkflowWizard(models.TransientModel):
         """Set domain to exclude current user"""
         return {
             'domain': {
-                'target_user_id_4': [('id', '!=', self.env.user.id), ('id', '!=', self.target_user_id_1.id), ('id', '!=', self.target_user_id_2.id), ('id', '!=', self.target_user_id_3.id), ('active', '=', True)]
+                'target_user_id_4': [('id', '!=', self.target_user_id_1.id), ('id', '!=', self.target_user_id_2.id), ('id', '!=', self.target_user_id_3.id), ('active', '=', True)]
             }
         }
     
@@ -290,6 +333,41 @@ class SignatureWorkflowWizard(models.TransientModel):
                 }
             }
 
+    def open_destination_folder_selection(self):
+        """Abre el wizard de selección de carpeta de destino"""
+        self.ensure_one()
+        
+        if not self.has_alfresco_config:
+            raise UserError(_('Alfresco no está configurado correctamente.'))
+        
+        # Crear wizard de selección de carpeta
+        folder_wizard = self.env['folder.selection.wizard'].create({
+            'workflow_wizard_id': self.id,
+            'selected_folder_id': self.destination_folder_id.id if self.destination_folder_id else False,
+        })
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Seleccionar Carpeta de Destino',
+            'res_model': 'folder.selection.wizard',
+            'res_id': folder_wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def clear_destination_folder(self):
+        """Limpia la carpeta de destino seleccionada"""
+        self.ensure_one()
+        self.destination_folder_id = False
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Iniciar Solicitud de Firma',
+            'res_model': 'signature.workflow.wizard',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
     def open_document_selection(self):
         """Abre el wizard de selección de documentos directamente"""
         self.ensure_one()
@@ -298,7 +376,6 @@ class SignatureWorkflowWizard(models.TransientModel):
         _logger.info("[v0] Current document_source: %s", self.document_source)
         _logger.info("[v0] Current target_user_id_1: %s", self.target_user_id_1.id if self.target_user_id_1 else None)
         
-        # Validate required fields
         if not self.target_user_id_1:
             raise UserError(_('Debe seleccionar un usuario destinatario.'))
         
@@ -311,7 +388,6 @@ class SignatureWorkflowWizard(models.TransientModel):
         if self.document_source == 'alfresco' and not self.has_alfresco_config:
             raise UserError(_('Alfresco no está configurado correctamente.'))
         
-        # Create the PDF selection wizard
         _logger.info("[v0] Creating PdfSelectionWizard with selection_type: %s", self.document_source)
         
         try:
@@ -324,7 +400,6 @@ class SignatureWorkflowWizard(models.TransientModel):
             _logger.error("[v0] Error creating PdfSelectionWizard: %s", str(e))
             raise UserError(_('Error al crear el asistente de selección: %s') % str(e))
         
-        # Return action to open the PDF selection wizard
         action = {
             'type': 'ir.actions.act_window',
             'name': 'Seleccionar Documentos PDF',
@@ -342,9 +417,10 @@ class SignatureWorkflowWizard(models.TransientModel):
         return action
 
     def create_workflow(self):
-        """Crea la solicitud de firma final con múltiples destinatarios"""
+        """Abre wizard para preguntar si guardar como plantilla antes de crear el flujo"""
         self.ensure_one()
         
+        # Validaciones previas
         if not self.target_user_id_1:
             raise UserError(_('Debe seleccionar al menos un usuario destinatario.'))
         
@@ -365,6 +441,24 @@ class SignatureWorkflowWizard(models.TransientModel):
         if not self.selected_document_ids:
             raise UserError(_('Debe seleccionar al menos un documento.'))
         
+        # Crear y mostrar wizard de guardar plantilla
+        save_wizard = self.env['save.template.wizard'].create({
+            'workflow_wizard_id': self.id,
+        })
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': '¿Guardar como Plantilla?',
+            'res_model': 'save.template.wizard',
+            'res_id': save_wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def _do_create_workflow(self):
+        """Crea la solicitud de firma final con múltiples destinatarios"""
+        self.ensure_one()
+        
         try:
             workflow_vals = {
                 'name': self.name,
@@ -373,6 +467,7 @@ class SignatureWorkflowWizard(models.TransientModel):
                 'sign_all_pages': self.sign_all_pages,
                 'document_source': self.document_source,
                 'notes': self.notes,
+                'destination_folder_id': self.destination_folder_id.id if self.destination_folder_id else False,
             }
             
             # Agregar destinatarios y sus configuraciones
@@ -428,16 +523,17 @@ class SignatureWorkflowWizard(models.TransientModel):
         """Procesa la firma de documentos de Alfresco"""
         alfresco_files = self.selected_document_ids.mapped('alfresco_file_id')
         
-        # Crear wizard de firma de Alfresco con configuración fija del flujo
+        if not alfresco_files:
+            raise UserError(_('No hay archivos de Alfresco seleccionados.'))
+        
         wizard = self.env['alfresco.firma.wizard'].create({
             'file_ids': [(6, 0, alfresco_files.ids)],
-            'signature_role': self.signature_role_id.id,
-            'signature_position': self.signature_position,
+            'signature_role': self.signature_role_id_1.id,
+            'signature_position': self.signature_position_1,
             'signature_opaque_background': self.signature_opaque_background,
             'sign_all_pages': self.sign_all_pages,
         })
         
-        # Hacer campos de rol y posición de solo lectura para el destinatario
         return {
             'type': 'ir.actions.act_window',
             'name': 'Firmar Documentos de la Solicitud',
@@ -448,13 +544,12 @@ class SignatureWorkflowWizard(models.TransientModel):
             'context': {
                 'workflow_id': self.id,
                 'from_workflow': True,
-                'readonly_signature_config': True,  # Indicar que la configuración es de solo lectura
+                'readonly_signature_config': True,
             }
         }
 
     def _process_local_signature(self):
         """Procesa la firma de documentos locales"""
-        # Crear documentos temporales para el wizard de firma local
         document_lines = []
         for doc in self.selected_document_ids:
             document_lines.append((0, 0, {
@@ -462,11 +557,10 @@ class SignatureWorkflowWizard(models.TransientModel):
                 'pdf_document': doc.pdf_content,
             }))
         
-        # Crear wizard de firma local con configuración fija del flujo
         wizard = self.env['firma.documento.wizard'].create({
             'document_ids': document_lines,
-            'signature_role': self.signature_role_id.id,
-            'signature_position': self.signature_position,
+            'signature_role': self.signature_role_id_1.id,
+            'signature_position': self.signature_position_1,
             'signature_opaque_background': self.signature_opaque_background,
             'sign_all_pages': self.sign_all_pages,
         })
@@ -481,9 +575,10 @@ class SignatureWorkflowWizard(models.TransientModel):
             'context': {
                 'workflow_id': self.id,
                 'from_workflow': True,
-                'readonly_signature_config': True,  # Indicar que la configuración es de solo lectura
+                'readonly_signature_config': True,
             }
         }
+
 
 class SignatureWorkflowDocumentTemp(models.TransientModel):
     _name = 'signature.workflow.document.temp'

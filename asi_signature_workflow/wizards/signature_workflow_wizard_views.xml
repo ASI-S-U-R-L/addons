@@ -11,12 +11,15 @@
                 <div class="alert alert-info" role="alert">
                     <h4><i class="fa fa-cogs" /> Configuración de la Solicitud de Firma</h4>
                     <p>Configure los parámetros básicos para la solicitud de firma digital
-                        con hasta 4 destinatarios.</p>
+                        con hasta 4 destinatarios. El flujo es secuencial: cada destinatario
+                        firmará en orden después de que el anterior complete su firma.</p>
                 </div>
 
                 <group>
                     <group>
                         <field name="name" placeholder="ej: Aprobación de Contratos - Enero 2024" />
+                        <field name="template_id" options="{'no_create': True}"
+                            placeholder="Seleccione una plantilla o déjelo vacío..." />
                         <field name="document_source" />
                     </group>
                     <group>
@@ -25,8 +28,32 @@
                     </group>
                 </group>
 
+                <!-- Carpeta de destino -->
+                <group string="Carpeta de Destino (Opcional)" col="1"
+                    attrs="{'invisible': [('has_alfresco_config', '=', False)]}">
+                    <div class="alert alert-secondary" role="alert">
+                        <p><i class="fa fa-folder" /> Si selecciona una carpeta de destino, los
+                            documentos firmados se moverán automáticamente a esta carpeta al
+                            completar el flujo.</p>
+                    </div>
+                    <group>
+                        <field name="destination_folder_id" readonly="1" invisible="1" />
+                        <field name="destination_folder_path" readonly="1"
+                            attrs="{'invisible': [('destination_folder_id', '=', False)]}" />
+                    </group>
+                    <div>
+                        <button name="open_destination_folder_selection"
+                            string="Seleccionar Carpeta de Destino"
+                            type="object" class="btn-sm btn-info" icon="fa-folder-open" />
+                        <button name="clear_destination_folder"
+                            string="Limpiar Selección"
+                            type="object" class="btn-sm btn-warning" icon="fa-times"
+                            attrs="{'invisible': [('destination_folder_id', '=', False)]}" />
+                    </div>
+                </group>
+
                 <!-- Destinatario 1 (siempre visible) -->
-                <group string="Destinatario 1" col="2">
+                <group string="Destinatario 1 (Primer firmante)" col="2">
                     <group>
                         <field name="target_user_id_1" options="{'no_create': True}" required="1" />
                         <field name="signature_role_id_1" options="{'no_create': True}" required="1" />
@@ -37,7 +64,7 @@
                 </group>
 
                 <!-- Destinatario 2 (visible solo si destinatario 1 está completo) -->
-                <group string="Destinatario 2 (Opcional)" col="2"
+                <group string="Destinatario 2 (Opcional - Segundo firmante)" col="2"
                     attrs="{'invisible': ['|', '|', ('target_user_id_1', '=', False), ('signature_role_id_1', '=', False), ('signature_position_1', '=', False)]}">
                     <group>
                         <field name="target_user_id_2" options="{'no_create': True}" />
@@ -51,7 +78,7 @@
                 </group>
 
                 <!-- Destinatario 3 (visible solo si destinatario 2 está completo) -->
-                <group string="Destinatario 3 (Opcional)" col="2"
+                <group string="Destinatario 3 (Opcional - Tercer firmante)" col="2"
                     attrs="{'invisible': ['|', '|', ('target_user_id_2', '=', False), ('signature_role_id_2', '=', False), ('signature_position_2', '=', False)]}">
                     <group>
                         <field name="target_user_id_3" options="{'no_create': True}" />
@@ -65,7 +92,7 @@
                 </group>
 
                 <!-- Destinatario 4 (visible solo si destinatario 3 está completo) -->
-                <group string="Destinatario 4 (Opcional)" col="2"
+                <group string="Destinatario 4 (Opcional - Cuarto firmante)" col="2"
                     attrs="{'invisible': ['|', '|', ('target_user_id_3', '=', False), ('signature_role_id_3', '=', False), ('signature_position_3', '=', False)]}">
                     <group>
                         <field name="target_user_id_4" options="{'no_create': True}" />

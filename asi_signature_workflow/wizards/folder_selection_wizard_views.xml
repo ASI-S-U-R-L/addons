@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_folder_selection_wizard_form" model="ir.ui.view">
+        <field name="name">folder.selection.wizard.form</field>
+        <field name="model">folder.selection.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Seleccionar Carpeta de Destino">
+                <!-- Agregados campos invisibles necesarios para attrs -->
+                <field name="current_folder_id" invisible="1" />
+                <field name="parent_folder_id" invisible="1" />
+                <field name="selected_folder_id" invisible="1" />
+
+                <div class="alert alert-info" role="alert">
+                    <h4><i class="fa fa-folder-open" /> Seleccionar Carpeta de Destino</h4>
+                    <p>Navegue por las carpetas de Alfresco y seleccione la carpeta donde se moverán
+                        los documentos firmados al completar el flujo.</p>
+                </div>
+
+                <!-- Carpeta seleccionada actualmente -->
+                <group string="Carpeta Seleccionada" col="1"
+                    attrs="{'invisible': [('selected_folder_id', '=', False)]}">
+                    <div class="alert alert-success" role="alert">
+                        <strong><i class="fa fa-check-circle" /> Carpeta seleccionada:</strong>
+                        <field name="selected_folder_path" nolabel="1" readonly="1" />
+                        <button name="action_clear_selection" string="Limpiar Selección"
+                            type="object" class="btn-sm btn-warning float-right" icon="fa-times" />
+                    </div>
+                </group>
+
+                <!-- Navegación de carpetas -->
+                <group string="Navegación" col="1">
+                    <div class="row">
+                        <div class="col-8">
+                            <strong>Ruta actual:</strong>
+                            <field name="folder_path" readonly="1" nolabel="1" />
+                        </div>
+                        <div class="col-4 text-right">
+                            <button name="action_go_to_root" string="Ir a Raíz" type="object"
+                                class="btn-sm btn-secondary" icon="fa-home" />
+                            <button name="action_go_to_parent" string="Subir" type="object"
+                                class="btn-sm btn-secondary" icon="fa-level-up"
+                                attrs="{'invisible': [('parent_folder_id', '=', False)]}" />
+                            <button name="action_select_current_folder"
+                                string="Seleccionar Esta Carpeta"
+                                type="object" class="btn-sm btn-success" icon="fa-check"
+                                attrs="{'invisible': [('current_folder_id', '=', False)]}" />
+                        </div>
+                    </div>
+                </group>
+
+                <!-- Subcarpetas disponibles -->
+                <group string="Carpetas Disponibles" col="1">
+                    <field name="child_folder_ids" nolabel="1" readonly="1"
+                        attrs="{'invisible': [('child_folder_ids', '=', [])]}">
+                        <tree create="false" edit="false" delete="false">
+                            <field name="name" />
+                            <field name="subfolder_count" string="Subcarpetas" />
+                            <field name="file_count" string="Archivos" />
+                            <!-- Usar action_navigate_to_folder_selection_wizard en lugar de
+                            action_navigate_to_folder -->
+                            <button name="action_navigate_to_folder_selection_wizard" type="object"
+                                string="Abrir" class="btn-sm btn-primary" icon="fa-folder-open"
+                                context="{'wizard_id': parent.id}" />
+                            <button name="action_select_folder_from_list" type="object"
+                                string="Seleccionar" class="btn-sm btn-success" icon="fa-check"
+                                context="{'wizard_id': parent.id}" />
+                        </tree>
+                    </field>
+
+                    <div class="alert alert-info" role="alert"
+                        attrs="{'invisible': [('child_folder_ids', '!=', [])]}">
+                        <p><i class="fa fa-info-circle" /> No hay subcarpetas en esta ubicación.</p>
+                    </div>
+                </group>
+
+                <footer>
+                    <button name="action_confirm_selection" string="Confirmar Selección"
+                        type="object" class="btn-primary"
+                        attrs="{'invisible': [('selected_folder_id', '=', False)]}" />
+                    <button string="Cancelar" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_folder_selection_wizard" model="ir.actions.act_window">
+        <field name="name">Seleccionar Carpeta de Destino</field>
+        <field name="res_model">folder.selection.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
