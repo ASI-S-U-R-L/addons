@@ -5,130 +5,174 @@
     <!-- ================================================================= -->
     <template id="certificate_validation_page" name="Validar Certificado">
         <t t-call="website.layout">
-            <t t-set="pageName" t-value="'validar-certificado'"/>
-            <link rel="stylesheet" type="text/css" href="/asi_signature_validator/static/src/css/validator.css"/>
+            <t t-set="pageName" t-value="'validar-certificado'" />
+            <link rel="stylesheet" type="text/css"
+                href="/asi_signature_validator/static/src/css/validator.css" />
             <script type="text/javascript" src="/asi_signature_validator/static/src/js/validator.js"></script>
-            
+
             <div id="wrap">
                 <div class="oe_structure">
                     <section class="oe_structure mt-5 mb-5">
                         <div class="container position-relative">
                             <!-- Contenedor para notificaciones -->
-                            <div id="notification-container" class="position-absolute" style="top: 0; right: 15px; z-index: 1050;"></div>
-                            
+                            <div id="notification-container" class="position-absolute"
+                                style="top: 0; right: 15px; z-index: 1050;"></div>
+
+                            <!-- Trigger para auto-validación -->
+                            <input type="hidden" id="auto-validate-trigger"
+                                t-att-value="'true' if user_has_certificado and user_has_password else 'false'" />
+
                             <div class="row justify-content-center">
                                 <div class="col-lg-8">
                                     <h2 class="mb-4 text-center">
-                                        <i class="fa fa-certificate text-primary"></i>
-                                        Validar Certificado Digital
-                                    </h2>
-                                    
+                                        <i class="fa fa-certificate text-primary"></i> Validar
+                                        Certificado Digital </h2>
+
                                     <p class="text-center text-muted mb-4">
-                                        Suba su archivo de certificado (.p12 o .pfx) y contraseña para verificar su validez
+                                        Suba su archivo de certificado (.p12 o .pfx) y contraseña
+                                        para verificar su validez
                                         y obtener información detallada del mismo.
                                     </p>
-                                    
+
+                                    <!-- Mensaje informativo si ya tiene certificado configurado 
+                                    <t t-if="user_has_certificado and user_has_password">
+                                        <div class="alert alert-success mb-4">
+                                            <i class="fa fa-check-circle"></i>
+                                            <strong>Validación
+                                            Automática:</strong> Se está validando automáticamente
+                                            tu certificado configurado. Los resultados aparecerán a
+                                            continuación. Si deseas validar otro certificado, puedes
+                                            subirlo usando el formulario. </div>
+                                    </t>-->
+
                                     <!-- Mostrar información de CAs configuradas -->
                                     <t t-if="ca_count and ca_count > 0">
                                         <div class="alert alert-info mb-4">
                                             <i class="fa fa-shield"></i>
-                                            <strong>Verificación de Cadena de Confianza:</strong>
-                                            Se verificará el certificado contra <t t-esc="ca_count"/> entidad(es) certificadora(s) configurada(s).
-                                        </div>
+                                            <strong>Verificación de
+                                            Cadena de Confianza:</strong> Se verificará el
+                                            certificado contra <t t-esc="ca_count" /> entidad(es)
+                                            certificadora(s) configurada(s). </div>
                                     </t>
                                     <t t-else="">
                                         <div class="alert alert-warning mb-4">
                                             <i class="fa fa-exclamation-triangle"></i>
                                             <strong>Aviso:</strong>
-                                            No hay entidades certificadoras configuradas. Solo se verificará la validez temporal del certificado.
+                                            No hay entidades certificadoras configuradas. Solo se
+                                            verificará la validez temporal del certificado. </div>
+                                    </t>
+
+                                    <t t-if="message">
+                                        <div class="alert alert-info">
+                                            <t t-esc="message" />
                                         </div>
                                     </t>
-                                    
-                                    <t t-if="message">
-                                        <div class="alert alert-info"><t t-esc="message"/></div>
-                                    </t>
-                                    
+
+                                    <!-- Área de resultados (se muestra primero si hay
+                                    auto-validación) -->
+                                    <div id="validation-results" class="mb-4" style="display: none;">
+                                        <!-- Los resultados se mostrarán aquí dinámicamente -->
+                                    </div>
+
                                     <div class="card shadow">
                                         <div class="card-body p-4">
-                                            <form id="certificate-validation-form" class="needs-validation" novalidate="novalidate">
-                                                
+                                            <form id="certificate-validation-form"
+                                                class="needs-validation" novalidate="novalidate">
+
                                                 <!-- Opción de usar certificado del perfil -->
                                                 <t t-if="user_has_certificado">
                                                     <div class="mb-4">
                                                         <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" id="use-profile-cert" name="use_profile"/>
-                                                            <label class="form-check-label" for="use-profile-cert">
+                                                            <input class="form-check-input"
+                                                                type="checkbox"
+                                                                id="use-profile-cert"
+                                                                name="use_profile" />
+                                                            <label class="form-check-label"
+                                                                for="use-profile-cert">
                                                                 <i class="fa fa-user text-success"></i>
-                                                                Usar el certificado guardado en mi perfil
-                                                            </label>
+                                                                Usar el certificado guardado en mi
+                                                                perfil </label>
                                                         </div>
                                                         <small class="text-muted ms-4">
-                                                            Ya tienes un certificado almacenado. Puedes usarlo o subir uno diferente.
+                                                            Ya tienes un certificado almacenado.
+                                                            Puedes usarlo o subir uno diferente.
                                                         </small>
                                                     </div>
                                                 </t>
-                                                
+
                                                 <!-- Área de subida de certificado -->
                                                 <div class="mb-4" id="certificate-upload-section">
-                                                    <label class="form-label">
-                                                        Certificado (.p12 / .pfx)
-                                                        <span class="text-danger" id="cert-required-mark">*</span>
+                                                    <label class="form-label"> Certificado (.p12 /
+                                                        .pfx) <span class="text-danger"
+                                                            id="cert-required-mark">*</span>
                                                     </label>
                                                     <div class="asi-dnd" id="cert-drop-zone">
                                                         <div class="asi-dnd__content">
                                                             <div class="asi-dnd__icon">
-                                                                <i class="fa fa-key fa-2x" aria-hidden="true"></i>
+                                                                <i class="fa fa-key fa-2x"
+                                                                    aria-hidden="true"></i>
                                                             </div>
                                                             <div class="asi-dnd__text">
-                                                                <strong>Arrastra y suelta tu certificado aquí</strong><br/>
-                                                                <span class="text-muted">o haz clic para seleccionar</span>
+                                                                <strong>Arrastra y suelta tu
+                                                                    certificado aquí</strong>
+                                                                <br />
+                                                                <span class="text-muted">o haz clic
+                                                                    para seleccionar</span>
                                                             </div>
-                                                            <div class="asi-dnd__file-info" id="cert-file-info"></div>
+                                                            <div class="asi-dnd__file-info"
+                                                                id="cert-file-info"></div>
                                                         </div>
-                                                        <input type="file" name="certificate" accept=".p12,.pfx,application/x-pkcs12" class="d-none" id="cert-input"/>
+                                                        <input type="file" name="certificate"
+                                                            accept=".p12,.pfx,application/x-pkcs12"
+                                                            class="d-none" id="cert-input" />
                                                     </div>
                                                 </div>
-                                                
+
                                                 <!-- Contraseña -->
                                                 <div class="mb-4">
                                                     <label class="form-label" for="cert-password">
-                                                        Contraseña del certificado
-                                                        <span class="text-danger" id="pass-required-mark">*</span>
+                                                        Contraseña del certificado <span
+                                                            class="text-danger"
+                                                            id="pass-required-mark">*</span>
                                                     </label>
-                                                    
+
                                                     <t t-if="user_has_password">
                                                         <div class="mb-2">
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" id="use-profile-password"/>
-                                                                <label class="form-check-label" for="use-profile-password">
-                                                                    <i class="fa fa-lock text-success"></i>
-                                                                    Usar la contraseña guardada en mi perfil
-                                                                </label>
+                                                                <input class="form-check-input"
+                                                                    type="checkbox"
+                                                                    id="use-profile-password" />
+                                                                <label class="form-check-label"
+                                                                    for="use-profile-password">
+                                                                    <i
+                                                                        class="fa fa-lock text-success"></i>
+                                                                    Usar la contraseña guardada en
+                                                                    mi perfil </label>
                                                             </div>
                                                         </div>
                                                     </t>
-                                                    
-                                                    <div class="input-group" id="password-input-group">
-                                                        <input type="password" class="form-control" id="cert-password" name="password" placeholder="Ingrese la contraseña"/>
-                                                        <button class="btn btn-outline-secondary" type="button" id="toggle-password">
+
+                                                    <div class="input-group"
+                                                        id="password-input-group">
+                                                        <input type="password" class="form-control"
+                                                            id="cert-password" name="password"
+                                                            placeholder="Ingrese la contraseña" />
+                                                        <button class="btn btn-outline-secondary"
+                                                            type="button" id="toggle-password">
                                                             <i class="fa fa-eye"></i>
                                                         </button>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <!-- Botón de validación -->
                                                 <div class="d-grid">
-                                                    <button type="submit" class="btn btn-primary btn-lg" id="validate-btn">
-                                                        <i class="fa fa-check-circle"></i>
-                                                        Validar Certificado
-                                                    </button>
+                                                    <button type="submit"
+                                                        class="btn btn-primary btn-lg"
+                                                        id="validate-btn">
+                                                        <i class="fa fa-check-circle"></i> Validar
+                                                        Certificado </button>
                                                 </div>
                                             </form>
-                                            
-                                            <!-- Área de resultados -->
-                                            <div id="validation-results" class="mt-4" style="display: none;">
-                                                <!-- Los resultados se mostrarán aquí dinámicamente -->
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -139,91 +183,105 @@
             </div>
         </t>
     </template>
-    
+
     <!-- ================================================================= -->
     <!-- PÁGINA DE VERIFICACIÓN DE FIRMAS EN PDFs                          -->
     <!-- ================================================================= -->
     <template id="pdf_verification_page" name="Verificar Firmas PDF">
         <t t-call="website.layout">
-            <t t-set="pageName" t-value="'verificar-firmas-pdf'"/>
-            <link rel="stylesheet" type="text/css" href="/asi_signature_validator/static/src/css/validator.css"/>
+            <t t-set="pageName" t-value="'verificar-firmas-pdf'" />
+            <link rel="stylesheet" type="text/css"
+                href="/asi_signature_validator/static/src/css/validator.css" />
             <script type="text/javascript" src="/asi_signature_validator/static/src/js/validator.js"></script>
-            
+
             <div id="wrap">
                 <div class="oe_structure">
                     <section class="oe_structure mt-5 mb-5">
                         <div class="container position-relative">
                             <!-- Contenedor para notificaciones -->
-                            <div id="notification-container" class="position-absolute" style="top: 0; right: 15px; z-index: 1050;"></div>
-                            
+                            <div id="notification-container" class="position-absolute"
+                                style="top: 0; right: 15px; z-index: 1050;"></div>
+
                             <div class="row justify-content-center">
                                 <div class="col-lg-10">
                                     <h2 class="mb-4 text-center">
-                                        <i class="fa fa-file-pdf-o text-danger"></i>
-                                        Verificar Firmas en PDFs
-                                    </h2>
-                                    
+                                        <i class="fa fa-file-pdf-o text-danger"></i> Verificar
+                                        Firmas en PDFs </h2>
+
                                     <p class="text-center text-muted mb-4">
-                                        Suba uno o varios documentos PDF para verificar si contienen firmas digitales
+                                        Suba uno o varios documentos PDF para verificar si contienen
+                                        firmas digitales
                                         y obtener información detallada de cada una.
                                     </p>
-                                    
+
                                     <!-- Mostrar información de CAs configuradas -->
                                     <t t-if="ca_count and ca_count > 0">
                                         <div class="alert alert-info mb-4">
                                             <i class="fa fa-shield"></i>
-                                            <strong>Verificación de Cadena de Confianza:</strong>
-                                            Las firmas se verificarán contra <t t-esc="ca_count"/> entidad(es) certificadora(s) configurada(s).
-                                        </div>
+                                            <strong>Verificación de
+                                            Cadena de Confianza:</strong> Las firmas se verificarán
+                                            contra <t t-esc="ca_count" /> entidad(es)
+                                            certificadora(s) configurada(s). </div>
                                     </t>
                                     <t t-else="">
                                         <div class="alert alert-warning mb-4">
                                             <i class="fa fa-exclamation-triangle"></i>
                                             <strong>Aviso:</strong>
-                                            No hay entidades certificadoras configuradas. Solo se verificará la validez temporal de las firmas.
+                                            No hay entidades certificadoras configuradas. Solo se
+                                            verificará la validez temporal de las firmas. </div>
+                                    </t>
+
+                                    <t t-if="message">
+                                        <div class="alert alert-info">
+                                            <t t-esc="message" />
                                         </div>
                                     </t>
-                                    
-                                    <t t-if="message">
-                                        <div class="alert alert-info"><t t-esc="message"/></div>
-                                    </t>
-                                    
+
                                     <div class="card shadow mb-4">
                                         <div class="card-body p-4">
-                                            <form id="pdf-verification-form" class="needs-validation" novalidate="novalidate">
-                                                
+                                            <form id="pdf-verification-form"
+                                                class="needs-validation" novalidate="novalidate">
+
                                                 <!-- Área de subida de PDFs -->
                                                 <div class="mb-4">
-                                                    <label class="form-label">
-                                                        Documentos PDF a verificar
-                                                        <span class="text-danger">*</span>
+                                                    <label class="form-label"> Documentos PDF a
+                                                        verificar <span class="text-danger">*</span>
                                                     </label>
                                                     <div class="asi-dnd" id="pdf-drop-zone">
                                                         <div class="asi-dnd__content">
                                                             <div class="asi-dnd__icon">
-                                                                <i class="fa fa-cloud-upload fa-2x" aria-hidden="true"></i>
+                                                                <i class="fa fa-cloud-upload fa-2x"
+                                                                    aria-hidden="true"></i>
                                                             </div>
                                                             <div class="asi-dnd__text">
-                                                                <strong>Arrastra y suelta tus PDFs aquí</strong><br/>
-                                                                <span class="text-muted">o haz clic para seleccionar archivos</span>
+                                                                <strong>Arrastra y suelta tus PDFs
+                                                                    aquí</strong>
+                                                                <br />
+                                                                <span class="text-muted">o haz clic
+                                                                    para seleccionar archivos</span>
                                                             </div>
-                                                            <div class="asi-dnd__files-list" id="pdf-files-list"></div>
+                                                            <div class="asi-dnd__files-list"
+                                                                id="pdf-files-list"></div>
                                                         </div>
-                                                        <input type="file" name="pdfs" accept="application/pdf,.pdf" multiple="multiple" class="d-none" id="pdf-input"/>
+                                                        <input type="file" name="pdfs"
+                                                            accept="application/pdf,.pdf"
+                                                            multiple="multiple" class="d-none"
+                                                            id="pdf-input" />
                                                     </div>
                                                 </div>
-                                                
+
                                                 <!-- Botón de verificación -->
                                                 <div class="d-grid">
-                                                    <button type="submit" class="btn btn-primary btn-lg" id="verify-btn" disabled="disabled">
-                                                        <i class="fa fa-search"></i>
-                                                        Verificar Firmas
-                                                    </button>
+                                                    <button type="submit"
+                                                        class="btn btn-primary btn-lg"
+                                                        id="verify-btn" disabled="disabled">
+                                                        <i class="fa fa-search"></i> Verificar
+                                                        Firmas </button>
                                                 </div>
                                             </form>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Área de resultados -->
                                     <div id="pdf-results" style="display: none;">
                                         <!-- Los resultados se mostrarán aquí dinámicamente -->
@@ -236,24 +294,21 @@
             </div>
         </t>
     </template>
-    
+
     <!-- ================================================================= -->
     <!-- BOTONES EN MI CUENTA (PORTAL)                                     -->
     <!-- ================================================================= -->
-    <template id="portal_validator_buttons" inherit_id="portal.portal_my_home" name="Botones Validador de Firmas">
+    <template id="portal_validator_buttons" inherit_id="portal.portal_my_home"
+        name="Botones Validador de Firmas">
         <xpath expr="//div[hasclass('o_portal_my_home')]" position="inside">
             <div class="col-12 col-md-6 d-flex">
                 <div class="card flex-fill">
                     <div class="card-body text-center">
                         <h4 class="card-title">
-                            <i class="fa fa-certificate text-primary"></i>
-                            Validar Certificado
-                        </h4>
+                            <i class="fa fa-certificate text-primary"></i> Validar Certificado </h4>
                         <p class="card-text">Verifica la validez de tu certificado digital (.p12)</p>
                         <a href="/validar-certificado" class="btn btn-outline-primary">
-                            <i class="fa fa-check-circle"></i>
-                            Validar certificado
-                        </a>
+                            <i class="fa fa-check-circle"></i> Validar certificado </a>
                     </div>
                 </div>
             </div>
@@ -261,14 +316,10 @@
                 <div class="card flex-fill">
                     <div class="card-body text-center">
                         <h4 class="card-title">
-                            <i class="fa fa-file-pdf-o text-danger"></i>
-                            Verificar Firmas PDF
-                        </h4>
+                            <i class="fa fa-file-pdf-o text-danger"></i> Verificar Firmas PDF </h4>
                         <p class="card-text">Verifica las firmas digitales en documentos PDF</p>
                         <a href="/verificar-firmas-pdf" class="btn btn-outline-danger">
-                            <i class="fa fa-search"></i>
-                            Verificar firmas
-                        </a>
+                            <i class="fa fa-search"></i> Verificar firmas </a>
                     </div>
                 </div>
             </div>

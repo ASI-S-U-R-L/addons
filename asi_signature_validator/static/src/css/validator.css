@@ -419,6 +419,25 @@
   color: #383d41;
 }
 
+/* Badge para mostrar contador de firmas duplicadas */
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: #17a2b8;
+  color: white;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.count-badge i {
+  font-size: 10px;
+}
+
 /* Errores y advertencias en firmas */
 .signature-errors,
 .signature-warnings {

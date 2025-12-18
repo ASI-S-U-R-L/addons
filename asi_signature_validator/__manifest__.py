@@ -8,7 +8,7 @@
 {
     'name': 'ASI Validador de Firmas',
     'summary': 'Validar certificados P12 y verificar firmas digitales en PDFs desde el sitio web',
-    'version': '16.0.2.0.0',  # Incrementar versión
+    'version': '2.5.0',
     'category': 'Website',
     'author': 'F3nrir',
     'company': 'ASI S.U.R.L.',
@@ -17,6 +17,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/certificate_authority_views.xml',
+        'views/user_p12_report_views.xml',
         'data/website_menu.xml',
         'views/templates.xml',
     ],

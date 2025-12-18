@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de lista para usuarios con P12 -->
+    <record id="view_user_p12_report_tree" model="ir.ui.view">
+        <field name="name">asi.user.p12.report.tree</field>
+        <field name="model">res.users</field>
+        <field name="arch" type="xml">
+            <tree string="Usuarios con Certificados P12" create="false" edit="false" delete="false">
+                <field name="name" string="Nombre" />
+                <field name="login" string="Usuario" />
+                <field name="email" string="Email" />
+                <!-- Usar campos computados de texto que muestran SÍ/NO -->
+                <field name="has_p12_text" string="Tiene P12"
+                    decoration-success="certificado_firma"
+                    decoration-danger="not certificado_firma" />
+                <field name="has_password_text" string="Tiene Contraseña"
+                    decoration-success="contrasena_certificado"
+                    decoration-muted="not contrasena_certificado" />
+                <field name="has_signature_image_text" string="Tiene Imagen Firma"
+                    decoration-success="imagen_firma"
+                    decoration-muted="not imagen_firma" />
+                <field name="write_date" string="Última Modificación" />
+                <!-- Campos invisibles usados para decoraciones -->
+                <field name="certificado_firma" invisible="1" />
+                <field name="contrasena_certificado" invisible="1" />
+                <field name="imagen_firma" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Acción para mostrar el reporte -->
+    <record id="action_user_p12_report" model="ir.actions.act_window">
+        <field name="name">Usuarios con Certificados P12</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="view_user_p12_report_tree" />
+        <field name="domain">[('certificado_firma', '!=', False)]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay usuarios con certificados P12 configurados
+            </p>
+            <p>
+                Esta vista muestra todos los usuarios que tienen configurado su certificado P12
+                en sus preferencias de firma digital.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú en Ajustes -->
+    <menuitem
+        id="menu_user_p12_report"
+        name="Usuarios con Certificados P12"
+        parent="menu_signature_validator_config"
+        action="action_user_p12_report"
+        groups="base.group_system,base.group_erp_manager"
+        sequence="100" />
+</odoo>

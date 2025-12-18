@@ -99,8 +99,52 @@ function initCertificateValidation() {
   const certRequiredMark = document.getElementById("cert-required-mark")
   const passRequiredMark = document.getElementById("pass-required-mark")
 
+  const autoValidate = document.getElementById("auto-validate-trigger")
+  if (autoValidate && autoValidate.value === "true") {
+    console.log("Auto-validando certificado del perfil...")
+    setTimeout(() => {
+      autoValidateProfile()
+    }, 500)
+  }
+
   let selectedFile = null
   let dragCounter = 0
+
+  async function autoValidateProfile() {
+    try {
+      resultsContainer.style.display = "block"
+      resultsContainer.innerHTML = `
+        <div class="spinner-container">
+          <i class="fa fa-spinner fa-spin"></i>
+          <p class="mt-3">Validando tu certificado configurado...</p>
+        </div>
+      `
+
+      const formData = new FormData()
+      formData.append("use_profile", "true")
+
+      const response = await fetch("/validar-certificado/verificar", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      })
+
+      const result = await response.json()
+      displayCertificateResult(result)
+
+      // Mostrar mensaje informativo después de la auto-validación
+      showNotification(
+        "Se ha validado automáticamente tu certificado configurado. Puedes validar otro certificado si lo deseas.",
+        "info",
+      )
+    } catch (error) {
+      console.error("Error en auto-validación:", error)
+      resultsContainer.style.display = "none"
+      showNotification("No se pudo validar automáticamente tu certificado. Puedes validarlo manualmente.", "warning")
+    }
+  }
 
   if (useProfileCert) {
     useProfileCert.addEventListener("change", function () {
@@ -408,26 +452,24 @@ function initCertificateValidation() {
             <i class="fa ${chainIcon}"></i>
             <span>${escapeHtml(chainText)}</span>
           </div>
-          ${
-            chainValidation.trusted_ca
-              ? `
+          ${chainValidation.trusted_ca
+          ? `
             <div class="cert-info-row mt-2">
               <span class="cert-info-label">CA de Confianza:</span>
               <span class="cert-info-value">${escapeHtml(chainValidation.trusted_ca.name)}</span>
             </div>
-            ${
-              chainValidation.trusted_ca.organization
-                ? `
+            ${chainValidation.trusted_ca.organization
+            ? `
             <div class="cert-info-row">
               <span class="cert-info-label">Organización:</span>
               <span class="cert-info-value">${escapeHtml(chainValidation.trusted_ca.organization)}</span>
             </div>
             `
-                : ""
-            }
-          `
-              : ""
+            : ""
           }
+          `
+          : ""
+        }
         </div>
       `
     }
@@ -476,17 +518,25 @@ function initCertificateValidation() {
   function formatCertNameInfo(info) {
     const labels = {
       nombre: "Nombre",
+      common_name: "Nombre",
       organizacion: "Organización",
+      organization: "Organización",
       unidad_organizativa: "Unidad organizativa",
+      organizational_unit: "Unidad organizativa",
       pais: "País",
+      country: "País",
       provincia: "Provincia/Estado",
+      state: "Provincia/Estado",
       localidad: "Localidad",
+      locality: "Localidad",
       email: "Correo electrónico",
       numero_serie: "Número de serie",
+      serial_number: "Número de serie",
     }
 
     let html = ""
     for (const [key, value] of Object.entries(info)) {
+      if (!value) continue
       const label = labels[key] || key
       html += `
                 <div class="cert-info-row">
@@ -495,7 +545,7 @@ function initCertificateValidation() {
                 </div>
             `
     }
-    return html
+    return html || '<p class="text-muted">No hay información disponible</p>'
   }
 
   validateForm()
@@ -757,22 +807,29 @@ function initPdfVerification() {
         validityClass = "signature-unknown"
       }
 
+      let countBadge = ""
+      if (sig.count && sig.count > 1) {
+        countBadge = `<span class="count-badge"><i class="fa fa-clone"></i> x${sig.count}</span>`
+      }
+
       // Construir información de cadena de confianza
       let chainInfo = ""
-      if (sig.chain_valid === true && sig.trusted_ca) {
-        chainInfo = `
-          <div class="chain-info valid mt-2">
-            <i class="fa fa-shield text-success"></i>
-            <small>Verificado contra: ${escapeHtml(sig.trusted_ca.name)}</small>
-          </div>
-        `
-      } else if (sig.chain_valid === false) {
-        chainInfo = `
-          <div class="chain-info invalid mt-2">
-            <i class="fa fa-shield text-danger"></i>
-            <small>No verificado contra CA de confianza</small>
-          </div>
-        `
+      if (sig.chain_validation) {
+        if (sig.chain_validation.valid && sig.chain_validation.trusted_ca) {
+          chainInfo = `
+            <div class="chain-info valid mt-2">
+              <i class="fa fa-shield text-success"></i>
+              <small>Verificado contra: ${escapeHtml(sig.chain_validation.trusted_ca.name)}</small>
+            </div>
+          `
+        } else if (sig.chain_validation.verified && !sig.chain_validation.valid) {
+          chainInfo = `
+            <div class="chain-info invalid mt-2">
+              <i class="fa fa-shield text-danger"></i>
+              <small>No verificado contra CA de confianza</small>
+            </div>
+          `
+        }
       }
 
       // Construir lista de errores/advertencias
@@ -804,6 +861,7 @@ function initPdfVerification() {
                     <td>${index + 1}</td>
                     <td>
                         <strong>${escapeHtml(sig.signer || "Desconocido")}</strong>
+                        ${countBadge}
                         ${sig.signer_details?.organization ? `<br><small class="text-muted">${escapeHtml(sig.signer_details.organization)}</small>` : ""}
                         ${chainInfo}
                     </td>

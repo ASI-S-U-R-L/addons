@@ -12,7 +12,7 @@ import logging
 import re
 import tempfile
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from io import BytesIO
 from werkzeug.utils import secure_filename
 
@@ -929,33 +929,56 @@ class SignatureValidatorController(http.Controller):
 
     def _analyze_single_pdf(self, pdf_data, filename):
         """
-        Analiza las firmas digitales en un único PDF.
+        Analiza un único PDF y extrae información de sus firmas.
+        
+        Args:
+            pdf_data: Bytes del archivo PDF
+            filename: Nombre del archivo
+            
+        Returns:
+            dict: Diccionario con información de las firmas encontradas
         """
-        result = {
-            'filename': filename,
-            'has_signatures': False,
-            'signatures': [],
-            'total_signatures': 0
-        }
-        
-        if not HAS_ASN1CRYPTO:
-            result['error'] = 'El módulo asn1crypto no está instalado en el servidor.'
-            return result
-        
         try:
-            signatures = self._extract_pkcs7_signatures_from_pdf(pdf_data)
+            signatures_list = self._extract_pkcs7_signatures_from_pdf(pdf_data)
             
-            _logger.info(f"Se encontraron {len(signatures)} firma(s) en {filename}")
+            signatures_grouped = {}
+            for sig in signatures_list:
+                # Crear clave única basada en firmante, emisor y fechas de validez
+                # Asegurarse de que valid_from y valid_until existan y sean comparables
+                valid_from = sig.get('valid_from', 'unknown')
+                valid_until = sig.get('expiry_date', 'unknown') # Usamos 'expiry_date' como 'valid_until'
+                
+                sig_key = f"{sig.get('signer', 'unknown')}|{sig.get('issuer', 'unknown')}|{valid_from}|{valid_until}"
+                
+                if sig_key in signatures_grouped:
+                    signatures_grouped[sig_key]['count'] += 1
+                else:
+                    sig['count'] = 1
+                    signatures_grouped[sig_key] = sig
             
-            result['has_signatures'] = len(signatures) > 0
-            result['signatures'] = signatures
-            result['total_signatures'] = len(signatures)
+            # Convertir de nuevo a lista
+            unique_signatures = list(signatures_grouped.values())
             
+            _logger.info(f"Se encontraron {len(signatures_list)} firma(s) en {filename} ({len(unique_signatures)} única(s))")
+            
+            return {
+                'filename': filename,
+                'has_signatures': len(unique_signatures) > 0,
+                'total_signatures': len(signatures_list),
+                'unique_signatures': len(unique_signatures),
+                'signatures': unique_signatures,
+                'error': None
+            }
         except Exception as e:
             _logger.error(f"Error analizando PDF {filename}: {e}", exc_info=True)
-            result['error'] = f'Error al analizar el PDF: {str(e)}'
-        
-        return result
+            return {
+                'filename': filename,
+                'has_signatures': False,
+                'total_signatures': 0,
+                'unique_signatures': 0,
+                'signatures': [],
+                'error': str(e)
+            }
 
     def _extract_pkcs7_signatures_from_pdf(self, pdf_data):
         """
@@ -1143,10 +1166,14 @@ class SignatureValidatorController(http.Controller):
             'validation_errors': [],
             'validation_warnings': [],
             'chain_valid': None,
-            'trusted_ca': None
+            'trusted_ca': None,
+            'hash': None  # Añadido para agrupar duplicados
         }
         
         try:
+            import hashlib
+            sig_info['hash'] = hashlib.sha256(pkcs7_data).hexdigest()
+            
             # Extraer metadatos del diccionario PDF
             if pdf_chunk:
                 # Razón de la firma
@@ -1187,7 +1214,7 @@ class SignatureValidatorController(http.Controller):
                 
                 # Fecha /M
                 date_patterns = [
-                    (rb"/M\s*$$D:(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})[^$$]*\)", "estándar completo"),
+                    (rb"/M\s*$$D:(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})[^$$]*([+-Z])?(\d{2})?(\d{2})?$", "estándar completo"),
                     (rb"/M\s*$$D:(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})$$", "estándar sin segundos"),
                     (rb"/M\s*$$D:(\d{4})(\d{2})(\d{2})$$", "estándar solo fecha"),
                     (rb"/M\s*<([0-9a-fA-F]+)>", "hexadecimal"),
@@ -1216,9 +1243,26 @@ class SignatureValidatorController(http.Controller):
                             second = int(groups[5]) if len(groups) > 5 and groups[5] else 0
                             
                             sign_dt = datetime(year, month, day, hour, minute, second)
-                            sig_info['sign_date'] = sign_dt.strftime('%d/%m/%Y %H:%M:%S')
+                            
+                            # Manejar timezone offset
+                            tz_indicator = groups[6] if len(groups) > 6 else None
+                            tz_hour = int(groups[7]) if len(groups) > 7 and groups[7] else 0
+                            tz_minute = int(groups[8]) if len(groups) > 8 and groups[8] else 0
+
+                            if tz_indicator == '+':
+                                offset = timezone(timedelta(hours=tz_hour, minutes=tz_minute))
+                            elif tz_indicator == '-':
+                                offset = timezone(timedelta(hours=-tz_hour, minutes=-tz_minute))
+                            else: # 'Z' or no indicator implies UTC
+                                offset = timezone.utc
+                            
+                            if offset:
+                                sign_dt = sign_dt.replace(tzinfo=offset)
+                            
+                            sig_info['sign_date'] = sign_dt.astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
                             break
-                        except:
+                        except Exception as e:
+                            _logger.debug(f"Error parsing date pattern {pattern_name}: {e}")
                             continue
             
             # Parsear PKCS#7
@@ -1306,7 +1350,7 @@ class SignatureValidatorController(http.Controller):
             is_cert_valid = not_before <= now <= not_after
             
             sig_info['valid_from'] = not_before.strftime('%d/%m/%Y %H:%M:%S')
-            sig_info['expiry_date'] = not_after.strftime('%d/%m/%Y %H:%M:%S')
+            sig_info['expiry_date'] = not_after.strftime('%d/%m/%Y %H:%M:%S') # Corregido para que coincida con el uso en _analyze_single_pdf
             sig_info['expired'] = is_expired
             
             if HAS_CRYPTOGRAPHY:
@@ -1326,11 +1370,15 @@ class SignatureValidatorController(http.Controller):
                     
                     chain_result = self._verify_certificate_chain(x509_cert, x509_additional)
                     
-                    sig_info['chain_valid'] = chain_result.get('chain_valid', False)
-                    sig_info['chain_verified'] = chain_result.get('chain_verified', False)
-                    sig_info['trusted_ca'] = chain_result.get('trusted_ca')
+                    sig_info['chain_validation'] = {
+                        'verified': chain_result.get('chain_verified', False),
+                        'valid': chain_result.get('chain_valid', False),
+                        'trusted_ca': chain_result.get('trusted_ca'),
+                        'chain_path': chain_result.get('chain_path', [])
+                    }
                     sig_info['validation_errors'].extend(chain_result.get('validation_errors', []))
                     sig_info['validation_warnings'].extend(chain_result.get('validation_warnings', []))
+                    sig_info['debug_info'] = chain_result.get('debug_info', [])
                     
                 except Exception as e:
                     _logger.error(f"Error verificando cadena para firma PDF: {e}")
@@ -1352,7 +1400,7 @@ class SignatureValidatorController(http.Controller):
             # Determinar validez final de la firma
             has_cas = len(self._get_configured_cas()) > 0
             if has_cas:
-                chain_valid = sig_info.get('chain_valid', False)
+                chain_valid = sig_info.get('chain_validation', {}).get('valid', False)
                 # La firma es válida si el certificado es válido Y la cadena de confianza es válida
                 sig_info['valid'] = is_cert_valid and chain_valid
             else:
@@ -1372,7 +1420,7 @@ class SignatureValidatorController(http.Controller):
                                 if signing_time:
                                     if signing_time.tzinfo is None:
                                         signing_time = signing_time.replace(tzinfo=timezone.utc)
-                                    sig_info['sign_date'] = signing_time.strftime('%d/%m/%Y %H:%M:%S')
+                                    sig_info['sign_date'] = signing_time.astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
                             except:
                                 pass
                             break
@@ -1399,7 +1447,7 @@ class SignatureValidatorController(http.Controller):
                                         if gen_time:
                                             if gen_time.tzinfo is None:
                                                 gen_time = gen_time.replace(tzinfo=timezone.utc)
-                                            sig_info['sign_date'] = gen_time.strftime('%d/%m/%Y %H:%M:%S')
+                                            sig_info['sign_date'] = gen_time.astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
                                             sig_info['timestamp_authority'] = True
                             except:
                                 pass
