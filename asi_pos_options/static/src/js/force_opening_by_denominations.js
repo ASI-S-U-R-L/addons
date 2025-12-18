@@ -287,6 +287,13 @@ function wireCalculatorToOpeningPopupWithPersistence() {
     }
     calcPopup.dataset._wiredPersistent = "1";
 
+    // Agregar selección automática de contenido en inputs de denominaciones
+    const denominationInputs = calcPopup.querySelectorAll('.money-details-value input[type="number"]');
+    denominationInputs.forEach(input => {
+        input.addEventListener('focus', () => input.select());
+        input.addEventListener('click', () => input.select());
+    });
+
     console.log("[asi_pos_options] Cableando popup de calculadora de apertura");
 
     // Buscar el botón de confirmar en el popup de calculadora
