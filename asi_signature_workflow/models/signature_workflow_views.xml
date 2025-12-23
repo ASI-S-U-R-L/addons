@@ -62,7 +62,7 @@
                         attrs="{'invisible': [('destination_folder_id', '=', False)]}">
                         <group>
                             <field name="destination_folder_id" readonly="1" />
-                            <field name="destination_folder_path" readonly="1" />
+                            <field name="destination_folder_path" readonly="1" invisible="1" />
                         </group>
                         <group>
                             <field name="documents_moved" widget="boolean_toggle" readonly="1" />

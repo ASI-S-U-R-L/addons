@@ -18,6 +18,7 @@
         'security/ir.model.access.csv',
         'views/certificate_authority_views.xml',
         'views/user_p12_report_views.xml',
+        'data/ir_cron.xml',
         'data/website_menu.xml',
         'views/templates.xml',
     ],

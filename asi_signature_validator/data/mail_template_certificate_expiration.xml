@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Plantilla de correo para notificar expiración de certificados P12 -->
+        <record id="mail_template_certificate_expiration" model="mail.template">
+            <field name="name">Notificación de Expiración de Certificado P12</field>
+            <field name="model_id" ref="base.model_res_users" />
+            <field name="subject">⚠️ Su certificado de firma digital está por expirar</field>
+            <field name="email_from">${object.company_id.email or ''}</field>
+            <field name="email_to">${object.email}</field>
+            <field name="body_html" type="html">
+<![CDATA[
+<div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" style="padding-top: 16px; background-color: #F1F1F1; font-family: Arial, sans-serif; color: #454748; width: 100%; border-collapse: separate;">
+        <tr>
+            <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="padding: 16px; background-color: #FFFFFF; border: 1px solid #DDDDDD; border-radius: 8px;">
+                    <!-- Encabezado -->
+                    <tr>
+                        <td align="center" style="padding: 20px 0;">
+                            <h1 style="color: #E74C3C; margin: 0; font-size: 24px;">
+                                ⚠️ Certificado de Firma Digital por Expirar
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Contenido -->
+                    <tr>
+                        <td style="padding: 20px; font-size: 14px; line-height: 1.6;">
+                            <p style="margin: 0 0 15px;">Estimado/a <strong>${ctx.get('user_name', 'Usuario')}</strong>,</p>
+                            
+                            <p style="margin: 0 0 15px;">
+                                Le informamos que su certificado de firma digital (.p12) configurado en el sistema
+                                <strong style="color: #E74C3C;">
+                                    % if ctx.get('expires_today'):
+                                        expira hoy
+                                    % else:
+                                        expirará mañana
+                                    % endif
+                                </strong>.
+                            </p>
+                            
+                            <div style="background-color: #FFF3CD; border-left: 4px solid #FFC107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0; color: #856404;">
+                                    <strong>Fecha de expiración:</strong> ${ctx.get('expiration_date', 'No disponible')}<br/>
+                                    <strong>Días restantes:</strong> ${ctx.get('days_remaining', 0)} día(s)
+                                </p>
+                            </div>
+                            
+                            <p style="margin: 0 0 15px;">
+                                Para continuar firmando documentos digitalmente, deberá renovar su certificado
+                                lo antes posible y actualizar su configuración en el sistema.
+                            </p>
+                            
+                            <p style="margin: 0 0 15px;">
+                                <strong>¿Qué debe hacer?</strong>
+                            </p>
+                            <ul style="margin: 0 0 15px; padding-left: 20px;">
+                                <li>Contacte a su autoridad certificadora para renovar su certificado</li>
+                                <li>Una vez renovado, actualice su certificado en la configuración de su perfil</li>
+                                <li>Verifique que el nuevo certificado funciona correctamente</li>
+                            </ul>
+                            
+                            <p style="margin: 0 0 15px;">
+                                Si tiene alguna duda o necesita asistencia, no dude en contactar con el soporte técnico.
+                            </p>
+                            
+                            <p style="margin: 20px 0 0;">
+                                Atentamente,<br/>
+                                <strong>${object.company_id.name or 'Sistema de Firma Digital'}</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Pie de página -->
+                    <tr>
+                        <td style="padding: 20px; background-color: #F8F9FA; border-top: 1px solid #DDDDDD; text-align: center; font-size: 12px; color: #6C757D;">
+                            <p style="margin: 0;">
+                                Este es un mensaje automático. Por favor, no responda a este correo.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+]]>
+            </field>
+        </record>
+    </data>
+</odoo>

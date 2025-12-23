@@ -298,6 +298,8 @@ class SignatureWorkflow(models.Model):
             
             _logger.info(f"Documentos locales de la solicitud {self.id} subidos exitosamente a Alfresco ({uploaded_count}/{uploaded_count + failed_count})")
             
+            self._update_real_node_ids_from_alfresco(workflow_folder)
+            
         except Exception as e:
             _logger.error(f"Error subiendo documentos locales de la solicitud {self.id}: {e}")
             raise UserError(_('Error subiendo documentos a Alfresco: %s') % str(e))
@@ -508,6 +510,7 @@ class SignatureWorkflow(models.Model):
             _logger.info(f"Respuesta de Alfresco para {document.name}: Status {response.status_code}")
             
             if response.status_code in [201, 409]:
+                file_id = None
                 if response.status_code == 201:
                     try:
                         response_data = response.json()
@@ -517,25 +520,28 @@ class SignatureWorkflow(models.Model):
                             file_id = response_data['entry']['id']
                             _logger.info(f"ID real obtenido de respuesta: {file_id}")
                         else:
+                            # Generar ID ficticio si no se obtiene de la respuesta
                             file_id = f"workflow-{self.id}-{document.name.replace(' ', '_').replace('.', '_')}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                            _logger.warning(f"Respuesta vacía de Alfresco, usando ID ficticio: {file_id}")
-                    except:
+                            _logger.warning(f"Respuesta de Alfresco vacía o sin ID, usando ID ficticio: {file_id}")
+                    except json.JSONDecodeError:
+                        # Generar ID ficticio si la respuesta no es JSON
                         file_id = f"workflow-{self.id}-{document.name.replace(' ', '_').replace('.', '_')}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                        _logger.warning(f"Error parseando respuesta, usando ID ficticio: {file_id}")
-                else:
+                        _logger.warning(f"Error parseando respuesta de Alfresco a JSON, usando ID ficticio: {file_id}")
+                else: # response.status_code == 409
+                    # Generar ID ficticio si el archivo ya existe (409 Conflict)
                     file_id = f"existing-{self.id}-{document.name.replace(' ', '_').replace('.', '_')}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                    _logger.info(f"Archivo ya existe (409), usando ID ficticio: {file_id}")
+                    _logger.info(f"Archivo ya existe en Alfresco (409), usando ID ficticio: {file_id}")
                 
                 alfresco_file = self.env['alfresco.file'].create({
                     'name': document.name,
                     'folder_id': workflow_folder.id,
-                    'alfresco_node_id': file_id,
+                    'alfresco_node_id': file_id, # Este podría ser ficticio inicialmente
                     'mime_type': 'application/pdf',
                     'file_size': len(pdf_data),
                     'modified_at': fields.Datetime.now(),
                 })
                 
-                _logger.info(f"Documento {document.name} procesado exitosamente con ID: {file_id} (Status: {response.status_code})")
+                _logger.info(f"Documento {document.name} procesado con ID: {file_id} (Status: {response.status_code})")
                 return alfresco_file
                 
             else:
@@ -543,7 +549,7 @@ class SignatureWorkflow(models.Model):
                 try:
                     error_data = response.json()
                     _logger.error(f"Detalles del error: {error_data}")
-                except:
+                except json.JSONDecodeError:
                     _logger.error(f"No se pudo parsear respuesta de error como JSON")
                 return False
                 
@@ -552,6 +558,90 @@ class SignatureWorkflow(models.Model):
             import traceback
             _logger.error(f"Traceback: {traceback.format_exc()}")
             return False
+
+    def _update_real_node_ids_from_alfresco(self, workflow_folder):
+        """
+        Actualiza los node_ids ficticios de los archivos con los reales de Alfresco.
+        Busca cada archivo en la carpeta de Alfresco por nombre y actualiza el node_id.
+        """
+        self.ensure_one()
+        
+        if not workflow_folder:
+            _logger.error("No se puede actualizar node_ids sin carpeta de Alfresco")
+            return
+        
+        try:
+            config = self.env['ir.config_parameter'].sudo()
+            url = config.get_param('asi_alfresco_integration.alfresco_server_url')
+            user = config.get_param('asi_alfresco_integration.alfresco_username')
+            pwd = config.get_param('asi_alfresco_integration.alfresco_password')
+            
+            if not all([url, user, pwd]):
+                raise UserError(_('Configuración de Alfresco incompleta'))
+            
+            import requests
+            
+            # Obtener lista de archivos en la carpeta de Alfresco
+            list_url = f"{url}/alfresco/api/-default-/public/alfresco/versions/1/nodes/{workflow_folder.node_id}/children"
+            
+            _logger.info(f"Buscando archivos reales en carpeta {workflow_folder.node_id}")
+            
+            response = requests.get(
+                list_url,
+                auth=(user, pwd),
+                timeout=30
+            )
+            
+            if response.status_code != 200:
+                _logger.error(f"Error listando archivos de Alfresco: {response.status_code} - {response.text}")
+                raise UserError(_('Error consultando archivos de Alfresco'))
+            
+            response_data = response.json()
+            alfresco_files = {}
+            
+            # Crear un diccionario con nombre_archivo -> node_id
+            if 'list' in response_data and 'entries' in response_data['list']:
+                for entry in response_data['list']['entries']:
+                    if 'entry' in entry:
+                        file_entry = entry['entry']
+                        if file_entry.get('isFile', False):
+                            file_name = file_entry.get('name', '')
+                            file_node_id = file_entry.get('id', '')
+                            if file_name and file_node_id:
+                                alfresco_files[file_name] = file_node_id
+                                _logger.info(f"Archivo encontrado en Alfresco: {file_name} -> {file_node_id}")
+            
+            # Actualizar los node_ids de los archivos en Odoo
+            updated_count = 0
+            for doc in self.document_ids.filtered(lambda d: d.alfresco_file_id):
+                file_name = doc.name
+                current_node_id = doc.alfresco_file_id.alfresco_node_id
+                
+                # Verificar si el node_id actual es ficticio (contiene 'workflow-' o 'existing-')
+                is_fictitious = current_node_id and ('workflow-' in current_node_id or 'existing-' in current_node_id)
+                
+                if file_name in alfresco_files:
+                    real_node_id = alfresco_files[file_name]
+                    
+                    if is_fictitious or current_node_id != real_node_id:
+                        _logger.info(f"Actualizando node_id de {file_name}: {current_node_id} -> {real_node_id}")
+                        doc.alfresco_file_id.write({
+                            'alfresco_node_id': real_node_id
+                        })
+                        updated_count += 1
+                    else:
+                        _logger.info(f"Node_id de {file_name} ya es correcto: {current_node_id}")
+                else:
+                    _logger.warning(f"No se encontró archivo {file_name} en Alfresco para actualizar node_id")
+            
+            _logger.info(f"Actualización de node_ids completada: {updated_count} actualizados de {len(self.document_ids)} documentos")
+            
+        except Exception as e:
+            _logger.error(f"Error actualizando node_ids desde Alfresco: {e}")
+            import traceback
+            _logger.error(f"Traceback: {traceback.format_exc()}")
+            # No lanzamos UserError aquí para no bloquear el flujo si falla la actualización
+            # Los IDs ficticios se pueden corregir manualmente o en un reintento posterior
 
     def action_send_for_signature(self):
         """Envía la solicitud para firma - solo al primer destinatario (flujo secuencial)"""
@@ -985,17 +1075,7 @@ class SignatureWorkflow(models.Model):
             
             try:
                 # 5. Marcar TODOS los documentos como firmados
-                for doc in self.document_ids:
-                    update_vals = {
-                        'is_signed': True,
-                        'signed_date': fields.Datetime.now()
-                    }
-                    
-                    if doc.alfresco_file_id:
-                        update_vals['download_url'] = f'/alfresco/file/{doc.alfresco_file_id.id}/download'
-                    
-                    doc.write(update_vals)
-                    _logger.info(f"[SIGN] Documento {doc.name} marcado como firmado")
+                self._process_signed_documents()
                 
                 if self.destination_folder_id:
                     _logger.info(f"[SIGN] Iniciando movimiento de documentos a carpeta destino: {self.destination_folder_id.name}")
@@ -1008,6 +1088,7 @@ class SignatureWorkflow(models.Model):
                         'signed_date': fields.Datetime.now(),
                         'completed_date': fields.Datetime.now()
                     })
+                    self._send_completion_notification()
                 
                 _logger.info(f"[SIGN] Solicitud {self.id} procesada exitosamente")
                 
@@ -1074,6 +1155,15 @@ class SignatureWorkflow(models.Model):
         
         if not self.destination_folder_id:
             _logger.warning(f"[MOVE] No hay carpeta de destino configurada para la solicitud {self.id}")
+            # Marcar como completado si no hay carpeta destino
+            self.write({
+                'documents_moved': False,
+                'move_status': 'Carpeta de destino no configurada.',
+                'state': 'completed',
+                'signed_date': fields.Datetime.now(),
+                'completed_date': fields.Datetime.now()
+            })
+            self._send_completion_notification()
             return
         
         try:
@@ -1142,7 +1232,7 @@ class SignatureWorkflow(models.Model):
                             error_data = response.json()
                             if 'error' in error_data:
                                 error_msg = error_data['error'].get('briefSummary', error_msg)
-                        except:
+                        except json.JSONDecodeError:
                             pass
                         
                         _logger.error(f"[MOVE] Error moviendo {doc.name}: {error_msg}")
@@ -1170,6 +1260,8 @@ class SignatureWorkflow(models.Model):
             if failed_count > 0:
                 _logger.warning(f"[MOVE] Algunos documentos no se pudieron mover. Detalles: {move_status}")
             
+            self._send_completion_notification()
+            
         except Exception as e:
             _logger.error(f"[MOVE] Error general moviendo documentos de la solicitud {self.id}: {e}")
             import traceback
@@ -1183,6 +1275,8 @@ class SignatureWorkflow(models.Model):
                 'signed_date': fields.Datetime.now(),
                 'completed_date': fields.Datetime.now()
             })
+            self._send_completion_notification()
+
 
     def _send_partial_signature_notification(self, signed_recipient, pending_users):
         """Notifica al creador que un usuario ha firmado pero aún faltan otros"""
