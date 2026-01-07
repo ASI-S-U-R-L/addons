@@ -36,10 +36,10 @@
         </field>
     </record>
     <record id="action_pos_merchandise_report_wizard" model="ir.actions.act_window">
-    <field name="name">Reporte de Ventas por Mercancías</field>
-    <field name="res_model">pos.merchandise.report.wizard</field>
-    <field name="view_mode">form</field>
-    <field name="target">new</field>
+        <field name="name">Reporte de Ventas por Mercancías</field>
+        <field name="res_model">pos.merchandise.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
 
-</record>
+    </record>
 </odoo>

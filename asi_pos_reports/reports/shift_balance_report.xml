@@ -14,7 +14,7 @@
     <!-- Template principal del reporte PDF -->
     <template id="report_shift_balance_document">
         <t t-call="web.html_container">
-            <t t-call="web.external_layout">
+            <t t-call="asi_pos_reports.report_blank_layout">
                 <div class="page" style="font-size: 11pt;">
                     <t t-foreach="docs" t-as="doc">
                         <t t-set="shift_data" t-value="doc._get_shift_balance_data()" />
@@ -117,7 +117,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <strong>Otros ingresos:</strong>
+                                        <strong>Transferencias:</strong>
                                     </td>
                                     <td style="text-align: right;">
                                         <t t-esc="shift_data['other_income']"
@@ -293,207 +293,197 @@
                         <t t-set="shift_data" t-value="doc._get_shift_balance_data()" />
 
                         <div
-                            style="max-width: 300px; margin: 0 auto; font-family: 'Courier New', monospace; border: 2px dashed #ccc; padding: 20px; background-color: #f9f9f9;">
-                            <div style="font-weight: bold; margin-bottom: 5px; text-align: center;">Balance
-                                de turno</div>
-                            <br></br>
-                            <div style="text-align: left; font-size: 12px;">
-                                <div style="margin: 2px 0;">
+                            style="max-width: 200px; margin: 0 auto; font-family: 'Oswald', sans-serif; border: 2px dashed #ccc; padding: 10px; background-color: #f9f9f9; font-size: 10px; line-height: 1.3;">
+                            <style>
+                                @import
+                                url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&amp;display=swap');
+                            </style>
+
+                            <div
+                                style="text-align: center; font-size: 12px; font-weight: 600; margin-bottom: 5px;">
+                                BALANCE DE TURNO
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Fecha:</div>
+                                <div style="display: table-cell; text-align: right;">
                                     <t t-esc="shift_data['date']" />
                                 </div>
-                                <div style="margin: 2px 0;">Usuario: <t
-                                        t-esc="shift_data['user_name']" /></div>
-                                <div style="margin: 2px 0;">Sesión: <t
-                                        t-esc="shift_data['session_name']" /></div>
-                                <div style="margin: 5px 0;">============================</div>
-                                <!-- Sección actualizada con Empresa, POS (Entidad) y Teléfono con
-                                valores alineados a la derecha -->
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Empresa:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['empresa_name']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Dirección:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['company_address']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Teléfono:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['company_phone']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Desde:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['start_date']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Hasta:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['end_date']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Entidad:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['company_name']" />
-                                    </div>
-                                </div>
-                                <div style="margin: 5px 0;">============================</div>
                             </div>
-
-                            <!-- Balance -->
-                            <div style="font-size: 12px;">
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Inicio:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['opening_balance']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Efectivo:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['cash_amount']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Otros ingresos:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['other_income']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Gastos:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['expenses']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div
-                                    style="display: table; width: 100%; margin: 2px 0; font-weight: bold;">
-                                    <div style="display: table-cell;">Balance:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['balance']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Usuario:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="shift_data['user_name']" />
                                 </div>
                             </div>
-
-                            <div style="margin: 5px 0;">============================</div>
-
-                            <!-- Pagos -->
-                            <div style="font-size: 12px;">
-                                <div style="font-weight: bold; margin: 5px 0;">Pagos:</div>
-                                <t t-foreach="shift_data['payment_methods']" t-as="payment">
-                                    <div style="display: table; width: 100%; margin: 2px 0;">
-                                        <div style="display: table-cell;">
-                                            <t t-esc="payment['name']" />
-                                        </div>
-                                        <div style="display: table-cell; text-align: right;">
-                                            <t t-esc="payment['amount']"
-                                                t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                        </div>
-                                    </div>
-                                </t>
-                            </div>
-
-                            <div style="margin: 5px 0;">============================</div>
-
-                            <!-- Deudas, Servicio, Descuento, Devoluciones -->
-                            <div style="font-size: 12px;">
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Deudas:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['debts']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Servicio:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['service']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Descuento:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['discount']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Devoluciones:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['returns']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Sesion:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="shift_data['session_name']" />
                                 </div>
                             </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
 
-                            <div style="margin: 5px 0;">============================</div>
-
-                            <!-- Gastos -->
-                            <div style="font-size: 12px;">
-                                <div style="font-weight: bold; margin: 5px 0;">Gastos:</div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Retiro al cerrar:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['cash_amount']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Empresa:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="shift_data['empresa_name']" />
                                 </div>
                             </div>
-
-                            <div style="margin: 5px 0;">============================</div>
-
-                            <!-- Balance Final -->
-                            <div style="font-size: 12px;">
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Balance:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['balance']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Retiro:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['cash_amount']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Final:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['final_balance']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">Restante:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="shift_data['remaining']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Direccion:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="shift_data['company_address']" />
                                 </div>
                             </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Telefono:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="shift_data['company_phone']" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Desde:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="shift_data['start_date']" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Hasta:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="shift_data['end_date']" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Entidad:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="shift_data['company_name']" />
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
 
-                            <div style="margin: 5px 0;">============================</div>
-
-                            <!-- Total -->
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Inicio:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['opening_balance'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Efectivo:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['cash_amount'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Transferencias:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['other_income'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Gastos:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['expenses'])" />
+                                </div>
+                            </div>
                             <div
-                                style="text-align: center; font-weight: bold; font-size: 14px; margin: 10px 0;">
-                                TOTAL: <t t-esc="shift_data['total']"
-                                    t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
+                                style="display: table; width: 100%; margin: 2px 0; font-weight: 600;">
+                                <div style="display: table-cell;">Balance:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['balance'])" />
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div style="font-weight: 600; margin: 3px 0;">Pagos:</div>
+                            <t t-foreach="shift_data['payment_methods']" t-as="payment">
+                                <div style="display: table; width: 100%; margin: 2px 0;">
+                                    <div style="display: table-cell;">
+                                        <t t-esc="payment['name']" />
+                                    </div>
+                                    <div style="display: table-cell; text-align: right;"> $<t
+                                            t-esc="'{:,.2f}'.format(payment['amount'])" />
+                                    </div>
+                                </div>
+                            </t>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Deudas:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['debts'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Servicio:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['service'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Descuento:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['discount'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Devoluciones:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['returns'])" />
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div style="font-weight: 600; margin: 3px 0;">Gastos:</div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Retiro al cerrar:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['cash_amount'])" />
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Balance:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['balance'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Retiro:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['cash_amount'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Final:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['final_balance'])" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">Restante:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['remaining'])" />
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div
+                                style="display: table; width: 100%; margin: 5px 0; font-weight: 600; font-size: 12px;">
+                                <div style="display: table-cell;">TOTAL:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(shift_data['total'])" />
+                                </div>
                             </div>
                         </div>
                     </t>
@@ -501,6 +491,168 @@
             </t>
         </t>
     </template>
+
+    <!-- Template para ticket de impresora -->
+    <template id="report_shift_balance_ticket_document">
+        <t t-call="web.basic_layout">
+            <div
+                style="font-family: Arial, sans-serif; font-size: 10px; width: 190px; max-width: 190px; margin: 0; padding: 1px; line-height: 1.2;">
+                <!-- Encabezado -->
+                <div style="text-align: left; margin-bottom: 5px;">
+                    <strong style="font-size: 12px;">BALANCE DE TURNO</strong>
+                </div>
+
+                <!-- Información de la sesión -->
+                <t t-foreach="docs" t-as="doc">
+                    <t t-set="shift_data" t-value="doc._get_shift_balance_data()" />
+
+                    <div style="text-align: left;">
+                        <div style="margin: 1px 0;">FECHA: <t t-esc="shift_data['date']" /></div>
+                        <div style="margin: 1px 0;">USUARIO: <t t-esc="shift_data['user_name']" /></div>
+                        <div style="margin: 1px 0;">SESIÓN: <t t-esc="shift_data['session_name']" /></div>
+                        <div style="margin: 1px 0;">EMPRESA: <t t-esc="shift_data['empresa_name']" /></div>
+                        <div style="margin: 1px 0;">ENTIDAD: <t t-esc="shift_data['company_name']" /></div>
+                        <div style="margin: 1px 0;">DESDE: <t t-esc="shift_data['start_date']" /></div>
+                        <div style="margin: 1px 0;">HASTA: <t t-esc="shift_data['end_date']" /></div>
+                    </div>
+                </t>
+
+                <div style="margin: 3px 0;">--------------------------------</div>
+
+                <!-- Balance -->
+                <table style="width: 100%; border-collapse: collapse; margin: 1px 0;">
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Inicio</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['opening_balance'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Efectivo</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['cash_amount'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Transferencias</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['other_income'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Gastos</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['expenses'])" />
+                        </td>
+                    </tr>
+                    <tr style="font-weight: bold;">
+                        <td style="text-align: left; padding: 0;">Balance</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['balance'])" />
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin: 3px 0;">--------------------------------</div>
+
+                <!-- Pagos -->
+                <div style="font-weight: bold; margin: 3px 0;">PAGOS</div>
+                <t t-foreach="shift_data['payment_methods']" t-as="payment">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1px 0;">
+                        <tr>
+                            <td style="text-align: left; padding: 0;">
+                                <t t-esc="payment['name']" />
+                            </td>
+                            <td
+                                style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                                $<t t-esc="'{:,.2f}'.format(payment['amount'])" />
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+
+                <div style="margin: 3px 0;">--------------------------------</div>
+
+                <!-- Otros datos -->
+                <table style="width: 100%; border-collapse: collapse; margin: 1px 0;">
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Deudas</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['debts'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Servicio</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['service'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Descuento</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['discount'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Devoluciones</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['returns'])" />
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin: 3px 0;">--------------------------------</div>
+
+                <!-- Balance final -->
+                <table style="width: 100%; border-collapse: collapse; margin: 1px 0;">
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Balance</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['balance'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Retiro</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['cash_amount'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Final</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['final_balance'])" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 0;">Restante</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['remaining'])" />
+                        </td>
+                    </tr>
+                    <tr style="font-weight: bold;">
+                        <td style="text-align: left; padding: 0;">TOTAL</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(shift_data['total'])" />
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin: 3px 0;">--------------------------------</div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Reporte Ticket de Balance de Turno para impresora -->
+    <record id="action_report_shift_balance_ticket" model="ir.actions.report">
+        <field name="name">Ticket de Balance de Turno</field>
+        <field name="model">pos.session</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">asi_pos_reports.report_shift_balance_ticket_document</field>
+        <field name="report_file">asi_pos_reports.report_shift_balance_ticket_document</field>
+        <field name="binding_model_id" ref="point_of_sale.model_pos_session" />
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="asi_pos_reports.paperformat_thermal_ticket" />
+    </record>
 
     <!-- Reporte para previsualización de ticket -->
     <record id="action_report_shift_balance_ticket_preview" model="ir.actions.report">

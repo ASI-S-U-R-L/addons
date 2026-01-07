@@ -170,7 +170,7 @@
         <field name="binding_type">report</field>
     </record>
 
-    <!-- Template para previsualización de ticket -->
+    <!-- Template para previsualización de ticket con formato de tirilla térmica -->
     <template id="report_pos_coins_ticket_preview">
         <t t-call="web.html_container">
             <t t-call="asi_pos_reports.report_blank_layout">
@@ -179,98 +179,104 @@
                         <t t-set="data" t-value="doc._get_coins_data()" />
 
                         <div
-                            style="max-width: 300px; margin: 0 auto; font-family: 'Courier New', monospace; border: 2px dashed #ccc; padding: 20px; background-color: #f9f9f9;">
-                            <!-- Título centrado -->
-                            <div style="font-weight: bold; margin-bottom: 5px; text-align: center;">
-                                Monedas</div>
-                            <br></br>
+                            style="max-width: 200px; margin: 0 auto; font-family: 'Oswald', sans-serif; border: 2px dashed #ccc; padding: 10px; background-color: #f9f9f9; font-size: 10px; line-height: 1.3;">
+                            <style>
+                                @import
+                                url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&amp;display=swap');
+                            </style>
 
-                            <!-- Información de sesión alineada a la izquierda -->
-                            <div style="text-align: left; font-size: 12px;">
-                                <div style="margin: 2px 0;">
+                            <div
+                                style="text-align: center; font-size: 12px; font-weight: 600; margin-bottom: 5px;">
+                                MONEDAS
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Fecha:</div>
+                                <div style="display: table-cell; text-align: right;">
                                     <t t-esc="data['date']" />
                                 </div>
-                                <div style="margin: 2px 0;">Usuario: <t t-esc="data['user_name']" /></div>
-                                <div style="margin: 2px 0;">Sesión: <t t-esc="data['session_name']" /></div>
-                                <div style="margin: 5px 0;">============================</div>
-
-                                <!-- Información de empresa con valores alineados a la derecha -->
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Empresa:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['empresa_name']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Entidad:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['company_name']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Dirección:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['company_address']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Teléfono:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['company_phone']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Desde:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['start_date']" />
-                                    </div>
-                                </div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell; width: 40%;">Hasta:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['end_date']" />
-                                    </div>
-                                </div>
-                                <div style="margin: 5px 0;">============================</div>
                             </div>
-
-                            <!-- Simplificado: solo mostrar el importe de apertura -->
-                            <div style="font-size: 12px;">
-                                <div style="font-weight: bold; margin: 5px 0;">Inicial</div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">CUP Importe:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['opening_balance']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Usuario:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="data['user_name']" />
                                 </div>
                             </div>
-
-                            <div style="margin: 5px 0;">============================</div>
-
-                            <!-- Simplificado: solo mostrar el importe de retiro -->
-                            <div style="font-size: 12px;">
-                                <div style="font-weight: bold; margin: 5px 0;">Retiro</div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">CUP Importe:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['withdrawal']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Sesion:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="data['session_name']" />
                                 </div>
                             </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
 
-                            <div style="margin: 5px 0;">============================</div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Empresa:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="data['empresa_name']" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Entidad:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="data['company_name']" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Direccion:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="data['company_address']" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Telefono:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="data['company_phone']" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Desde:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="data['start_date']" />
+                                </div>
+                            </div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell; word-wrap: break-word;">Hasta:</div>
+                                <div style="display: table-cell; text-align: right;">
+                                    <t t-esc="data['end_date']" />
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
 
-                            <!-- Simplificado: solo mostrar el importe de apertura -->
-                            <div style="font-size: 12px;">
-                                <div style="font-weight: bold; margin: 5px 0;">Final</div>
-                                <div style="display: table; width: 100%; margin: 2px 0;">
-                                    <div style="display: table-cell;">CUP Importe:</div>
-                                    <div style="display: table-cell; text-align: right;">
-                                        <t t-esc="data['ending_cash']"
-                                            t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}" />
-                                    </div>
+                            <div style="font-weight: 600; margin: 3px 0;">Inicial</div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">CUP Importe:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(data['opening_balance'])" />
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div style="font-weight: 600; margin: 3px 0;">Retiro</div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">CUP Importe:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(data['withdrawal'])" />
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin: 3px 0;">
+                                ============================</div>
+
+                            <div style="font-weight: 600; margin: 3px 0;">Final</div>
+                            <div style="display: table; width: 100%; margin: 2px 0;">
+                                <div style="display: table-cell;">CUP Importe:</div>
+                                <div style="display: table-cell; text-align: right;"> $<t
+                                        t-esc="'{:,.2f}'.format(data['ending_cash'])" />
                                 </div>
                             </div>
                         </div>
@@ -291,63 +297,73 @@
         <field name="binding_type">report</field>
     </record>
 
-    <!-- Template para ticket de impresora -->
+    <!-- Template para ticket de impresora con formato mejorado -->
     <template id="report_pos_coins_ticket_document">
-        <t t-call="asi_pos_reports.report_ticket_thermal_layout">
-            <t t-foreach="docs" t-as="doc">
-                <div class="ticket-content" style="font-size:11px">
-                    <div class="ticket-center">
-                        <p class="ticket-line" style="font-size:12px">
-                            <strong>MONEDAS</strong>
-                        </p>
-                        <p class="ticket-line">============================</p>
-                    </div>
+        <t t-call="web.basic_layout">
+            <div
+                style="font-family: Arial, sans-serif; font-size: 10px; width: 190px; max-width: 190px; margin: 0; padding: 1px; line-height: 1.2;">
+                <!-- Encabezado -->
+                <div style="text-align: left; margin-bottom: 5px;">
+                    <strong style="font-size: 12px;">MONEDAS</strong>
+                </div>
 
-                    <div class="ticket-left">
-                        <p class="ticket-line">Fecha: <t t-esc="doc.start_at.strftime('%d/%m/%Y')" /></p>
-                        <p class="ticket-line">Usuario: <t t-esc="doc.user_id.name" /></p>
-                        <p class="ticket-line">Sesion: <t t-esc="doc.name" /></p>
-                        <p class="ticket-line">============================</p>
-                    </div>
-
+                <!-- Información de la sesión -->
+                <t t-foreach="docs" t-as="doc">
                     <t t-set="data" t-value="doc._get_coins_data()" />
 
-                    <div class="ticket-left">
-                        <p class="ticket-line">Empresa: <t t-esc="data['empresa_name']" /></p>
-                        <p class="ticket-line">Entidad: <t t-esc="data['company_name']" /></p>
-                        <p class="ticket-line">Desde: <t t-esc="data['start_date']" /></p>
-                        <p class="ticket-line">Hasta: <t t-esc="data['end_date']" /></p>
-                        <p class="ticket-line">============================</p>
+                    <div style="text-align: left;">
+                        <div style="margin: 1px 0;">FECHA: <t t-esc="data['date']" /></div>
+                        <div style="margin: 1px 0;">USUARIO: <t t-esc="data['user_name']" /></div>
+                        <div style="margin: 1px 0;">SESIÓN: <t t-esc="data['session_name']" /></div>
+                        <div style="margin: 1px 0;">EMPRESA: <t t-esc="data['empresa_name']" /></div>
+                        <div style="margin: 1px 0;">ENTIDAD: <t t-esc="data['company_name']" /></div>
+                        <div style="margin: 1px 0;">DESDE: <t t-esc="data['start_date']" /></div>
+                        <div style="margin: 1px 0;">HASTA: <t t-esc="data['end_date']" /></div>
                     </div>
+                </t>
 
-                    <div class="ticket-left">
-                        <p class="ticket-line">
-                            <strong>INICIAL</strong>
-                        </p>
-                        <p class="ticket-line">CUP Importe: $<t
-                                t-esc="'{0:.2f}'.format(data['opening_balance'])" /></p>
-                        <p class="ticket-line">============================</p>
-                    </div>
+                <div style="margin: 3px 0;">--------------------------------</div>
 
-                    <div class="ticket-left">
-                        <p class="ticket-line">
-                            <strong>RETIRO</strong>
-                        </p>
-                        <p class="ticket-line">CUP Importe: $<t
-                                t-esc="'{0:.2f}'.format(data['withdrawal'])" /></p>
-                        <p class="ticket-line">============================</p>
-                    </div>
+                <!-- Inicial -->
+                <div style="font-weight: bold; margin: 3px 0;">INICIAL</div>
+                <table style="width: 100%; border-collapse: collapse; margin: 1px 0;">
+                    <tr>
+                        <td style="text-align: left; padding: 0;">CUP Importe</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(data['opening_balance'])" />
+                        </td>
+                    </tr>
+                </table>
 
-                    <div class="ticket-left">
-                        <p class="ticket-line">
-                            <strong>FINAL</strong>
-                        </p>
-                        <p class="ticket-line">CUP Importe: $<t
-                                t-esc="'{0:.2f}'.format(data['ending_cash'])" /></p>
-                        <p class="ticket-line">============================</p>
-                    </div>
-                </div>
-            </t>
+                <div style="margin: 3px 0;">--------------------------------</div>
+
+                <!-- Retiro -->
+                <div style="font-weight: bold; margin: 3px 0;">RETIRO</div>
+                <table style="width: 100%; border-collapse: collapse; margin: 1px 0;">
+                    <tr>
+                        <td style="text-align: left; padding: 0;">CUP Importe</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(data['withdrawal'])" />
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin: 3px 0;">--------------------------------</div>
+
+                <!-- Final -->
+                <div style="font-weight: bold; margin: 3px 0;">FINAL</div>
+                <table style="width: 100%; border-collapse: collapse; margin: 1px 0;">
+                    <tr>
+                        <td style="text-align: left; padding: 0;">CUP Importe</td>
+                        <td style="text-align: right; white-space: nowrap; padding: 0; width: 70px;">
+                            $<t t-esc="'{:,.2f}'.format(data['ending_cash'])" />
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="margin: 3px 0;">--------------------------------</div>
+
+            </div>
         </t>
     </template>
 

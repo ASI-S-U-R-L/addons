@@ -49,26 +49,26 @@ class PosMerchandiseReportByDateWizard(models.TransientModel):
                 date_end = datetime.combine(wizard.report_date, datetime.max.time())
                 
                 # Buscar sesiones del POS en esa fecha
-                sessions = self.env['pos.session'].search([
+                filtered_sessions = self.env['pos.session'].search([
                     ('config_id', '=', wizard.pos_config_id.id),
                     ('start_at', '>=', date_start),
                     ('start_at', '<=', date_end),
                 ])
                 
-                wizard.available_session_ids = sessions
-                wizard.session_count = len(sessions)
+                wizard.available_session_ids = filtered_sessions
+                wizard.session_count = len(filtered_sessions)
                 
                 # Si solo hay una sesión, seleccionarla automáticamente
-                if len(sessions) == 1:
-                    wizard.session_id = sessions[0]
-                elif wizard.session_id and wizard.session_id not in sessions:
+                if len(filtered_sessions) == 1:
+                    wizard.session_id = filtered_sessions[0]
+                elif wizard.session_id and wizard.session_id not in filtered_sessions:
                     # Si la sesión seleccionada ya no está en las disponibles, limpiarla
                     wizard.session_id = False
             else:
                 wizard.available_session_ids = False
                 wizard.session_count = 0
                 wizard.session_id = False
-
+        
     @api.onchange('pos_config_id', 'report_date')
     def _onchange_filters(self):
         """Limpia la sesión seleccionada cuando cambian los filtros"""
@@ -98,29 +98,34 @@ class PosMerchandiseReportByDateWizard(models.TransientModel):
             raise UserError(_('Debe seleccionar una sesión POS'))
         
         # Generar la previsualización del ticket
-        return self.env.ref('asi_pos_reports.action_report_pos_merchandise_ticket_preview').report_action(
+        return self.env.ref('asi_pos_reports.action_report_pos_merchandise_ticket').report_action(
             self.session_id.ids
         )
     
     def action_print_ticket(self):
-        """Acción para imprimir ticket en impresora Epson"""
+        """Intenta impresión directa, falla a PDF"""
         self.ensure_one()
-        
+    
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
-        
-        report_data = self.session_id._prepare_merchandise_report_data()
-        self.session_id._try_print_to_epson_printer(report_data)
-        
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Impresión de Ticket'),
-                'message': _('Se ha enviado el ticket a la impresora Epson'),
-                'type': 'success',
+    
+        # Intentar impresión directa
+        success = self.session_id.print_ticket_direct('merchandise')  # o 'shift_balance', 'coins'
+    
+        if success:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Impresión exitosa'),
+                    'message': _('Ticket enviado a la impresora del POS'),
+                    'type': 'success',
+                }
             }
-        }
+        else:
+            # Fallback: abrir PDF para impresión manual
+            _logger.info("Fallback a PDF - No hay IoT configurado")
+            return self.env.ref('asi_pos_reports.action_report_pos_merchandise_ticket').report_action(self.session_id.ids)
 
     def action_generate_excel(self):
         """Generar reporte Excel"""

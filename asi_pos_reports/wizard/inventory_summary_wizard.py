@@ -234,26 +234,12 @@ class InventorySummaryWizard(models.TransientModel):
     def action_preview_ticket(self):
         """Previsualizar formato ticket"""
         self.ensure_one()
-        return self.env.ref('asi_pos_reports.action_report_inventory_ticket_preview').report_action([self.id])
-
+        return self.env.ref('asi_pos_reports.action_report_inventory_ticket').report_action([self.id])
+    
     def action_print_ticket(self):
-        """Imprimir ticket"""
+        """Descargar ticket en formato PDF para impresión manual"""
         self.ensure_one()
-        
-        data = self._get_inventory_data()
-        ticket_content = self._generate_ticket_content(data)
-        
-        _logger.info(f"Ticket de inventario generado:\n{ticket_content}")
-        
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Impresión de Ticket'),
-                'message': _('Se ha enviado el ticket de inventario a la impresora'),
-                'type': 'success',
-            }
-        }
+        return self.env.ref('asi_pos_reports.action_report_inventory_ticket').report_action([self.id])
 
     def _generate_ticket_content(self, data):
         """Generar contenido del ticket"""
