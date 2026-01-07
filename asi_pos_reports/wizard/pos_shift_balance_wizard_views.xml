@@ -10,10 +10,8 @@
                     <group>
                         <field name="pos_config_id"
                             options="{'no_create': True, 'no_open': True}"
-                            attrs="{'readonly': [('session_id', '!=', False)]}"
                             placeholder="Seleccione un punto de venta..." />
-                        <field name="report_date"
-                            attrs="{'readonly': [('session_id', '!=', False)]}" />
+                        <field name="report_date" />
                     </group>
                     <group>
                         <field name="session_count" invisible="1" />
@@ -21,7 +19,7 @@
                         <field name="session_id"
                             domain="[('id', 'in', available_session_ids)]"
                             options="{'no_create': True, 'no_open': True}"
-                            attrs="{'invisible': [('session_count', '=', 0)], 'required': [('session_count', '>', 0)], 'readonly': [('session_id', '!=', False)]}"
+                            attrs="{'invisible': [('session_count', '=', 0)], 'required': [('session_count', '>', 0)]}"
                             placeholder="Seleccione una sesión..." />
                         <div attrs="{'invisible': [('session_count', '!=', 0)]}" class="text-muted">
                             <p>No hay sesiones disponibles para el punto de venta y fecha
