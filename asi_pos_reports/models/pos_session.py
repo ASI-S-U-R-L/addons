@@ -105,6 +105,7 @@ class PosSession(models.Model):
         })
         return action
 
+
     def _generate_merchandise_report_on_close(self):
         """Genera el reporte de mercancías al cerrar la sesión"""
         self.ensure_one()
@@ -429,7 +430,7 @@ class PosSession(models.Model):
         company = self.company_id
         company_address = f"{company.street or ''} {company.street2 or ''}, {company.city or ''}, {company.state_id.name or ''} {company.zip or ''}".strip()
         company_phone = company.phone or ''
-        pos_name = self.config_id.name
+        pos_name = self.config_id.name  # Nombre del punto de venta
         
         return {
             'session_name': self.name,

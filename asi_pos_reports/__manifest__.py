@@ -29,9 +29,6 @@
         'wizard/pos_coins_report_wizard_views.xml',
         'views/pos_reports_menu.xml',
     ],
-    # 'qweb': [
-    #     'static/src/xml/pos_reports_templates.xml',
-    # ],
     'assets': {
         'point_of_sale.assets': [
             'asi_pos_reports/static/src/js/pos_session_close.js',

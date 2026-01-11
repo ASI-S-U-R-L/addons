@@ -44,16 +44,19 @@ class PosMerchandiseReportByDateWizard(models.TransientModel):
         """Calcula las sesiones disponibles según el POS y la fecha seleccionada"""
         for wizard in self:
             if wizard.pos_config_id and wizard.report_date:
-                # Convertir la fecha a datetime para el inicio y fin del día
-                date_start = datetime.combine(wizard.report_date, datetime.min.time())
-                date_end = datetime.combine(wizard.report_date, datetime.max.time())
-                
-                # Buscar sesiones del POS en esa fecha
-                filtered_sessions = self.env['pos.session'].search([
+                # Buscar todas las sesiones del POS
+                sessions = self.env['pos.session'].search([
                     ('config_id', '=', wizard.pos_config_id.id),
-                    ('start_at', '>=', date_start),
-                    ('start_at', '<=', date_end),
+                    ('start_at', '!=', False),
                 ])
+                
+                # Filtrar por fecha usando el contexto del usuario
+                filtered_sessions = self.env['pos.session']
+                for session in sessions:
+                    # Convertir start_at a la fecha local del usuario
+                    session_date = fields.Date.context_today(session, session.start_at)
+                    if session_date == wizard.report_date:
+                        filtered_sessions |= session
                 
                 wizard.available_session_ids = filtered_sessions
                 wizard.session_count = len(filtered_sessions)
@@ -68,7 +71,7 @@ class PosMerchandiseReportByDateWizard(models.TransientModel):
                 wizard.available_session_ids = False
                 wizard.session_count = 0
                 wizard.session_id = False
-        
+
     @api.onchange('pos_config_id', 'report_date')
     def _onchange_filters(self):
         """Limpia la sesión seleccionada cuando cambian los filtros"""

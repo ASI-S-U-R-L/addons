@@ -16,19 +16,19 @@ class PosShiftBalanceWizard(models.TransientModel):
     _description = 'Wizard para Balance de Turno'
 
     pos_config_id = fields.Many2one(
-        'pos.config', 
-        string='Punto de Venta', 
+        'pos.config',
+        string='Punto de Venta',
         required=True,
         help='Seleccione el punto de venta'
     )
     report_date = fields.Date(
-        string='Fecha', 
+        string='Fecha',
         required=True,
         default=fields.Date.context_today,
         help='Seleccione la fecha para filtrar las sesiones'
     )
     session_id = fields.Many2one(
-        'pos.session', 
+        'pos.session',
         string='Sesión POS',
         help='Seleccione la sesión del día'
     )
@@ -47,16 +47,22 @@ class PosShiftBalanceWizard(models.TransientModel):
         """Calcula las sesiones disponibles según el POS y la fecha seleccionada"""
         for wizard in self:
             if wizard.pos_config_id and wizard.report_date:
-                # Convertir la fecha a datetime para el inicio y fin del día
-                date_start = datetime.combine(wizard.report_date, datetime.min.time())
-                date_end = datetime.combine(wizard.report_date, datetime.max.time())
-                
-                # Buscar sesiones del POS en esa fecha
-                filtered_sessions = self.env['pos.session'].search([
+                # Buscar todas las sesiones del POS
+                sessions = self.env['pos.session'].search([
                     ('config_id', '=', wizard.pos_config_id.id),
-                    ('start_at', '>=', date_start),
-                    ('start_at', '<=', date_end),
+                    ('start_at', '!=', False),
                 ])
+                
+                # Filtrar por fecha usando el contexto del usuario
+                filtered_sessions = self.env['pos.session']
+                for session in sessions:
+                    # Convertir start_at a la fecha local del usuario
+                    session_date = fields.Date.context_today(session, session.start_at)
+                    if session_date == wizard.report_date:
+                        filtered_sessions |= session
+                
+                wizard.available_session_ids = filtered_sessions
+                wizard.session_count = len(filtered_sessions)
                 
                 # Si solo hay una sesión, seleccionarla automáticamente
                 if len(filtered_sessions) == 1:
@@ -102,7 +108,7 @@ class PosShiftBalanceWizard(models.TransientModel):
     def action_print_ticket(self):
         """Intenta impresión directa, falla a PDF"""
         self.ensure_one()
-    
+        
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
     

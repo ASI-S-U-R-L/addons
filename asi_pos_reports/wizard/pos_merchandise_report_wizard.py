@@ -22,7 +22,7 @@ class PosMerchandiseReportWizard(models.TransientModel):
     def action_print_report(self):
         """Acción para imprimir el reporte principal (ahora usa el mejorado)"""
         self.ensure_one()
-        
+
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
         
@@ -34,10 +34,10 @@ class PosMerchandiseReportWizard(models.TransientModel):
     def action_preview_ticket(self):
         """Acción para previsualizar el formato de ticket"""
         self.ensure_one()
-        
+
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión POS'))
-        
+
         # Generar la previsualización del ticket
         return self.env.ref('asi_pos_reports.action_report_pos_merchandise_ticket').report_action(
             self.session_id.ids

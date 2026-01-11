@@ -232,7 +232,7 @@ class PosCoinsReportWizard(models.TransientModel):
         if not self.session_id:
             raise UserError(_('Debe seleccionar una sesión.'))
         
-        return self.env.ref('asi_pos_reports.action_report_pos_coins_ticket').report_action(self.session_id.ids)
+        return self.env.ref('asi_pos_reports.action_report_pos_coins_ticket_preview').report_action(self.session_id.ids)
 
     def action_print_ticket(self):
         """Intenta impresión directa, falla a PDF"""
