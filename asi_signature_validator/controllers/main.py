@@ -1573,47 +1573,58 @@ class SignatureValidatorController(http.Controller):
     
     def _validate_pdf_signatures(self, pdf_data):
         """Valida las firmas digitales en un documento PDF."""
-        if not HAS_PYHANKO:
-            return self._validate_pdf_basic(pdf_data)
-        
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
-                tmp.write(pdf_data)
-                tmp_path = tmp.name
-            
-            try:
-                with open(tmp_path, 'rb') as f:
-                    reader = PdfFileReader(f)
-                    
-                    sig_fields = reader.embedded_signatures
-                    
-                    if not sig_fields:
-                        return {
-                            'success': True,
-                            'has_signatures': False,
-                            'message': 'El documento PDF no contiene firmas digitales.',
-                            'signatures': []
-                        }
-                    
-                    signatures = []
-                    
-                    for sig in sig_fields:
-                        sig_info = self._extract_signature_info_pyhanko(sig)
-                        signatures.append(sig_info)
-                    
-                    all_valid = all(s.get('valid', False) for s in signatures)
-                    
-                    return {
-                        'success': True,
-                        'has_signatures': True,
-                        'signature_count': len(signatures),
-                        'all_valid': all_valid,
-                        'signatures': signatures
-                    }
-                    
-            finally:
-                os.unlink(tmp_path)
-                
+            # SIEMPRE extraer firmas PKCS#7, independientemente de pyHanko
+            signatures = self._extract_pkcs7_signatures_from_pdf(pdf_data)
+        
+            if not signatures:
+                return {
+                    'success': True,
+                    'has_signatures': False,
+                    'message': 'El documento PDF no contiene firmas digitales.',
+                    'signatures': []
+                }
+
+            # Si pyHanko está disponible, enriquecer con validación adicional
+            if HAS_PYHANKO:
+                try:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+                        tmp.write(pdf_data)
+                        tmp_path = tmp.name
+
+                    try:
+                        with open(tmp_path, 'rb') as f:
+                            reader = PdfFileReader(f)
+                            sig_fields = reader.embedded_signatures
+
+                            # Enriquecer las firmas extraídas con validación de pyHanko
+                            for i, sig_field in enumerate(sig_fields):
+                                if i < len(signatures):
+                                    try:
+                                        pyhanko_info = self._extract_signature_info_pyhanko(sig_field)
+                                        # Combinar información de pyHanko con la ya extraída
+                                        signatures[i]['intact'] = pyhanko_info.get('intact')
+                                        signatures[i]['signature_valid'] = pyhanko_info.get('signature_valid')
+                                        if pyhanko_info.get('timestamp'):
+                                            signatures[i]['timestamp'] = pyhanko_info['timestamp']
+                                    except Exception as e:
+                                        _logger.debug(f"Error enriqueciendo firma {i} con pyHanko: {e}")
+                    finally:
+                        os.unlink(tmp_path)
+                except Exception as e:
+                    _logger.debug(f"Error usando pyHanko para validación adicional: {e}")
+
+            # Determinar si todas las firmas son válidas
+            all_valid = all(sig.get('valid', False) for sig in signatures)
+
+            return {
+                'success': True,
+                'has_signatures': True,
+                'signature_count': len(signatures),
+                'all_valid': all_valid,
+                'signatures': signatures
+            }
+
         except Exception as e:
             _logger.exception("Error validando PDF")
             return {
@@ -1738,6 +1749,7 @@ class SignatureValidatorController(http.Controller):
         
         return info
     
+    '''
     def _validate_pdf_basic(self, pdf_data):
         """Validación básica de PDF sin pyHanko."""
         try:
@@ -1768,3 +1780,4 @@ class SignatureValidatorController(http.Controller):
                 'error': f'Error analizando el PDF: {str(e)}',
                 'validation_errors': [f'No se pudo analizar el documento: {str(e)}']
             }
+        '''
