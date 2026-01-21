@@ -75,7 +75,7 @@
                 <field name="document_source" />
                 <field name="recipient_count" />
                 <field name="signature_opaque_background" widget="boolean_toggle" />
-                <field name="sign_all_pages" widget="boolean_toggle" />
+                <field name="sign_all_pages" widget="boolean_toggle" invisible="1" />
                 <field name="creator_id" />
                 <field name="active" widget="boolean_toggle" />
             </tree>

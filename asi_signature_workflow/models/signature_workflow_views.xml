@@ -165,8 +165,8 @@
                         <group>
                             <field name="signature_opaque_background" readonly="1" />
                         </group>
-                        <group>
-                            <field name="sign_all_pages" readonly="1" />
+                        <group invisible="1">
+                            <field name="sign_all_pages" readonly="1" invisible="1" />
                         </group>
                     </group>
 

@@ -78,8 +78,8 @@
                         <group>
                             <field name="signature_opaque_background" />
                         </group>
-                        <group>
-                            <field name="sign_all_pages" />
+                        <group invisible="1">
+                            <field name="sign_all_pages" invisible="1" />
                         </group>
                     </group>
 
@@ -97,28 +97,27 @@
                         </group>
                     </group>
 
-<!-- Subida rápida por arrastrar y soltar -->
-<group string="Subida rápida por arrastrar y soltar" col="1">
-  <div class="asi-dnd o_drag_drop_area">
-    <field name="temp_pdf_uploads"
-           widget="many2many_binary"
-           options="{'accept': 'application/pdf,.pdf', 'max_upload_size': 10485760}"/>
+                    <!-- Subida rápida por arrastrar y soltar -->
+                    <group string="Subida rápida por arrastrar y soltar" col="1">
+                        <div class="asi-dnd o_drag_drop_area">
+                            <field name="temp_pdf_uploads"
+                                widget="many2many_binary"
+                                options="{'accept': 'application/pdf,.pdf', 'max_upload_size': 10485760}" />
 
-    <div class="asi-dnd__help o_form_label text-muted">
-      Arrastra y suelta archivos PDF aquí o haz clic para seleccionar (máx. 10 MB por archivo).
-    </div>
+                            <div class="asi-dnd__help o_form_label text-muted">
+                                Arrastra y suelta archivos PDF aquí o haz clic para seleccionar
+                                (máx. 10 MB por archivo).
+                            </div>
 
-    <!-- Progreso (mostrar/ocultar por JS) -->
-    <div class="asi-dnd__progress" style="display:none;">
-      <div class="asi-progress">
-        <div class="asi-progress__bar" style="width:0%"></div>
-      </div>
-      <div class="asi-progress__text o_form_label text-muted">Subiendo…</div>
-    </div>
-  </div>
-</group>
-
-
+                            <!-- Progreso (mostrar/ocultar por JS) -->
+                            <div class="asi-dnd__progress" style="display:none;">
+                                <div class="asi-progress">
+                                    <div class="asi-progress__bar" style="width:0%"></div>
+                                </div>
+                                <div class="asi-progress__text o_form_label text-muted">Subiendo…</div>
+                            </div>
+                        </div>
+                    </group>
 
 
                     <!-- Lista de documentos seleccionados -->

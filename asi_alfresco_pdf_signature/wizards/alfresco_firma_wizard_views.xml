@@ -86,7 +86,7 @@
                             <field name="signature_opaque_background" />
                         </group>
                         <group>
-                            <field name="sign_all_pages" />
+                            <field name="sign_all_pages" invisible="1" />
                         </group>
                     </group>
 
