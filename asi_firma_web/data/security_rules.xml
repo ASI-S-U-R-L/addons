@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reglas de acceso para los nuevos modelos -->
+    <record id="access_documento_firma" model="ir.model.access">
+        <field name="name">documento.firma</field>
+        <field name="model_id" search="[('model', '=', 'documento.firma')]"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+
+    <record id="access_solicitud_firma" model="ir.model.access">
+        <field name="name">solicitud.firma</field>
+        <field name="model_id" search="[('model', '=', 'solicitud.firma')]"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+
+    <record id="access_solicitud_firma_rechazo_wizard" model="ir.model.access">
+        <field name="name">solicitud.firma.rechazo.wizard</field>
+        <field name="model_id" search="[('model', '=', 'solicitud.firma.rechazo.wizard')]"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>
+</odoo>

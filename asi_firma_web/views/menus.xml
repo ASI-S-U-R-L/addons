@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menu principal para Firma Web -->
+    <menuitem id="menu_firma_web_root" name="Firma Web" sequence="10" web_icon="asi_firma_web,static/description/icon.png"/>
+
+    <!-- Submenu para Solicitudes de Firma (usa el modelo signature.workflow de asi_signature_workflow) -->
+    <menuitem id="menu_solicitudes_firma" name="Mis Solicitudes" parent="menu_firma_web_root" action="action_signature_workflow" sequence="10"/>
+
+    <!-- Submenu para Bandeja de Entrada (enlace al sitio web) -->
+    <menuitem id="menu_bandeja_entrada" name="Bandeja de Entrada" parent="menu_firma_web_root" action="website.action_website" sequence="30" groups="base.group_user"/>
+</odoo>

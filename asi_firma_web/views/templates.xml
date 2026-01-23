@@ -1,205 +1,462 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <template id="firma_form_page" name="Firma de Documentos">
-    <t t-call="website.layout">
-      <t t-set="pageName" t-value="'firmar-documentos'"/>
-      <link rel="stylesheet" type="text/css" href="/asi_firma_web/static/src/css/drag_drop.css"/>
-      <script type="text/javascript" src="/asi_firma_web/static/src/js/drag_drop.js"></script>
-      <div id="wrap">
-        <div class="oe_structure">
-          <section class="oe_structure mt-5 mb-5">
-            <div class="container position-relative">
-              <!-- Contenedor para notificaciones - parte superior derecha del main -->
-              <div id="notification-container" class="position-absolute" style="top: 0; right: 15px; z-index: 1050;"></div>
-              <div style="padding-right: 320px;">
-                <h2 class="mb-3 text-center">Firmar documento/s</h2>
-                <t t-if="message">
-                  <div class="alert alert-info"><t t-esc="message"/></div>
-                </t>
-              </div>
-              <form t-att-action="url_for('/firmar-documentos/enviar')" method="post" enctype="multipart/form-data" class="o_website_form border shadow p-4">
-                <div class="row g-3">
-                  <div class="col-md-3">
-                    <label class="form-label">PDF(s) a firmar</label>
-                    <div class="asi-dnd" id="pdf-drop-zone">
-                      <div class="asi-dnd__content">
-                        <div class="asi-dnd__icon">
-                          <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+    <template id="asi_firma_web.solicitud_firma_portal_template" name="Solicitud de Firma Portal">
+        <t t-call="portal.portal_layout">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h1>Solicitud de Firma</h1>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Documento</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="solicitudes" t-as="solicitud">
+                                        <tr>
+                                            <td><t t-esc="solicitud.name"/></td>
+                                            <td><t t-esc="solicitud.state"/></td>
+                                            <td>
+                                                <a t-att-href="'/web#id=' + str(solicitud.id) + '&amp;view_type=form&amp;model=signature.workflow'"
+                                                   class="btn btn-info btn-sm">
+                                                    <i class="fa fa-eye"></i> Ver
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="asi-dnd__text">
-                          <![CDATA[<strong>Arrastra y suelta tus PDFs aquí</strong><br>
-                          <span class="text-muted">o haz clic para seleccionar archivos</span>]]>
-                        </div>
-                        <div class="asi-dnd__files-list" id="files-list"></div>
-                      </div>
-                      <div class="asi-dnd__progress" style="display: none;">
-                        <div class="asi-progress__bar"></div>
-                        <div class="asi-progress__text">Subiendo...</div>
-                      </div>
-                      <input type="file" name="pdfs" accept="application/pdf" multiple="multiple" class="d-none" required="required" id="pdf-input"/>
                     </div>
-                  </div>
-
-                  <div class="col-md-3">
-                    <div class="row g-3">
-                      <div class="col-12">
-                        <label class="form-label">Etiqueta / Rol de firma</label>
-                        <select name="signature_role" class="form-select" required="required">
-                            <option value="">-- Selecciona --</option>
-                            <t t-foreach="tags" t-as="tag">
-                              <option t-att-value="tag.id"><t t-esc="tag.name"/></option>
-                            </t>
-                        </select>
-                      </div>
-
-                      <t t-if="not user_has_certificado">
-                        <div class="col-12">
-                          <label class="form-label">Certificado (.p12) <span class="text-danger">*</span></label>
-                          <div class="input-group">
-                            <input type="file" id="certificate-input" name="certificate_wizard" accept=".p12,.pfx,application/x-pkcs12" class="d-none" required="required"/>
-                            <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('certificate-input').click()"><i class="fa fa-cloud-upload"></i></button>
-                            <span id="certificate-name" class="ms-2 align-self-center"></span>
-                          </div>
-                        </div>
-                      </t>
-                      <t t-if="user_has_certificado">
-                        <div class="col-12">
-                          <label class="form-label">Certificado</label>
-                          <div class="alert alert-info mb-2">
-                            <i class="fa fa-info-circle"></i>
-                            Se utilizará el certificado almacenado en tu perfil
-                          </div>
-                          <button type="button" class="btn btn-sm btn-outline-primary modify-certificate-btn">
-                            <i class="fa fa-edit"></i> Modificar certificado
-                          </button>
-                          <div class="certificate-input-group mt-2" style="display: none;">
-                            <div class="input-group">
-                              <input type="file" id="certificate-input" name="certificate_wizard" accept=".p12,.pfx,application/x-pkcs12" class="d-none"/>
-                              <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('certificate-input').click()"><i class="fa fa-cloud-upload"></i></button>
-                              <span id="certificate-name" class="ms-2 align-self-center"></span>
-                            </div>
-                          </div>
-                        </div>
-                      </t>
-
-                      <div class="col-12 form-check">
-                        <input class="form-check-input" type="checkbox" name="signature_opaque_background" id="opaque"/>
-                        <label class="form-check-label" for="opaque">Firma con fondo opaco</label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-3">
-                    <div class="row g-3">
-                      <div class="col-12">
-                        <label class="form-label">Posición de la firma</label>
-                        <select name="signature_position" class="form-select">
-                          <option value="izquierda">Izquierda</option>
-                          <option value="centro_izquierda">Centro-Izquierda</option>
-                          <option value="centro_derecha">Centro-Derecha</option>
-                          <option value="derecha" selected="selected">Derecha</option>
-                        </select>
-                      </div>
-
-                      <t t-if="not user_has_password">
-                        <div class="col-12">
-                          <label class="form-label">Contraseña del certificado <span class="text-danger">*</span></label>
-                          <input type="password" name="signature_password" class="form-control" required="required"/>
-                        </div>
-                      </t>
-                      <t t-if="user_has_password">
-                        <div class="col-12">
-                          <label class="form-label">Contraseña del certificado</label>
-                          <div class="alert alert-info mb-2">
-                            <i class="fa fa-info-circle"></i>
-                            Se utilizará la contraseña almacenada en tu perfil
-                          </div>
-                          <button type="button" class="btn btn-sm btn-outline-primary modify-password-btn">
-                            <i class="fa fa-edit"></i> Modificar contraseña
-                          </button>
-                          <div class="password-input-group mt-2" style="display: none;">
-                            <input type="password" name="signature_password" class="form-control"/>
-                          </div>
-                        </div>
-                      </t>
-
-                      <div class="col-12 form-check">
-                        <input class="form-check-input" type="checkbox" name="sign_all_pages" id="all_pages"/>
-                        <label class="form-check-label" for="all_pages">Firmar todas las páginas</label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-3">
-                    <t t-if="not user_has_imagen">
-                      <label class="form-label">Imagen de firma (PNG/JPG) <span class="text-danger">*</span></label>
-                      <div class="input-group">
-                        <input type="file" id="signature-image" name="wizard_signature_image" accept="image/*" class="d-none" required="required"/>
-                        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('signature-image').click()"><i class="fa fa-cloud-upload"></i></button>
-                        <span id="signature-name" class="ms-2 align-self-center"></span>
-                      </div>
-                      <img id="signature-preview" style="display:none; max-width:200px; margin-top:10px; border:1px solid #ddd; border-radius:4px;"/>
-                    </t>
-                    <t t-if="user_has_imagen">
-                      <label class="form-label">Imagen de firma</label>
-                      <div class="alert alert-info mb-2">
-                        <i class="fa fa-info-circle"></i>
-                        Se utilizará la imagen de firma almacenada en tu perfil
-                      </div>
-                      <button type="button" class="btn btn-sm btn-outline-primary modify-image-btn">
-                        <i class="fa fa-edit"></i> Modificar imagen
-                      </button>
-                      <div class="image-input-group mt-2" style="display: none;">
-                        <div class="input-group">
-                          <input type="file" id="signature-image" name="wizard_signature_image" accept="image/*" class="d-none"/>
-                          <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('signature-image').click()"><i class="fa fa-cloud-upload"></i></button>
-                          <span id="signature-name" class="ms-2 align-self-center"></span>
-                        </div>
-                        <img id="signature-preview" style="display:none; max-width:200px; margin-top:10px; border:1px solid #ddd; border-radius:4px;"/>
-                      </div>
-                    </t>
-                  </div>
                 </div>
-
-                <div class="row g-3 mt-3">
-                  <div class="col-12">
-                    <button type="submit" class="btn btn-primary w-100">Firmar</button>
-                  </div>
-                </div>
-              </form>
             </div>
-          </section>
-        </div>
-      </div>
-    </t>
-  </template>
+        </t>
+    </template>
+    
+    <template id="asi_firma_web.firma_form_page" name="Firma de Documentos">
+        <t t-call="website.layout">
+            <t t-set="pageName" t-value="'firmar-documentos'"/>
+            <link rel="stylesheet" type="text/css" href="/asi_firma_web/static/src/css/drag_drop.css"/>
+            <script type="text/javascript" src="/asi_firma_web/static/src/js/drag_drop.js"></script>
+            <div id="wrap">
+                <div class="oe_structure">
+                    <section class="oe_structure mt-5 mb-5">
+                        <div class="container">
+                            <h2 class="mb-3 text-center">Firmar documento/s</h2>
+                            <t t-if="message">
+                                <div class="alert alert-info"><t t-esc="message"/></div>
+                            </t>
+                            
+                            <t t-if="workflow_id">
+                                <div class="alert alert-success mb-3">
+                                    <i class="fa fa-info-circle"></i> Estas firmando un documento desde tu bandeja de entrada.
+                                    <t t-if="document_name">
+                                        <br/><strong>Documento:</strong> <t t-esc="document_name"/>
+                                    </t>
+                                    <t t-if="workflow">
+                                        <br/><strong>Solicitud:</strong> <t t-esc="workflow.name"/>
+                                    </t>
+                                    <t t-if="workflow_documents">
+                                        <br/><strong>Documentos:</strong>
+                                        <ul class="mb-0">
+                                            <t t-foreach="workflow_documents" t-as="d">
+                                                <li><t t-esc="d.name"/></li>
+                                            </t>
+                                        </ul>
+                                    </t>
+                                </div>
+                            </t>
+                            
+                            <form t-att-action="url_for('/firmar-documentos/enviar')" method="post" enctype="multipart/form-data" class="o_website_form border shadow p-4">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <t t-if="workflow_id">
+                                    <input type="hidden" name="workflow_id" t-att-value="workflow_id"/>
 
-  <!-- Botón en la página de inicio -->
-  <template id="homepage_button" inherit_id="website.homepage" name="Botón Firmar Documentos">
-    <xpath expr="//div[@id='wrap']" position="inside">
-      <section class="oe_structure mt-5 mb-5">
-        <div class="container text-center">
-          <a href="/firmar-documentos" class="btn btn-primary btn-lg">Firmar documentos</a>
-        </div>
-      </section>
-    </xpath>
-  </template>
 
-  <!-- Botón en la vista mi cuenta (my/home) -->
-  <template id="my_home_button" inherit_id="portal.portal_my_home" name="Botón Firmar Documentos Mi Cuenta">
-    <xpath expr="//div[hasclass('o_portal_my_home')]" position="inside">
-      <div class="col-12 col-md-6 d-flex">
-        <div class="card flex-fill">
-          <div class="card-body text-center">
-            <h4 class="card-title">Firma de Documentos</h4>
-            <p class="card-text">Firma tus documentos PDF de forma rápida y segura</p>
-            <a href="/firmar-documentos" class="btn btn-primary">
-              <i class="fa fa-file-pdf-o"></i>
-              Firmar documentos
-            </a>
-          </div>
-        </div>
-      </div>
-    </xpath>
-  </template>
+                                </t>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <t t-if="workflow_id and document_data">
+                                            <!-- Documento precargado del workflow -->
+                                            <label class="form-label">Documento a firmar</label>
+                                            <div class="alert alert-secondary">
+                                                <i class="fa fa-file-pdf-o"></i> <t t-esc="document_name"/>
+
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <!-- Selector de archivos para nuevos documentos -->
+                                            <label class="form-label">PDF(s) a firmar</label>
+                                            <div class="asi-dnd" id="pdf-drop-zone">
+                                                <div class="asi-dnd__content">
+                                                    <div class="asi-dnd__icon">
+                                                        <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+                                                    </div>
+                                                    <div class="asi-dnd__text">
+                                                        <![CDATA[<strong>Arrastra y suelta tus PDFs aqui</strong><br>
+                                                        <span class="text-muted">o haz clic para seleccionar archivos</span>]]>
+                                                    </div>
+                                                    <div class="asi-dnd__files-list" id="files-list"></div>
+                                                </div>
+                                                <div class="asi-dnd__progress" style="display: none;">
+                                                    <div class="asi-progress__bar"></div>
+                                                    <div class="asi-progress__text">Subiendo...</div>
+                                                </div>
+                                                <input type="file" name="pdfs" accept="application/pdf" multiple="multiple" class="d-none" required="required" id="pdf-input"/>
+                                            </div>
+                                        </t>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <label class="form-label">Etiqueta / Rol de firma</label>
+                                                <select name="signature_role" class="form-select" required="required" t-att-disabled="workflow_id and 'disabled' or None">
+                                                    <option value="">-- Selecciona --</option>
+                                                    <t t-foreach="tags" t-as="tag">
+                                                        <option t-att-value="tag.id" t-att-selected="signature_role_id == tag.id"><t t-esc="tag.name"/></option>
+                                                    </t>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <label class="form-label">Certificado (.p12)</label>
+                                                <t t-if="user_has_certificado">
+                                                    <div class="alert alert-success py-2">
+                                                        <i class="fa fa-check-circle"></i> Certificado guardado en tu perfil
+                                                        <input type="hidden" name="use_profile_cert" value="true"/>
+                                                    </div>
+                                                </t>
+                                                <t t-else="">
+                                                    <div class="input-group">
+                                                        <input type="file" id="certificate-input" name="certificate_wizard" accept=".p12,.pfx,application/x-pkcs12" class="d-none"/>
+                                                        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('certificate-input').click()"><i class="fa fa-cloud-upload"></i></button>
+                                                        <span id="certificate-name" class="ms-2 align-self-center"></span>
+                                                    </div>
+                                                </t>
+                                            </div>
+
+                                            <div class="col-12 form-check">
+                                                <input class="form-check-input" type="checkbox" name="signature_opaque_background" id="opaque" t-att-checked="signature_opaque_background" t-att-disabled="workflow_id and 'disabled' or None"/>
+                                                <label class="form-check-label" for="opaque">Firma con fondo opaco</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <label class="form-label">Posicion de la firma</label>
+                                                <select name="signature_position" class="form-select" t-att-disabled="workflow_id and 'disabled' or None">
+                                                    <option value="izquierda" t-att-selected="signature_position == 'izquierda'">Izquierda</option>
+                                                    <option value="centro_izquierda" t-att-selected="signature_position == 'centro_izquierda'">Centro-Izquierda</option>
+                                                    <option value="centro_derecha" t-att-selected="signature_position == 'centro_derecha'">Centro-Derecha</option>
+                                                    <option value="derecha" t-att-selected="signature_position == 'derecha'">Derecha</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <label class="form-label">Contrasena del certificado</label>
+                                                <t t-if="user_has_password">
+                                                    <input type="password" name="signature_password" class="form-control" placeholder="Contrasena guardada"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <input type="password" name="signature_password" class="form-control"/>
+                                                </t>
+                                            </div>
+
+                                            <div class="col-12 form-check">
+                                                <input class="form-check-input" type="checkbox" name="sign_all_pages" id="all_pages" t-att-checked="sign_all_pages" t-att-disabled="workflow_id and 'disabled' or None"/>
+                                                <label class="form-check-label" for="all_pages">Firmar todas las paginas</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label">Imagen de firma (PNG/JPG)</label>
+                                        <t t-if="user_has_imagen">
+                                            <div class="alert alert-success py-2">
+                                                <i class="fa fa-check-circle"></i> Imagen guardada en tu perfil
+                                                <input type="hidden" name="use_profile_image" value="true"/>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="input-group">
+                                                <input type="file" id="signature-image" name="wizard_signature_image" accept="image/*" class="d-none"/>
+                                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('signature-image').click()"><i class="fa fa-cloud-upload"></i></button>
+                                                <span id="signature-name" class="ms-2 align-self-center"></span>
+                                            </div>
+                                        </t>
+                                        <img id="signature-preview" style="display:none; max-width:200px; margin-top:10px; border:1px solid #ddd; border-radius:4px;"/>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mt-3">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary w-100">Firmar</button>
+                                    </div>
+                                </div>
+
+                                <!-- Preview de PDF con firma -->
+                                <div class="row g-3 mt-3" id="pdf-preview-container" style="display: none;">
+                                    <div class="col-12">
+                                        <h5>Previsualizacion del documento con firma</h5>
+                                        <div id="pdf-preview" style="position: relative; border: 1px solid #ddd; height: 600px; background: #f8f9fa; overflow: hidden;">
+                                            <iframe id="pdf-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
+                                            <div id="signature-overlay" style="position: absolute; pointer-events: none;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </t>
+    </template>
+    
+    <!-- Template para la bandeja de entrada con diseno split view -->
+    <template id="asi_firma_web.bandeja_entrada_page" name="Bandeja de Entrada">
+        <t t-call="website.layout">
+            <t t-set="pageName" t-value="'bandeja-entrada'"/>
+            <link rel="stylesheet" type="text/css" href="/asi_firma_web/static/src/css/bandeja_split.css"/>
+            <script type="text/javascript" src="/asi_firma_web/static/src/js/bandeja_split.js"></script>
+            
+            <div id="wrap">
+                <div class="oe_structure">
+                    <section class="mt-4 mb-4">
+                        <div class="container-fluid px-4">
+                            <input type="hidden" id="asi_csrf_token" t-att-value="request.csrf_token()"/>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <!-- <h2 class="mb-0">
+                                    <i class="fa fa-inbox text-primary"></i> Bandeja de Entrada
+                                </h2> -->
+                                <t t-if="message">
+                                    <div class="alert alert-info mb-0 py-2">
+                                        <i class="fa fa-info-circle"></i> <t t-esc="message"/>
+                                    </div>
+                                </t>
+                            </div>
+                            
+                            <!-- Diseno Split View: Pantalla dividida -->
+                            <div class="bandeja-split-view">
+                                <!-- Panel Izquierdo: Lista de documentos -->
+                                <div class="split-panel-left">
+                                    <div class="split-panel-header bg-primary text-white">
+                                        <h5 class="mb-0 py-2 px-3">
+                                            <i class="fa fa-list me-2"></i>Documentos Pendientes
+                                            <span class="badge bg-white text-primary ms-2" t-if="solicitudes_pendientes">
+                                                <t t-esc="len(solicitudes_pendientes)"/>
+                                            </span>
+                                        </h5>
+                                    </div>
+                                    <div class="split-panel-content">
+                                        <t t-if="solicitudes_pendientes">
+                                            <div class="list-group list-group-flush">
+                                                <t t-foreach="solicitudes_pendientes" t-as="solicitud">
+                                                            <div class="workflow-item" t-att-data-id="solicitud['workflow'].id">
+                                                                <label class="workflow-select-checkbox d-flex w-100 justify-content-between align-items-start p-3 border-bottom cursor-pointer">
+                                                                    <input type="checkbox" name="workflow_select" t-att-value="solicitud['workflow'].id" class="workflow-checkbox me-3 mt-1"/>
+                                                                    <div class="flex-grow-1">
+                                                                        <h6 class="mb-1 text-truncate">
+                                                                            <i class="fa fa-file-pdf-o text-danger me-2"></i>
+                                                                            <t t-esc="solicitud['workflow'].name"/>
+                                                                        </h6>
+                                                                        <small class="text-muted d-block">
+                                                                            <i class="fa fa-user me-1"></i>
+                                                                            <t t-if="solicitud['workflow'].creator_id">
+                                                                                De: <t t-esc="solicitud['workflow'].creator_id.name"/>
+                                                                            </t>
+                                                                        </small>
+                                                                        <small class="text-muted d-block mt-1">
+                                                                            <i class="fa fa-calendar me-1"></i>
+                                                                            <t t-esc="solicitud['workflow'].create_date"/>
+                                                                        </small>
+                                                                    </div>
+                                                                    <!-- <div class="ms-2">
+                                                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                                                    </div> -->
+                                                                </label>
+                                                            </div>
+                                                        </t>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="p-4 text-center text-muted">
+                                                <i class="fa fa-check-circle fa-3x text-success"></i>
+                                                <p class="mt-3 mb-0">No tienes documentos pendientes</p>
+                                                <small>Todos tus documentos han sido procesados</small>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    
+                                    <!-- Seccion de solicitudes creadas -->
+                                    <t t-if="solicitudes_creadas">
+                                        <div class="split-panel-section">
+                                            <div class="split-panel-header bg-info text-white">
+                                                <h6 class="mb-0 py-2 px-3">
+                                                    <i class="fa fa-folder-open me-2"></i>Mis Solicitudes Enviadas
+                                                </h6>
+                                            </div>
+                                            <div class="split-panel-content-small">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Documento</th>
+                                                                <th>Estado</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <t t-foreach="solicitudes_creadas" t-as="solicitud">
+                                                                <tr>
+                                                                    <td>
+                                                                        <small class="text-truncate d-block" style="max-width: 150px;">
+                                                                            <t t-esc="solicitud['workflow'].name"/>
+                                                                        </small>
+                                                                    </td>
+                                                                    <td>
+                                                                        <t t-if="solicitud['workflow'].state == 'draft'">
+                                                                            <span class="badge bg-secondary">Borrador</span>
+                                                                        </t>
+                                                                        <t t-elif="solicitud['workflow'].state == 'sent'">
+                                                                            <span class="badge bg-info">Enviado</span>
+                                                                        </t>
+                                                                        <t t-elif="solicitud['workflow'].state == 'done'">
+                                                                            <span class="badge bg-success">Completado</span>
+                                                                        </t>
+                                                                        <t t-elif="solicitud['workflow'].state == 'cancel'">
+                                                                            <span class="badge bg-danger">Cancelado</span>
+                                                                        </t>
+                                                                        <t t-else="">
+                                                                            <span class="badge bg-secondary"><t t-esc="solicitud['workflow'].state"/></span>
+                                                                        </t>
+                                                                    </td>
+                                                                </tr>
+                                                            </t>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                                
+                                <!-- Panel Derecho: Formulario de firma -->
+                                <div class="split-panel-right">
+                                    <div class="split-panel-header bg-success text-white">
+                                        <h5 class="mb-0 py-2 px-3">
+                                            <i class="fa fa-pencil-square-o me-2"></i>Formulario de Firma
+                                        </h5>
+                                    </div>
+                                    <div class="split-panel-body">
+                                        <t t-if="workflow_id">
+                                                <!-- Botones de accion -->
+                                                <div class="row mt-4">
+                                                    <div class="col-6">
+                                                        <button type="submit" class="btn btn-success btn-lg w-100" id="btn-firmar" disabled="disabled">
+                                                            <i class="fa fa-pencil me-2"></i>Firmar Documento
+                                                        </button>
+                                                        <div class="text-muted small mt-1 text-center" id="btn-hint">
+                                                            Complete todos los campos marcados con *
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <a t-att-href="'/bandeja-entrada/rechazar/' + str(workflow_id)"
+                                                           class="btn btn-danger btn-lg w-100"
+>
+                                                            <i class="fa fa-times me-2"></i>Rechazar
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Preview del documento -->
+                                                <div class="row mt-4" t-if="document_data">
+                                                    <div class="col-12">
+                                                        <div class="card">
+                                                            <div class="card-header bg-light">
+                                                                <h6 class="mb-0">
+                                                                    <i class="fa fa-eye me-2"></i>Vista Previa del Documento
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body p-0">
+                                                                <iframe t-att-src="'data:application/pdf;base64,' + document_data" style="width:100%; height:500px; border: none;"></iframe>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                        </t>
+                                        <t t-else="">
+                                            <!-- Estado vacio - Sin documento seleccionado -->
+                                            <div class="text-center py-5 text-muted">
+                                                <div class="mb-4">
+                                                    <i class="fa fa-hand-o-left fa-4x text-primary"></i>
+                                                </div>
+                                                <h4>Selecciona documentos</h4>
+                                                <p class="lead">Marca los documentos que deseas firmar de la lista de la izquierda.</p>
+                                                <hr/>
+                                                <div class="row mt-4 text-start">
+                                                    <div class="col-md-6">
+                                                        <h6><i class="fa fa-check-circle text-success me-2"></i>Documentos Pendientes</h6>
+                                                        <p class="small text-muted">Los documentos que requieren tu firma apareceran aqui.</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6><i class="fa fa-certificate text-info me-2"></i>Certificado Digital</h6>
+                                                        <p class="small text-muted">Asegurate de tener tu certificado .p12 y contrasena listos.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="workflow_reject_page" name="Rechazar Solicitud de Firma">
+        <t t-call="website.layout">
+            <t t-set="pageName" t-value="'rechazar-solicitud'"/>
+            <div id="wrap">
+                <div class="oe_structure">
+                    <section class="oe_structure mt-5 mb-5">
+                        <div class="container" style="max-width: 700px;">
+                            <h2 class="mb-3">Rechazar solicitud</h2>
+                            <t t-if="message">
+                                <div class="alert alert-info"><t t-esc="message"/></div>
+                            </t>
+                            <div class="alert alert-warning">
+                                <i class="fa fa-exclamation-triangle me-2"></i>
+                                Estas a punto de rechazar: <strong><t t-esc="workflow.name"/></strong>
+                            </div>
+                            <form t-att-action="'/bandeja-entrada/rechazar/' + str(workflow_id)" method="post" class="o_website_form border shadow p-4">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="mb-3">
+                                    <label class="form-label">Motivo del rechazo</label>
+                                    <textarea name="reason" class="form-control" rows="5" required="required" placeholder="Describe el motivo..."></textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fa fa-times me-2"></i> Rechazar
+                                    </button>
+                                    <a href="/bandeja-entrada" class="btn btn-secondary">
+                                        <i class="fa fa-arrow-left me-2"></i> Cancelar
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </t>
+    </template>
+
 </odoo>

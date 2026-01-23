@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Acción de servidor para vencer documentos -->
+    <record id="action_vencer_documentos" model="ir.actions.server">
+        <field name="name">Vencer Documentos de Firma</field>
+        <field name="model_id" search="[('model', '=', 'documento.firma')]"/>
+        <field name="binding_model_id" search="[('model', '=', 'documento.firma')]"/>
+        <field name="state">code</field>
+        <field name="code">action = records.action_vencer_documentos()</field>
+    </record>
+
+    <!-- Acción de servidor para vencer solicitudes -->
+    <record id="action_vencer_solicitudes" model="ir.actions.server">
+        <field name="name">Vencer Solicitudes de Firma</field>
+        <field name="model_id" search="[('model', '=', 'solicitud.firma')]"/>
+        <field name="binding_model_id" search="[('model', '=', 'solicitud.firma')]"/>
+        <field name="state">code</field>
+        <field name="code">action = records.action_vencer_solicitudes()</field>
+    </record>
+</odoo>

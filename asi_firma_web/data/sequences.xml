@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Secuencia para documentos de firma -->
+    <record id="sequence_documento_firma" model="ir.sequence">
+        <field name="name">Documento de Firma</field>
+        <field name="code">documento.firma</field>
+        <field name="prefix">DOC-%(year)s%(month)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Secuencia para solicitudes de firma -->
+    <record id="sequence_solicitud_firma" model="ir.sequence">
+        <field name="name">Solicitud de Firma</field>
+        <field name="code">solicitud.firma</field>
+        <field name="prefix">SOL-%(year)s%(month)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

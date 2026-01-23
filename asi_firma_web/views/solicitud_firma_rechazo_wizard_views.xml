@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de formulario para el wizard de rechazo de solicitud -->
+    <record id="view_solicitud_firma_rechazo_wizard_form" model="ir.ui.view">
+        <field name="name">solicitud.firma.rechazo.wizard.form</field>
+        <field name="model">solicitud.firma.rechazo.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Rechazar Solicitud de Firma">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header bg-danger text-white">
+                                    <h4 class="card-title mb-0">
+                                        <i class="fa fa-times-circle"></i>
+                                        Rechazar Solicitud de Firma
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted">
+                                        Está a punto de rechazar la solicitud de firma para el documento:
+                                        <strong><field name="solicitud_id" readonly="1" class="d-block mt-2"/></strong>
+                                    </p>
+
+                                    <div class="form-group">
+                                        <label for="motivo_rechazo" class="form-label">
+                                            Motivo de Rechazo <span class="text-danger">*</span>
+                                        </label>
+                                        <field name="motivo_rechazo" placeholder="Por favor indique el motivo del rechazo..." class="form-control" required="1"/>
+                                        <small class="form-text text-muted">
+                                            Este motivo será visible para el solicitante del documento.
+                                        </small>
+                                    </div>
+
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="fa fa-exclamation-triangle"></i>
+                                        <strong>Advertencia:</strong> Una vez rechazada la solicitud, no podrá ser firmada posteriormente.
+                                    </div>
+                                </div>
+                                <div class="card-footer text-end">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fa fa-times"></i> Cancelar
+                                    </button>
+                                    <button name="action_rechazar" string="Rechazar Solicitud" type="object" class="btn btn-danger ms-2">
+                                        <i class="fa fa-times-circle"></i> Rechazar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de búsqueda para documentos de firma -->
+    <record id="view_documento_firma_search" model="ir.ui.view">
+        <field name="name">documento.firma.search</field>
+        <field name="model">documento.firma</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Documentos de Firma">
+                <field name="name"/>
+                <field name="solicitante_id"/>
+                <field name="state"/>
+                <field name="fecha_vencimiento"/>
+                <filter string="Mis Documentos" name="my_documents" domain="[('solicitante_id', '=', uid)]"/>
+                <filter string="Pendientes" name="pending" domain="[('state', '=', 'pendiente')]"/>
+                <filter string="Firmados" name="signed" domain="[('state', '=', 'firmado')]"/>
+                <filter string="Rechazados" name="rejected" domain="[('state', '=', 'rechazado')]"/>
+                <filter string="Vencidos" name="expired" domain="[('state', '=', 'vencido')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Solicitante" name="group_solicitante" context="{'group_by': 'solicitante_id'}"/>
+                    <filter string="Fecha de Creación" name="group_create_date" context="{'group_by': 'create_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Vista de lista para documentos de firma -->
+    <record id="view_documento_firma_tree" model="ir.ui.view">
+        <field name="name">documento.firma.tree</field>
+        <field name="model">documento.firma</field>
+        <field name="arch" type="xml">
+            <tree string="Documentos de Firma" decoration-muted="state == 'borrador'" decoration-success="state == 'firmado'" decoration-warning="state == 'pendiente'" decoration-danger="state in ('rechazado', 'vencido')">
+                <field name="name"/>
+                <field name="solicitante_id"/>
+                <field name="state"/>
+                <field name="total_firmas"/>
+                <field name="porcentaje_firmas" widget="progressbar"/>
+                <field name="fecha_vencimiento"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de formulario para documentos de firma -->
+    <record id="view_documento_firma_form" model="ir.ui.view">
+        <field name="name">documento.firma.form</field>
+        <field name="model">documento.firma</field>
+        <field name="arch" type="xml">
+            <form string="Documento de Firma">
+                <header>
+                    <button name="action_enviar_firma" string="Enviar para Firma" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'borrador')]}"/>
+                    <button name="action_firmar_documento" string="Firmar Documento" type="object" class="btn-success" attrs="{'invisible': [('state', '!=', 'pendiente')]}"/>
+                    <button name="action_rechazar_documento" string="Rechazar" type="object" class="btn-danger" attrs="{'invisible': [('state', '!=', 'pendiente')]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="borrador,pendiente,firmado"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nombre del documento"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="solicitante_id" readonly="1"/>
+                            <field name="fecha_vencimiento"/>
+                            <field name="motivo"/>
+                        </group>
+                        <group>
+                            <field name="state" readonly="1"/>
+                            <field name="total_firmas" readonly="1"/>
+                            <field name="porcentaje_firmas" widget="progressbar" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Documento">
+                            <group>
+                                <field name="document_file" filename="document_filename" widget="binary"/>
+                                <field name="document_filename" invisible="1"/>
+                            </group>
+                        </page>
+                        <page string="Firmantes">
+                            <field name="firmante_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Configuración de Firma">
+                            <group>
+                                <group>
+                                    <field name="signature_position"/>
+                                    <field name="signature_role"/>
+                                    <field name="sign_all_pages"/>
+                                </group>
+                                <group>
+                                    <field name="signature_opaque_background"/>
+                                    <field name="certificate_wizard_name" readonly="1"/>
+                                    <field name="wizard_signature_image" widget="image" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Solicitudes de Firma">
+                            <field name="solicitud_firma_ids" readonly="1">
+                                <tree string="Solicitudes de Firma">
+                                    <field name="firmante_id"/>
+                                    <field name="estado"/>
+                                    <field name="fecha_solicitud"/>
+                                    <field name="fecha_respuesta"/>
+                                    <field name="motivo_rechazo"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Documento Firmado" attrs="{'invisible': [('state', '!=', 'firmado')]}">
+                            <group>
+                                <field name="documentos_firmados" filename="documentos_firmados_filename" widget="binary"/>
+                                <field name="documentos_firmados_filename"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista Kanban para documentos de firma -->
+    <record id="view_documento_firma_kanban" model="ir.ui.view">
+        <field name="name">documento.firma.kanban</field>
+        <field name="model">documento.firma</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="solicitante_id"/>
+                <field name="total_firmas"/>
+                <field name="porcentaje_firmas"/>
+                <field name="fecha_vencimiento"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <span><t t-esc="record.name.value"/></span>
+                                    </strong>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <div class="o_kanban_record_bottom">
+                                        <div class="oe_kanban_bottom_left">
+                                            <span class="o_kanban_record_subtitle">
+                                                <i class="fa fa-user"/> <t t-esc="record.solicitante_id.value"/>
+                                            </span>
+                                        </div>
+                                        <div class="oe_kanban_bottom_right">
+                                            <span t-attf-class="badge bg-{{record.state.raw_value == 'firmado' and 'success' or record.state.raw_value == 'pendiente' and 'warning' or record.state.raw_value == 'rechazado' and 'danger' or 'secondary'}}">
+                                                <t t-esc="record.state.value"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar" t-attf-style="width: {{record.porcentaje_firmas.value}}%">
+                                            <t t-esc="record.porcentaje_firmas.value"/>%
+                                        </div>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        <i class="fa fa-users"/> <t t-esc="record.total_firmas.value"/> firmantes
+                                        <t t-if="record.fecha_vencimiento.value">
+                                            <br/>
+                                            <i class="fa fa-calendar"/> Vence: <t t-esc="record.fecha_vencimiento.value"/>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Acción de ventana para documentos de firma -->
+    <record id="action_documento_firma" model="ir.actions.act_window">
+        <field name="name">Documentos de Firma</field>
+        <field name="res_model">documento.firma</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="context">{'search_default_my_documents': 1}</field>
+        <field name="help">Aquí puedes gestionar todos los documentos que requieren firma digital.</field>
+    </record>
+</odoo>

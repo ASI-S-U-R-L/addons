@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
-        <record id="menu_firmar_documentos" model="website.menu">
-            <field name="name">Firmar documento/s</field>
-            <field name="url">/firmar-documentos</field>
-            <field name="website_id" ref="website.default_website"/>
-            <field name="parent_id" ref="website.main_menu"/>
-            <field name="sequence" eval="4"/>
-        </record>
-    </data>
+    <!-- Menú para la bandeja de entrada -->
+    <record id="website_menu_bandeja_entrada" model="website.menu">
+        <field name="name">Bandeja de Entrada</field>
+        <field name="url">/bandeja-entrada</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">10</field>
+    </record>
+    
+    <!-- Menú para firmar documentos -->
+    <record id="website_menu_firmar_documentos" model="website.menu">
+        <field name="name">Firmar Documentos</field>
+        <field name="url">/firmar-documentos</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">20</field>
+    </record>
 </odoo>

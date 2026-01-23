@@ -557,6 +557,12 @@ document.addEventListener('DOMContentLoaded', function () {
     async function saveToProfile() {
         try {
             const formData = new FormData();
+
+            // CSRF token (website)
+            const csrf = document.querySelector('input[name="csrf_token"]')?.value;
+            if (csrf) {
+                formData.append('csrf_token', csrf);
+            }
             
             // Agregar archivos si existen
             const certificateInput = document.getElementById('certificate-input');
