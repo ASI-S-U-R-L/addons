@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="persona_anisleydis_1" model="versat.persona">
+            <field name="persona_id">5e51c015-37e8-49e2-9eea-62e8a87bcfe2</field>
+            <field name="nombre_completo">Anisleydis Mayo Tellez</field>
+        </record>
+        <record id="persona_anisleydis_2" model="versat.persona">
+            <field name="persona_id">ce88e62c-4363-47ba-b45c-5da267a95d10</field>
+            <field name="nombre_completo">Anisleydis Mayo Tellez (2)</field>
+        </record>
+        <record id="persona_dallani" model="versat.persona">
+            <field name="persona_id">393a8bea-1b9d-487d-ba75-b5761c886681</field>
+            <field name="nombre_completo">Dallani Pupo Hernandez</field>
+        </record>
+        <record id="persona_dayli" model="versat.persona">
+            <field name="persona_id">7b3c4fa6-a1d5-4017-8637-78e6b41a970b</field>
+            <field name="nombre_completo">Dayli Cera Tamayo</field>
+        </record>
+        <record id="persona_dayneri" model="versat.persona">
+            <field name="persona_id">0e81d721-cacb-4c50-8770-b2e9d66f8367</field>
+            <field name="nombre_completo">Dayneri Idelisa Corps Aguero</field>
+        </record>
+        <record id="persona_jenny" model="versat.persona">
+            <field name="persona_id">0b839ca0-1d7a-4bdf-9885-9177e74e489a</field>
+            <field name="nombre_completo">Jenny Romero Lastre</field>
+        </record>
+        <record id="persona_liliana" model="versat.persona">
+            <field name="persona_id">c5d77268-49e3-4fde-939f-87e67cabb700</field>
+            <field name="nombre_completo">Liliana Maria Creagh Olivares</field>
+        </record>
+        <record id="persona_miriam" model="versat.persona">
+            <field name="persona_id">5afe3197-4c62-4aee-92b4-6faebb5e6b83</field>
+            <field name="nombre_completo">Miriam Hernandez Ramos</field>
+        </record>
+    </data>
+</odoo>

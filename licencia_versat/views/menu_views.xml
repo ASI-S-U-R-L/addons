@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menú raíz -->
+    <menuitem id="menu_licencia_versat_root"
+              name="Licencias Versat"
+              sequence="80"
+              web_icon="licencia_versat,static/description/icon.png"/>
+
+    <!-- Solicitudes -->
+    <menuitem id="menu_licencia_versat_solicitudes"
+              name="Solicitudes"
+              parent="menu_licencia_versat_root"
+              sequence="10"/>
+
+    <menuitem id="menu_licencia_versat_solicitud_nueva"
+              name="Nueva Solicitud"
+              parent="menu_licencia_versat_solicitudes"
+              action="action_versat_solicitud"
+              sequence="10"/>
+
+    <!-- Configuración -->
+    <menuitem id="menu_licencia_versat_config"
+              name="Configuración"
+              parent="menu_licencia_versat_root"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_licencia_versat_convenios"
+              name="Convenios"
+              parent="menu_licencia_versat_config"
+              action="action_versat_convenio"
+              sequence="10"/>
+
+    <menuitem id="menu_licencia_versat_servicios"
+              name="Servicios"
+              parent="menu_licencia_versat_config"
+              action="action_versat_servicio"
+              sequence="20"/>
+
+    <menuitem id="menu_licencia_versat_personas"
+              name="Personas Solicitantes"
+              parent="menu_licencia_versat_config"
+              action="action_versat_persona"
+              sequence="30"/>
+
+    <menuitem id="menu_licencia_versat_sync"
+              name="🔄 Sincronizar Convenios"
+              parent="menu_licencia_versat_config"
+              action="action_sync_convenios_wizard"
+              sequence="40"/>
+
+    <menuitem id="menu_licencia_versat_api_config"
+              name="Configuración API"
+              parent="menu_licencia_versat_config"
+              action="action_versat_config"
+              sequence="50"/>
+</odoo>

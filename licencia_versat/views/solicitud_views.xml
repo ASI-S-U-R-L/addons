@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sequence -->
+    <record id="seq_versat_solicitud" model="ir.sequence">
+        <field name="name">Solicitud Licencia Versat</field>
+        <field name="code">versat.solicitud</field>
+        <field name="prefix">SOL/%(year)s/</field>
+        <field name="padding">4</field>
+    </record>
+
+    <!-- Form view -->
+    <record id="versat_solicitud_view_form" model="ir.ui.view">
+        <field name="name">versat.solicitud.form</field>
+        <field name="model">versat.solicitud</field>
+        <field name="arch" type="xml">
+            <form string="Solicitud de Licencia">
+                <header>
+                    <button name="action_enviar"
+                            string="Enviar Solicitud"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', 'in', ['enviado'])]}"/>
+                    <button name="action_restablecer_borrador"
+                            string="Restablecer a Borrador"
+                            type="object"
+                            attrs="{'invisible': [('state', '=', 'borrador')]}"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="borrador,parcial,enviado"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Información General">
+                            <field name="tipo" widget="radio"/>
+                            <field name="fecha"/>
+                            <field name="no_solicitud"/>
+                            <field name="persona_id"/>
+                            <field name="problema_reg_anterior"/>
+                        </group>
+                        <group string="Cliente y Convenio">
+                            <field name="convenio_id"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                            <field name="usuario_final_nombre" readonly="1" string="Usuario Final"
+                                   attrs="{'invisible': [('usuario_final_nombre', '=', False)]}"/>
+                            <field name="cliente_final_id_ext" readonly="1" invisible="1"/>
+                            <field name="usuario_final_id_ext" readonly="1" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Líneas de servicios -->
+                    <notebook>
+                        <page string="Servicios" name="servicios">
+                            <field name="linea_ids" nolabel="1">
+                                <tree editable="bottom"
+                                      decoration-success="state == 'enviado'"
+                                      decoration-danger="state == 'error' or solicitud_pendiente == True"
+                                      decoration-warning="solicitud_pendiente == True and state == 'pendiente'"
+                                      decoration-muted="state == 'pendiente' and solicitud_pendiente == False">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="servicio_id"
+                                           options="{'no_create': True, 'no_open': True}"
+                                           readonly="1"/>
+                                    <field name="clave_registro"/>
+                                    <field name="solicitud_pendiente" readonly="1" string="⚠ Pendiente"/>
+                                    <field name="solicitud_pendiente_no" readonly="1" string="Nº Sol. Existente"
+                                           optional="show"/>
+                                    <field name="state" readonly="1"/>
+                                    <field name="respuesta_api" readonly="1" optional="show"/>
+                                </tree>
+                            </field>
+                            <group class="mt8">
+                                <field name="total_lineas" readonly="1"/>
+                                <field name="lineas_enviadas" readonly="1"/>
+                                <field name="lineas_error" readonly="1"
+                                       attrs="{'invisible': [('lineas_error', '=', 0)]}"/>
+                            </group>
+                        </page>
+                        <page string="Observaciones" name="observaciones">
+                            <field name="observaciones" nolabel="1"
+                                   placeholder="Observaciones adicionales..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- List view -->
+    <record id="versat_solicitud_view_list" model="ir.ui.view">
+        <field name="name">versat.solicitud.list</field>
+        <field name="model">versat.solicitud</field>
+        <field name="arch" type="xml">
+            <tree string="Solicitudes de Licencia"
+                  decoration-success="state == 'enviado'"
+                  decoration-danger="state == 'error'"
+                  decoration-warning="state == 'parcial'"
+                  decoration-muted="state == 'borrador'">
+                <field name="name"/>
+                <field name="fecha"/>
+                <field name="persona_id"/>
+                <field name="convenio_id"/>
+                <field name="total_lineas"/>
+                <field name="lineas_enviadas"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Search view -->
+    <record id="versat_solicitud_view_search" model="ir.ui.view">
+        <field name="name">versat.solicitud.search</field>
+        <field name="model">versat.solicitud</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Solicitudes">
+                <field name="name"/>
+                <field name="persona_id"/>
+                <field name="convenio_id"/>
+                <filter string="Borrador" name="borrador" domain="[('state', '=', 'borrador')]"/>
+                <filter string="Enviadas" name="enviadas" domain="[('state', '=', 'enviado')]"/>
+                <filter string="Parcial" name="parcial" domain="[('state', '=', 'parcial')]"/>
+                <filter string="Error" name="error" domain="[('state', '=', 'error')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Persona" name="group_persona" context="{'group_by': 'persona_id'}"/>
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_versat_solicitud" model="ir.actions.act_window">
+        <field name="name">Solicitudes de Licencia</field>
+        <field name="res_model">versat.solicitud</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Servicio views -->
+    <record id="versat_servicio_view_list" model="ir.ui.view">
+        <field name="name">versat.servicio.list</field>
+        <field name="model">versat.servicio</field>
+        <field name="arch" type="xml">
+            <tree string="Servicios" editable="bottom">
+                <field name="descripcion"/>
+                <field name="servicio_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_versat_servicio" model="ir.actions.act_window">
+        <field name="name">Servicios</field>
+        <field name="res_model">versat.servicio</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <!-- Persona views -->
+    <record id="versat_persona_view_list" model="ir.ui.view">
+        <field name="name">versat.persona.list</field>
+        <field name="model">versat.persona</field>
+        <field name="arch" type="xml">
+            <tree string="Personas" editable="bottom">
+                <field name="nombre_completo"/>
+                <field name="persona_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_versat_persona" model="ir.actions.act_window">
+        <field name="name">Personas Solicitantes</field>
+        <field name="res_model">versat.persona</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <!-- Sync action -->
+    <record id="action_sync_convenios_wizard" model="ir.actions.server">
+        <field name="name">🔄 Sincronizar Convenios</field>
+        <field name="model_id" ref="model_versat_solicitud"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_sync_convenios()</field>
+    </record>
+</odoo>

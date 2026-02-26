@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="versat_convenio_view_list" model="ir.ui.view">
+        <field name="name">versat.convenio.list</field>
+        <field name="model">versat.convenio</field>
+        <field name="arch" type="xml">
+            <tree string="Convenios">
+                <field name="nombre"/>
+                <field name="cliente_convenio"/>
+                <field name="ultimo_pago_licencia"/>
+                <field name="ultimo_pago_activacion"/>
+                <field name="ultima_solicitud"/>
+                <field name="usuario_final_nombre"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="versat_convenio_view_form" model="ir.ui.view">
+        <field name="name">versat.convenio.form</field>
+        <field name="model">versat.convenio</field>
+        <field name="arch" type="xml">
+            <form string="Convenio">
+                <header>
+                    <button name="action_cargar_usuario_final" string="Cargar Usuario Final"
+                            type="object" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="nombre" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Datos del Convenio">
+                            <field name="convenio_id" readonly="1"/>
+                            <field name="cliente_convenio" readonly="1"/>
+                            <field name="ultimo_pago_licencia" readonly="1"/>
+                            <field name="ultimo_pago_activacion" readonly="1"/>
+                            <field name="ultima_solicitud" readonly="1"/>
+                        </group>
+                        <group string="Usuario Final">
+                            <field name="usuario_final_id_ext" readonly="1"/>
+                            <field name="usuario_final_nombre" readonly="1"/>
+                            <field name="usuario_final_email" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="versat_convenio_view_search" model="ir.ui.view">
+        <field name="name">versat.convenio.search</field>
+        <field name="model">versat.convenio</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Convenios">
+                <field name="nombre"/>
+                <field name="cliente_convenio"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_versat_convenio" model="ir.actions.act_window">
+        <field name="name">Convenios</field>
+        <field name="res_model">versat.convenio</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

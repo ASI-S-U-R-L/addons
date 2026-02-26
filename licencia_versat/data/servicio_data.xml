@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="servicio_planificacion" model="versat.servicio">
+            <field name="servicio_id">89de9814-514e-5c66-9f4a-82e10e58f740</field>
+            <field name="descripcion">VS - Planificación</field>
+        </record>
+        <record id="servicio_inventarios" model="versat.servicio">
+            <field name="servicio_id">d721e07c-f44b-5d48-b080-9299ee251e77</field>
+            <field name="descripcion">VS - Inventarios</field>
+        </record>
+        <record id="servicio_costos" model="versat.servicio">
+            <field name="servicio_id">22478b5d-686b-54e5-85f6-8e08e1622c2a</field>
+            <field name="descripcion">VS - Costos y Procesos</field>
+        </record>
+        <record id="servicio_precios" model="versat.servicio">
+            <field name="servicio_id">909711bb-80a7-5e7c-b582-1e9c4a77c7f3</field>
+            <field name="descripcion">VS - Precios</field>
+        </record>
+        <record id="servicio_facturacion" model="versat.servicio">
+            <field name="servicio_id">d172afb9-ec34-56c6-b99a-227f6fe6a8a8</field>
+            <field name="descripcion">VS - Facturación</field>
+        </record>
+        <record id="servicio_contabilidad" model="versat.servicio">
+            <field name="servicio_id">cef5a806-8810-5c37-99aa-7180bb9c4c64</field>
+            <field name="descripcion">VS - Contabilidad General y Configuración</field>
+        </record>
+        <record id="servicio_pdv" model="versat.servicio">
+            <field name="servicio_id">959b0dd2-4b91-5db4-823f-4cbf767cdf1f</field>
+            <field name="descripcion">VS - Puntos de Ventas</field>
+        </record>
+        <record id="servicio_produccion" model="versat.servicio">
+            <field name="servicio_id">62bfca28-3e49-527c-85c2-05cc04b4942e</field>
+            <field name="descripcion">VS - Produccion</field>
+        </record>
+        <record id="servicio_finanzas" model="versat.servicio">
+            <field name="servicio_id">dc9f42e4-5f73-54d2-bbfb-21bb0f289c08</field>
+            <field name="descripcion">VS - Finanzas, Caja y Banco</field>
+        </record>
+        <record id="servicio_reportes" model="versat.servicio">
+            <field name="servicio_id">ecfcf906-5c7a-50e9-904d-b832c5098a4f</field>
+            <field name="descripcion">VS - Diseñador de Reportes</field>
+        </record>
+        <record id="servicio_complementos" model="versat.servicio">
+            <field name="servicio_id">2c73eab8-398b-5a2a-9d1f-b3c9734a928c</field>
+            <field name="descripcion">VS - Complementos</field>
+        </record>
+        <record id="servicio_nominas" model="versat.servicio">
+            <field name="servicio_id">060c034e-8f69-5d1f-a6c2-fad01b7a42fa</field>
+            <field name="descripcion">VS - Nóminas de Salarios</field>
+        </record>
+        <record id="servicio_activos" model="versat.servicio">
+            <field name="servicio_id">c2f77e11-cc56-5b83-95e3-86cc1b7bb7cc</field>
+            <field name="descripcion">VS - Activos Fijos</field>
+        </record>
+    </data>
+</odoo>

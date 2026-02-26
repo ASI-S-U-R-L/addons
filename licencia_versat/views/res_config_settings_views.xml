@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista propia de configuración, sin heredar res.config.settings -->
+    <record id="versat_config_view_form" model="ir.ui.view">
+        <field name="name">versat.config.form</field>
+        <field name="model">versat.config</field>
+        <field name="arch" type="xml">
+            <form string="Configuración API Versat">
+                <sheet>
+                    <h2>Configuración API Versat</h2>
+                    <group>
+                        <field name="api_base_url" placeholder="https://comercializador.versat.cu"/>
+                        <field name="api_username" placeholder="username"/>
+                        <field name="api_password" password="True" placeholder="••••••••"/>
+                    </group>
+                    <footer>
+                        <button name="action_guardar" string="Guardar" type="object" class="btn-primary"/>
+                        <button name="action_test_conexion" string="Probar Conexión" type="object"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_versat_config" model="ir.actions.act_window">
+        <field name="name">Configuración API</field>
+        <field name="res_model">versat.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+    </record>
+</odoo>
