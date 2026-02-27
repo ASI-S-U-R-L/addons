@@ -1,11 +1,9 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_versat_config,versat.config access,model_versat_config,base.group_user,1,1,1,0
 access_versat_servicio,versat.servicio access,model_versat_servicio,base.group_user,1,1,1,0
 access_versat_persona,versat.persona access,model_versat_persona,base.group_user,1,1,1,0
 access_versat_convenio,versat.convenio access,model_versat_convenio,base.group_user,1,1,1,0
 access_versat_solicitud,versat.solicitud access,model_versat_solicitud,base.group_user,1,1,1,0
 access_versat_solicitud_linea,versat.solicitud.linea access,model_versat_solicitud_linea,base.group_user,1,1,1,0
-access_versat_config_manager,versat.config manager,model_versat_config,base.group_system,1,1,1,1
 access_versat_servicio_manager,versat.servicio manager,model_versat_servicio,base.group_system,1,1,1,1
 access_versat_persona_manager,versat.persona manager,model_versat_persona,base.group_system,1,1,1,1
 access_versat_convenio_manager,versat.convenio manager,model_versat_convenio,base.group_system,1,1,1,1

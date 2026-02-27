@@ -1,31 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista propia de configuración, sin heredar res.config.settings -->
-    <record id="versat_config_view_form" model="ir.ui.view">
-        <field name="name">versat.config.form</field>
-        <field name="model">versat.config</field>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.licencia.versat</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <form string="Configuración API Versat">
-                <sheet>
-                    <h2>Configuración API Versat</h2>
-                    <group>
-                        <field name="api_base_url" placeholder="https://comercializador.versat.cu"/>
-                        <field name="api_username" placeholder="username"/>
-                        <field name="api_password" password="True" placeholder="••••••••"/>
-                    </group>
-                    <footer>
-                        <button name="action_guardar" string="Guardar" type="object" class="btn-primary"/>
-                        <button name="action_test_conexion" string="Probar Conexión" type="object"/>
-                    </footer>
-                </sheet>
-            </form>
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Licencias Versat"
+                     string="Licencias Versat" data-key="licencia_versat">
+                    <h2>Licencias Versat</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <div class="o_form_label">URL Base API</div>
+                                <div class="text-muted">URL del servidor Versat</div>
+                                <div class="mt8">
+                                    <field name="versat_api_base_url"
+                                           placeholder="https://comercializador.versat.cu"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <div class="o_form_label">Usuario API</div>
+                                <div class="text-muted">Usuario para autenticación</div>
+                                <div class="mt8">
+                                    <field name="versat_api_username" placeholder="username"/>
+                                </div>
+                                <div class="o_form_label mt8">Contraseña API</div>
+                                <div class="mt4">
+                                    <field name="versat_api_password" password="True" placeholder="••••••••"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
         </field>
-    </record>
-
-    <record id="action_versat_config" model="ir.actions.act_window">
-        <field name="name">Configuración API</field>
-        <field name="res_model">versat.config</field>
-        <field name="view_mode">form</field>
-        <field name="target">inline</field>
     </record>
 </odoo>
