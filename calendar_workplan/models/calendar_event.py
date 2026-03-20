@@ -23,21 +23,36 @@ class CalendarEvent(models.Model):
 #***** Limitando la creacion de eventos fuera del año actual
     @api.constrains('start', 'stop', 'recurrency')
     def _check_dates_within_current_year(self):
+        _logger.warning(">>> [CHECK] Entrando a _check_dates_within_current_year para IDs: %s", self.ids)
+
         current_year = datetime.now().year
         max_date = datetime(current_year, 12, 31)
-    
+
         for event in self:
-            # Validar fechas del evento principal
+            _logger.warning(
+                ">>> [CHECK] Evento ID=%s | start=%s | stop=%s | recurrency=%s",
+                event.id, event.start, event.stop, event.recurrency
+            )
+
             start_date = event.start.date() if event.start else None
             stop_date = event.stop.date() if event.stop else None
-    
+
             if (start_date and start_date > max_date.date()) or (stop_date and stop_date > max_date.date()):
+                _logger.error(
+                    ">>> [ERROR] Evento fuera del año actual: start=%s stop=%s límite=%s",
+                    start_date, stop_date, max_date.date()
+                )
                 raise ValidationError("❌ Las fechas del evento no pueden superar el 31/12/%s" % current_year)
-    
-            # Validar fecha de recurrencia (solo si existe el campo)
-            if hasattr(event, 'until') and event.recurrency and event.until and event.until > max_date.date():
-                raise ValidationError("❌ La recurrencia no puede extenderse más allá del 31/12/%s" % current_year)
-    
+
+            # Validación de recurrencia
+            if hasattr(event, 'until') and event.recurrency and event.until:
+                _logger.warning(">>> [CHECK] until=%s", event.until)
+                if event.until > max_date.date():
+                    _logger.error(
+                        ">>> [ERROR] Recurrencia fuera del año actual: until=%s límite=%s",
+                        event.until, max_date.date()
+                    )
+                    raise ValidationError("❌ La recurrencia no puede extenderse más allá del 31/12/%s" % current_year)
 
     def _get_recurrence_dates(self, base_event):
         dates = super()._get_recurrence_dates(base_event)
