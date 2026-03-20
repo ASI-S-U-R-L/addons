@@ -17,28 +17,19 @@ class CalendarRecurrence(models.Model):
         return exceptions       
 
     def _apply_recurrence(self):
-        """Override para evitar generar eventos más allá del 31 de diciembre del año del evento base."""
         self.ensure_one()
 
-        # Ejecutamos la lógica original para obtener las fechas generadas
-        dates = super()._apply_recurrence()
-
-        if not dates:
-            return dates
-
-        # Fecha límite: 31 de diciembre del año del evento base
         base_event = self.base_event_id
-        if not base_event or not base_event.start:
-            return dates
+        if base_event and base_event.start:
+            year = base_event.start.year
+            limit_date = datetime(year, 12, 31, 23, 59, 59)
 
-        year = base_event.start.year
-        limit_date = datetime(year, 12, 31, 23, 59, 59)
+            # Si no tiene until, se lo ponemos
+            if not self.until:
+                self.until = limit_date
 
-        # Filtrar fechas que no sobrepasen el límite
-        filtered_dates = []
-        for dt in dates:
-            if dt <= limit_date:
-                filtered_dates.append(dt)
+            # Si tiene until pero es mayor, lo recortamos
+            elif self.until > limit_date:
+                self.until = limit_date
 
-        return filtered_dates
-
+        return super()._apply_recurrence()
