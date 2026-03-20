@@ -7,6 +7,22 @@ _logger = logging.getLogger(__name__)
 class CalendarRecurrence(models.Model):
     _inherit = 'calendar.recurrence'
     
+
+    def _get_rrule(self):
+        rule = super()._get_rrule()
+
+        if not self.base_event_id or not self.base_event_id.start:
+            return rule
+
+        year = self.base_event_id.start.year
+        limit_datetime = datetime(year, 12, 31, 23, 59, 59)
+
+        # ⚠️ Aquí está la clave
+        if hasattr(rule, '_until') and (not rule._until or rule._until > limit_datetime):
+            rule._until = limit_datetime
+
+        return rule
+        
     @api.model
 
     def get_exception_dates(self):
