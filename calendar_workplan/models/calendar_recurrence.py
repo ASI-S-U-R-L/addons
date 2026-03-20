@@ -16,20 +16,28 @@ class CalendarRecurrence(models.Model):
                     exceptions.add((start_date.year, start_date.month, start_date.day))
         return exceptions       
 
+
     def _apply_recurrence(self):
         self.ensure_one()
 
         base_event = self.base_event_id
         if base_event and base_event.start:
             year = base_event.start.year
-            limit_date = datetime(year, 12, 31, 23, 59, 59)
+            # límite como date, porque end_date es date
+            limit_date = datetime(year, 12, 31).date()
 
-            # Si no tiene until, se lo ponemos
-            if not self.until:
-                self.until = limit_date
+            # Caso 1: el usuario eligió fecha final
+            if self.end_type == 'end_date':
+                if self.end_date and self.end_date > limit_date:
+                    self.end_date = limit_date
 
-            # Si tiene until pero es mayor, lo recortamos
-            elif self.until > limit_date:
-                self.until = limit_date
+            # Caso 2: el usuario eligió número de ocurrencias o sin fin
+            else:
+                # Forzamos a que la recurrencia termine como máximo el 31/12 de ese año
+                self.end_type = 'end_date'
+                # Solo ponemos end_date si no hay una más restrictiva
+                if not self.end_date or self.end_date > limit_date:
+                    self.end_date = limit_date
 
         return super()._apply_recurrence()
+
