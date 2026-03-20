@@ -37,19 +37,21 @@ class CalendarEvent(models.Model):
             # Validar fecha de recurrencia (solo si existe el campo)
             if hasattr(event, 'until') and event.recurrency and event.until and event.until > max_date.date():
                 raise ValidationError("❌ La recurrencia no puede extenderse más allá del 31/12/%s" % current_year)
+    
 
+    def _get_recurrence_dates(self, base_event):
+        dates = super()._get_recurrence_dates(base_event)
 
-    def _get_recurrence_dates(self, dtstart, until_date=None):
-        """Generar fechas de recurrencia hasta el 31/12 del año actual"""
-        current_year = datetime.now().year
-        max_date = datetime(current_year, 12, 31)
-        
-        # Limitar until_date al 31/12 si es mayor
-        if until_date and until_date > max_date:
-            until_date = max_date
-        
-        # Llamar al método original con la fecha limitada
-        return super()._get_recurrence_dates(dtstart, until_date)
+        if not base_event.start:
+            return dates
+
+        year = base_event.start.year
+        limit_dt = datetime(year, 12, 31, 23, 59, 59)
+
+        filtered = [dt for dt in dates if dt <= limit_dt]
+
+        return filtered
+
         
     @api.model_create_multi
     def create(self, vals_list):
