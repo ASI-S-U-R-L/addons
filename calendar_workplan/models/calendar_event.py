@@ -133,3 +133,24 @@ class CalendarEvent(models.Model):
         """Días recurrentes ordenados sin duplicados"""
         days = list(set(self.get_recurrent_days(year, month)))  # Elimina duplicados
         return sorted(days) if days else []    
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        events = super().create(vals_list)
+
+        for event in events:
+            if event.recurrence_id and event.recurrence_id.base_event_id:
+                base = event.recurrence_id.base_event_id
+                year = base.start.year
+                limit_date = date(year, 12, 31)
+
+                # Convertimos start a date
+                event_date = event.start.date()
+
+                if event_date > limit_date:
+                    raise ValidationError(
+                        f"No se pueden generar eventos más allá del {limit_date} "
+                        f"(evento generado: {event_date})."
+                    )
+
+        return events

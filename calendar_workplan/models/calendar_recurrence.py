@@ -1,68 +1,27 @@
 from odoo import models, api
-from odoo.exceptions import ValidationError
 from datetime import datetime, date
-import logging
 
-_logger = logging.getLogger(__name__)
 class CalendarRecurrence(models.Model):
     _inherit = 'calendar.recurrence'
-    
-    def _get_rrule(self):
-        """
-        Parche limpio:
-        Limita cualquier recurrencia al 31/12 del año del evento base.
-        """
 
-        rule = super()._get_rrule()
+    def _apply_recurrence(self):
+        self.ensure_one()
 
-        if not self:
-            return rule
+        base_event = self.base_event_id
+        if base_event and base_event.start:
+            year = base_event.start.year
+            limit_date = date(year, 12, 31)
 
-        rec = self[0]  # ensure_one no siempre es seguro aquí
+            # Caso 1: usuario eligió fecha final
+            if self.end_type == 'end_date':
+                if self.end_date and self.end_date > limit_date:
+                    self.end_date = limit_date
 
-        if not rec.base_event_id or not rec.base_event_id.start:
-            return rule
+            # Caso 2: usuario eligió número de ocurrencias o sin fin
+            else:
+                # Convertimos a fecha final
+                if not self.end_date or self.end_date > limit_date:
+                    self.end_type = 'end_date'
+                    self.end_date = limit_date
 
-        year = rec.base_event_id.start.year
-        limit_datetime = datetime(year, 12, 31, 23, 59, 59)
-
-        _logger.debug(
-            "[Calendar Limit] Recurrence ID=%s | Año base=%s | Límite=%s",
-            rec.id, year, limit_datetime
-        )
-
-        # 🔥 CLAVE: modificar el UNTIL del rrule
-        try:
-            if hasattr(rule, '_until'):
-                if not rule._until or rule._until > limit_datetime:
-                    _logger.debug(
-                        "[Calendar Limit] Ajustando UNTIL de %s a %s",
-                        rule._until, limit_datetime
-                    )
-                    rule._until = limit_datetime
-        except Exception as e:
-            _logger.warning(
-                "[Calendar Limit] Error ajustando rrule: %s",
-                str(e)
-            )
-
-        return rule
-
-    # ---------------------------------------------------------
-    # VALIDACIÓN DURA
-    # ---------------------------------------------------------
-    def _check_year_limit(self):
-        for rec in self:
-            if rec.base_event_id and rec.base_event_id.start:
-                year = rec.base_event_id.start.year
-                limit_date = datetime(year, 12, 31).date()
-
-                if rec.end_type == 'end_date' and rec.end_date and rec.end_date > limit_date:
-                    raise ValidationError(
-                        "No puedes crear recurrencias más allá del año del evento base."
-                    )
-
-    # Activar constraint
-    @api.constrains('end_date', 'end_type', 'base_event_id')
-    def _constrain_year_limit(self):
-        self._check_year_limit()
+        return super()._apply_recurrence()
