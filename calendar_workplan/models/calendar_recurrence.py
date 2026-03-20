@@ -1,5 +1,8 @@
 from odoo import models, api
 from datetime import datetime, date
+import logging  
+    
+_logger = logging.getLogger(__name__)  
 
 class CalendarRecurrence(models.Model):
     _inherit = 'calendar.recurrence'
