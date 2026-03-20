@@ -1,6 +1,9 @@
 from odoo import models, api
-from datetime import datetime
+from odoo.exceptions import ValidationError
+from datetime import datetime, date
+import logging
 
+_logger = logging.getLogger(__name__)
 class CalendarRecurrence(models.Model):
     _inherit = 'calendar.recurrence'
     
@@ -17,27 +20,112 @@ class CalendarRecurrence(models.Model):
         return exceptions       
 
 
-    def _apply_recurrence(self):
-        self.ensure_one()
+    # ---------------------------------------------------------
+    # CORE LOGIC
+    # ---------------------------------------------------------
+    def _limit_to_year(self, vals):
+        """
+        Fuerza que la recurrencia no pase del año del evento base
+        """
+        base_event = None
 
-        base_event = self.base_event_id
-        if base_event and base_event.start:
-            year = base_event.start.year
-            # límite como date, porque end_date es date
-            limit_date = datetime(year, 12, 31).date()
+        # Detectar evento base
+        if 'base_event_id' in vals:
+            base_event = self.env['calendar.event'].browse(vals['base_event_id'])
+        elif self and self.base_event_id:
+            base_event = self.base_event_id
 
-            # Caso 1: el usuario eligió fecha final
-            if self.end_type == 'end_date':
-                if self.end_date and self.end_date > limit_date:
-                    self.end_date = limit_date
+        if not base_event or not base_event.start:
+            _logger.warning("No base_event o sin fecha de inicio. Se omite control.")
+            return vals
 
-            # Caso 2: el usuario eligió número de ocurrencias o sin fin
-            else:
-                # Forzamos a que la recurrencia termine como máximo el 31/12 de ese año
-                self.end_type = 'end_date'
-                # Solo ponemos end_date si no hay una más restrictiva
-                if not self.end_date or self.end_date > limit_date:
-                    self.end_date = limit_date
+        year = base_event.start.year
+        limit_date = date(year, 12, 31)
 
-        return super()._apply_recurrence()
+        _logger.warning(
+            "Aplicando límite de recurrencia. Año base: %s | Fecha límite: %s",
+            year, limit_date
+        )
 
+        end_type = vals.get('end_type', self.end_type if self else False)
+
+        # -----------------------------------------------------
+        # Caso 1: usuario define fecha final
+        # -----------------------------------------------------
+        if end_type == 'end_date':
+            end_date = vals.get('end_date', self.end_date if self else None)
+
+            if end_date and end_date > limit_date:
+                _logger.warning(
+                    "End date (%s) supera límite. Ajustando a %s",
+                    end_date, limit_date
+                )
+                vals['end_date'] = limit_date
+
+        # -----------------------------------------------------
+        # Caso 2: forever o count → lo forzamos
+        # -----------------------------------------------------
+        else:
+            _logger.warning(
+                "Recurrencia tipo '%s' no permitida. Forzando end_date=%s",
+                end_type, limit_date
+            )
+            vals['end_type'] = 'end_date'
+            vals['end_date'] = limit_date
+
+        return vals
+
+    # ---------------------------------------------------------
+    # CREATE
+    # ---------------------------------------------------------
+    @api.model
+    def create(self, vals):
+        _logger.warning("CREATE recurrence vals inicial: %s", vals)
+
+        vals = self._limit_to_year(vals)
+
+        rec = super().create(vals)
+
+        _logger.warning(
+            "Recurrence creada ID=%s | end_type=%s | end_date=%s",
+            rec.id, rec.end_type, rec.end_date
+        )
+
+        return rec
+
+    # ---------------------------------------------------------
+    # WRITE
+    # ---------------------------------------------------------
+    def write(self, vals):
+        _logger.warning("WRITE recurrence ID=%s | vals inicial: %s", self.ids, vals)
+
+        vals = self._limit_to_year(vals)
+
+        res = super().write(vals)
+
+        for rec in self:
+            _logger.warning(
+                "Recurrence actualizada ID=%s | end_type=%s | end_date=%s",
+                rec.id, rec.end_type, rec.end_date
+            )
+
+        return res
+
+    # ---------------------------------------------------------
+    # VALIDACIÓN DURA
+    # ---------------------------------------------------------
+    def _check_year_limit(self):
+        for rec in self:
+            if rec.base_event_id and rec.base_event_id.start:
+                year = rec.base_event_id.start.year
+                limit_date = datetime(year, 12, 31).date()
+
+                if rec.end_type == 'end_date' and rec.end_date and rec.end_date > limit_date:
+                    raise ValidationError(
+                        "No puedes crear recurrencias más allá del año del evento base."
+                    )
+
+    # Activar constraint
+    @api.constrains('end_date', 'end_type', 'base_event_id')
+    def _constrain_year_limit(self):
+        self._check_year_limit()
