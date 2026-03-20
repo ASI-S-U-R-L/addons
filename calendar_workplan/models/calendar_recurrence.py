@@ -6,7 +6,10 @@ class CalendarRecurrence(models.Model):
 
     def _apply_recurrence(self):
         self.ensure_one()
-
+        _logger.warning(
+            "ANTES: end_type=%s, end_date=%s, count=%s, base_start=%s",
+            self.end_type, self.end_date, self.count, self.base_event_id.start
+        )
         base_event = self.base_event_id
         if base_event and base_event.start:
             year = base_event.start.year
@@ -23,5 +26,7 @@ class CalendarRecurrence(models.Model):
                 if not self.end_date or self.end_date > limit_date:
                     self.end_type = 'end_date'
                     self.end_date = limit_date
-
+        _logger.warning(
+            "DESPUÉS: end_type=%s, end_date=%s, count=%s",
+            self.end_type, self.end_date, self.count
         return super()._apply_recurrence()
