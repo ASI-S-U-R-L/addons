@@ -23,13 +23,20 @@ class CalendarRecurrence(models.Model):
         base_year = base_event.start.year
         limit_dt = datetime(base_year, 12, 31, 23, 59, 59)
 
-        # Obtener fechas originales
-        dates = self._get_recurrence_dates(base_event)
+        # 1) Obtener fechas usando el método interno real de Odoo
+        #    Este método SÍ existe en tu build.
+        dates = self._get_recurrent_dates(base_event)
 
-        # Filtrar por año del evento base
+        # 2) Filtrar por año del evento base
         filtered_dates = [dt for dt in dates if dt <= limit_dt]
 
-        # Crear eventos hijos SOLO con fechas válidas
+        if len(filtered_dates) != len(dates):
+            _logger.warning(
+                "[APPLY TRIM] Recortando %s → %s fechas para recurrence_id=%s (límite=%s)",
+                len(dates), len(filtered_dates), self.id, limit_dt
+            )
+
+        # 3) Crear eventos hijos SOLO con fechas válidas
         Event = self.env['calendar.event']
         for dt in filtered_dates:
             values = self._get_event_values(base_event, dt)
