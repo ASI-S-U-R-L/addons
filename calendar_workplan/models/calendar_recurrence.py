@@ -1,35 +1,28 @@
-from odoo import models, api
 from datetime import datetime, date
-import logging  
-    
-_logger = logging.getLogger(__name__)  
+from odoo import models, fields
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class CalendarRecurrence(models.Model):
     _inherit = 'calendar.recurrence'
 
-    def _apply_recurrence(self):
-        self.ensure_one()
-        _logger.warning(
-            "ANTES: end_type=%s, end_date=%s, count=%s, base_start=%s",
-            self.end_type, self.end_date, self.count, self.base_event_id.start
-        )
-        base_event = self.base_event_id
-        if base_event and base_event.start:
-            year = base_event.start.year
-            limit_date = date(year, 12, 31)
+    def _get_recurrence_dates(self, dtstart, tz=None):
+        """
+        Limita las fechas generadas por la recurrencia al año actual.
+        """
+        dates = super()._get_recurrence_dates(dtstart, tz=tz)
 
-            # Caso 1: usuario eligió fecha final
-            if self.end_type == 'end_date':
-                if self.end_date and self.end_date > limit_date:
-                    self.end_date = limit_date
+        current_year = fields.Date.context_today(self).year
+        limit_dt = datetime(current_year, 12, 31, 23, 59, 59)
 
-            # Caso 2: usuario eligió número de ocurrencias o sin fin
-            else:
-                # Convertimos a fecha final
-                if not self.end_date or self.end_date > limit_date:
-                    self.end_type = 'end_date'
-                    self.end_date = limit_date
-        _logger.warning(
-            "DESPUÉS: end_type=%s, end_date=%s, count=%s",
-            self.end_type, self.end_date, self.count
-        return super()._apply_recurrence()
+        filtered = [dt for dt in dates if dt <= limit_dt]
+
+        if len(filtered) != len(dates):
+            _logger.info(
+                "[RRULE] Recurrence filtered for recurrence_id=%s: %s → %s (limit=%s)",
+                self.ids, len(dates), len(filtered), limit_dt
+            )
+
+        return filtered
