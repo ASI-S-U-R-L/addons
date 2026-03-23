@@ -33,30 +33,6 @@ class CalendarEvent(models.Model):
     )
 
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        """
-        Recorta automáticamente el campo 'until' o 'until_date'
-        para que no pase del año del evento base.
-        """
-        for vals in vals_list:
-            if vals.get('start'):
-                start_dt = fields.Datetime.from_string(vals['start'])
-                base_year = start_dt.year
-                limit_date = date(base_year, 12, 31)
-
-                # Recortar until
-                if vals.get('until') and vals['until'] > limit_date:
-                    vals['until'] = limit_date
-
-                # Recortar until_date (Odoo usa ambos según el caso)
-                if vals.get('until_date') and vals['until_date'] > limit_date:
-                    vals['until_date'] = limit_date
-
-        return super().create(vals_list)
-
-
-
     # -------------------------
     # DOMINIO DE ASISTENTES
     # -------------------------
@@ -127,4 +103,3 @@ class CalendarEvent(models.Model):
             return f"{start} - {stop}"
         except Exception:
             return self.display_time
-
