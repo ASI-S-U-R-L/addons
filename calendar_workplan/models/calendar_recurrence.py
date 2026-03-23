@@ -12,20 +12,24 @@ class CalendarRecurrence(models.Model):
 
     def _get_recurrence_dates(self, dtstart, tz=None):
         """
-        Limita las fechas generadas por la recurrencia al AÑO ACTUAL.
-        Esto afecta directamente a los eventos hijos que se crean.
+        Recorta silenciosamente las fechas generadas por la recurrencia
+        para que NO pasen del año del evento base.
         """
         dates = super()._get_recurrence_dates(dtstart, tz=tz)
 
-        current_year = fields.Date.context_today(self).year
-        limit_dt = datetime(current_year, 12, 31, 23, 59, 59)
+        if not dtstart:
+            return dates
+
+        # Año del evento base
+        base_year = dtstart.year
+        limit_dt = datetime(base_year, 12, 31, 23, 59, 59)
 
         filtered = [dt for dt in dates if dt <= limit_dt]
 
         if len(filtered) != len(dates):
             _logger.info(
-                "[RRULE] Recurrence filtered for recurrence_ids=%s: %s → %s (limit=%s)",
-                self.ids, len(dates), len(filtered), limit_dt
+                "[RRULE TRIM] Recortando %s → %s fechas para recurrence_id=%s (límite=%s)",
+                len(dates), len(filtered), self.ids, limit_dt
             )
 
         return filtered
