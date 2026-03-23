@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 import ast
 import calendar
 import logging
@@ -33,17 +32,6 @@ class CalendarEvent(models.Model):
         compute='_compute_attendees_filter_domain'
     )
 
-    # -------------------------
-    # CREATE SIN VALIDACIONES
-    # -------------------------
-    @api.model_create_multi
-    def create(self, vals_list):
-        """
-        Crear eventos normalmente.
-        El recorte de recurrencias se hace en calendar.recurrence.
-        """
-        _logger.debug("[CREATE] vals_list=%s", vals_list)
-        return super().create(vals_list)
 
     # -------------------------
     # DOMINIO DE ASISTENTES
