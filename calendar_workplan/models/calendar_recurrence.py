@@ -1,35 +1,32 @@
-# -*- coding: utf-8 -*-
+from datetime import datetime
+from odoo import models
 import logging
-from datetime import datetime, date
-
-from odoo import models, fields
 
 _logger = logging.getLogger(__name__)
 
 
-class CalendarRecurrence(models.Model):
-    _inherit = 'calendar.recurrence'
+class CalendarEvent(models.Model):
+    _inherit = 'calendar.event'
 
-    def _get_recurrence_dates(self, dtstart, tz=None):
+    def _get_recurrence_dates(self, base_event):
         """
         Recorta silenciosamente las fechas generadas por la recurrencia
-        para que NO pasen del año del evento base.
+        para que NO pasen del año de inicio del evento base.
         """
-        dates = super()._get_recurrence_dates(dtstart, tz=tz)
+        dates = super()._get_recurrence_dates(base_event)
 
-        if not dtstart:
+        if not base_event.start:
             return dates
 
-        # Año del evento base
-        base_year = dtstart.year
+        base_year = base_event.start.year
         limit_dt = datetime(base_year, 12, 31, 23, 59, 59)
 
         filtered = [dt for dt in dates if dt <= limit_dt]
 
         if len(filtered) != len(dates):
             _logger.info(
-                "[RRULE TRIM] Recortando %s → %s fechas para recurrence_id=%s (límite=%s)",
-                len(dates), len(filtered), self.ids, limit_dt
+                "[EVENT RRULE TRIM] base_event_id=%s %s→%s (límite=%s)",
+                base_event.id, len(dates), len(filtered), limit_dt
             )
 
         return filtered
