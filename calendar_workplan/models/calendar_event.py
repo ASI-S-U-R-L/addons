@@ -11,7 +11,7 @@ from odoo.tools import ustr
 
 _logger = logging.getLogger(__name__)
 
-#Alejandro estuvo aqui
+
 class CalendarEvent(models.Model):
     _inherit = 'calendar.event'
 
