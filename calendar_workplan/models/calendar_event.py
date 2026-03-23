@@ -69,25 +69,34 @@ class CalendarEvent(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         """
-        Recorta preventivamente until / until_date al año actual.
-        OJO: esto solo afecta al evento base, no a la expansión de recurrencias.
+        1) Deja que Odoo genere el evento base y todos los hijos recurrentes.
+        2) Luego elimina silenciosamente los eventos que caen fuera del año actual.
         """
         current_year = fields.Date.context_today(self).year
         max_date = date(current_year, 12, 31)
 
         _logger.debug("[CREATE] Incoming vals_list: %s", vals_list)
 
-        for vals in vals_list:
-            for key in ('until', 'until_date'):
-                if vals.get(key) and vals[key] > max_date:
-                    _logger.info(
-                        "[CREATE] Clipping %s from %s to %s for current_year=%s",
-                        key, vals[key], max_date, current_year
-                    )
-                    vals[key] = max_date
-
+        # Paso 1: crear todo normalmente
         events = super().create(vals_list)
+
+        # Paso 2: filtrar eventos fuera del año actual
+        invalid_events = events.filtered(
+            lambda e: e.start and e.start.date() > max_date
+        )
+
+        if invalid_events:
+            _logger.info(
+                "[TRIM] Eliminando %s eventos fuera del año actual. Ejemplo: ID=%s fecha=%s límite=%s",
+                len(invalid_events),
+                invalid_events[0].id,
+                invalid_events[0].start.date(),
+                max_date
+            )
+            invalid_events.unlink()
+
         return events
+
 
     # -------------------------
     # DOMINIO DE ASISTENTES
