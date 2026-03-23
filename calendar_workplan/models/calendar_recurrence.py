@@ -1,6 +1,8 @@
-from datetime import datetime, date
-from odoo import models, fields
+# -*- coding: utf-8 -*-
 import logging
+from datetime import datetime, date
+
+from odoo import models, fields
 
 _logger = logging.getLogger(__name__)
 
@@ -10,7 +12,8 @@ class CalendarRecurrence(models.Model):
 
     def _get_recurrence_dates(self, dtstart, tz=None):
         """
-        Limita las fechas generadas por la recurrencia al año actual.
+        Limita las fechas generadas por la recurrencia al AÑO ACTUAL.
+        Esto afecta directamente a los eventos hijos que se crean.
         """
         dates = super()._get_recurrence_dates(dtstart, tz=tz)
 
@@ -21,7 +24,7 @@ class CalendarRecurrence(models.Model):
 
         if len(filtered) != len(dates):
             _logger.info(
-                "[RRULE] Recurrence filtered for recurrence_id=%s: %s → %s (limit=%s)",
+                "[RRULE] Recurrence filtered for recurrence_ids=%s: %s → %s (limit=%s)",
                 self.ids, len(dates), len(filtered), limit_dt
             )
 
