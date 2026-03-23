@@ -67,7 +67,7 @@ class CalendarEvent(models.Model):
                 )
 
     @api.model_create_multi
-    def create(self, vals_list):
+     def create(self, vals_list):
         """
         1) Deja que Odoo genere el evento base y todos los hijos recurrentes.
         2) Luego elimina silenciosamente los eventos que caen fuera del año actual.
