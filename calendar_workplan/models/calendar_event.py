@@ -127,11 +127,3 @@ class CalendarEvent(models.Model):
         except Exception:
             return self.display_time
 
-
-    def _get_recurrence_dates(self, base_event):
-        _logger.warning(">>> DEBUG: calendar.event._get_recurrence_dates() fue llamado")
-        return super()._get_recurrence_dates(base_event)
-
-    def _get_recurrent_dates(self, base_event):
-        _logger.warning(">>> DEBUG: calendar.event._get_recurrent_dates() fue llamado")
-        return super()._get_recurrent_dates(base_event)

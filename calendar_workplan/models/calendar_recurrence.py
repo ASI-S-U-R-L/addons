@@ -34,10 +34,3 @@ class CalendarRecurrence(models.Model):
 
         return filtered
     
-    def _get_recurrence_dates(self, dtstart, tz=None):
-        _logger.warning(">>> DEBUG: calendar.recurrence._get_recurrence_dates() fue llamado")
-        return super()._get_recurrence_dates(dtstart, tz=tz)
-
-    def _get_recurrent_dates(self, dtstart, tz=None):
-        _logger.warning(">>> DEBUG: calendar.recurrence._get_recurrent_dates() fue llamado")
-        return super()._get_recurrent_dates(dtstart, tz=tz)
