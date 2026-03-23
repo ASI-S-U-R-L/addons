@@ -106,7 +106,7 @@ class CalendarEvent(models.Model):
         except Exception:
             return []
 
-     def get_sections_with_events(self):
+    def get_sections_with_events(self):
         sections_data = []
         Section = self.env['calendar_workplan.section']
 
