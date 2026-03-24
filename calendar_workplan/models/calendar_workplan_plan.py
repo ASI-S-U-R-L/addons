@@ -24,12 +24,11 @@ class CalendarWorkplanPlan(models.Model):
     _order = 'plan_sequence'
 
 
-
     def duplicate_plan_next_year(self):
         """
         Duplica el plan actual al siguiente año en estado borrador,
-        copiando solo los eventos principales recurrentes (no las ocurrencias),
-        con fecha de inicio +1 año.
+        copiando los eventos principales y creando nuevas reglas de recurrencia
+        con fecha límite 31 de diciembre del nuevo año.
         """
         self.ensure_one()
 
@@ -48,26 +47,46 @@ class CalendarWorkplanPlan(models.Model):
         })
 
         Event = self.env['calendar.event']
-        for event in self.meeting_ids:
-            # Solo duplicar eventos principales (los que tienen recurrence_id definido)
-            if event.recurrence_id:
-                new_start = event.start + timedelta(days=365)
-                new_stop = event.stop + timedelta(days=365) if event.stop else None
+        Recurrence = self.env['calendar.recurrence']
 
-                vals = {
-                    'name': f"{event.name} ({next_year})",
-                    'start': new_start,
-                    'stop': new_stop,
-                    'allday': event.allday,
-                    'partner_ids': [(6, 0, event.partner_ids.ids)],
-                    'workplan_id': new_plan.id,
-                    'section_id': event.section_id.id,
-                    'priority': event.priority,
-                    'recurrence_id': event.recurrence_id.id,  # mantiene la regla de recurrencia
-                }
-                Event.create(vals)
+        for event in self.meeting_ids:
+            new_start = event.start + timedelta(days=365)
+            new_stop = event.stop + timedelta(days=365) if event.stop else None
+
+            new_recurrence_id = False
+            if event.recurrence_id:
+                # Crear nueva regla de recurrencia con límite 31 de diciembre del nuevo año
+                limit_dt = datetime(next_year, 12, 31, 23, 59, 59)
+                new_recurrence = Recurrence.create({
+                    'name': f"{event.recurrence_id.name} ({next_year})",
+                    'rrule_type': event.recurrence_id.rrule_type,
+                    'interval': event.recurrence_id.interval,
+                    'count': event.recurrence_id.count,
+                    'until': limit_dt,
+                    'byday': event.recurrence_id.byday,
+                    'weekday': event.recurrence_id.weekday,
+                    'month_by': event.recurrence_id.month_by,
+                    'day': event.recurrence_id.day,
+                    'week': event.recurrence_id.week,
+                    'month': event.recurrence_id.month,
+                })
+                new_recurrence_id = new_recurrence.id
+
+            vals = {
+                'name': f"{event.name} ({next_year})",
+                'start': new_start,
+                'stop': new_stop,
+                'allday': event.allday,
+                'partner_ids': [(6, 0, event.partner_ids.ids)],
+                'workplan_id': new_plan.id,
+                'section_id': event.section_id.id,
+                'priority': event.priority,
+                'recurrence_id': new_recurrence_id,
+            }
+            Event.create(vals)
 
         return new_plan
+
 
 
 
