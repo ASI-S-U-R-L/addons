@@ -26,13 +26,13 @@ class CalendarWorkplanPlan(models.Model):
 
     def duplicate_plan_next_year(self):
         """
-        Duplica el plan actual al siguiente año en estado borrador,
-        copiando los eventos principales y creando nuevas reglas de recurrencia
-        con fecha límite 31 de diciembre del nuevo año.
+        Duplica el plan anual al siguiente año en estado borrador,
+        creando nuevas reglas de recurrencia con límite 31/12 del nuevo año.
         """
         self.ensure_one()
-
         next_year = int(self.plan_year) + 1
+
+        # Crear nuevo plan
         new_plan = self.create({
             'scope': self.scope,
             'parent_id': self.parent_id.id if self.parent_id else False,
@@ -47,28 +47,16 @@ class CalendarWorkplanPlan(models.Model):
         })
 
         Event = self.env['calendar.event']
-        Recurrence = self.env['calendar.recurrence']
-
         for event in self.meeting_ids:
             new_start = event.start + timedelta(days=365)
             new_stop = event.stop + timedelta(days=365) if event.stop else None
 
             new_recurrence_id = False
             if event.recurrence_id:
-                # Crear nueva regla de recurrencia con límite 31 de diciembre del nuevo año
-                limit_dt = datetime(next_year, 12, 31, 23, 59, 59)
-                new_recurrence = Recurrence.create({
+                # Copiar la recurrencia y ajustar el until
+                new_recurrence = event.recurrence_id.copy({
                     'name': f"{event.recurrence_id.name} ({next_year})",
-                    'rrule_type': event.recurrence_id.rrule_type,
-                    'interval': event.recurrence_id.interval,
-                    'count': event.recurrence_id.count,
-                    'until': limit_dt,
-                    'byday': event.recurrence_id.byday,
-                    'weekday': event.recurrence_id.weekday,
-                    'month_by': event.recurrence_id.month_by,
-                    'day': event.recurrence_id.day,
-                    'week': event.recurrence_id.week,
-                    'month': event.recurrence_id.month,
+                    'until': datetime(next_year, 12, 31, 23, 59, 59),
                 })
                 new_recurrence_id = new_recurrence.id
 
@@ -86,7 +74,6 @@ class CalendarWorkplanPlan(models.Model):
             Event.create(vals)
 
         return new_plan
-
 
 
 
