@@ -27,11 +27,11 @@ class CalendarWorkplanPlan(models.Model):
     def duplicate_plan_next_year(self):
         """
         Duplica el plan actual al siguiente año en estado borrador,
-        copiando sus eventos recurrentes con fecha de inicio +1 año.
+        copiando solo los eventos principales recurrentes (no las ocurrencias),
+        con fecha de inicio +1 año.
         """
         self.ensure_one()
 
-        # Crear nuevo plan para el año siguiente
         next_year = int(self.plan_year) + 1
         new_plan = self.create({
             'scope': self.scope,
@@ -46,24 +46,25 @@ class CalendarWorkplanPlan(models.Model):
             'plan_tz': self.plan_tz,
         })
 
-        # Duplicar eventos asociados
         Event = self.env['calendar.event']
         for event in self.meeting_ids:
-            new_start = event.start + timedelta(days=365)
-            new_stop = event.stop + timedelta(days=365) if event.stop else None
+            # Solo duplicar eventos principales (los que tienen recurrence_id definido)
+            if event.recurrence_id:
+                new_start = event.start + timedelta(days=365)
+                new_stop = event.stop + timedelta(days=365) if event.stop else None
 
-            vals = {
-                'name': f"{event.name} ({next_year})",
-                'start': new_start,
-                'stop': new_stop,
-                'allday': event.allday,
-                'partner_ids': [(6, 0, event.partner_ids.ids)],
-                'workplan_id': new_plan.id,
-                'section_id': event.section_id.id,
-                'priority': event.priority,
-                'recurrence_id': event.recurrence_id.id,  # mantiene la recurrencia
-            }
-            Event.create(vals)
+                vals = {
+                    'name': f"{event.name} ({next_year})",
+                    'start': new_start,
+                    'stop': new_stop,
+                    'allday': event.allday,
+                    'partner_ids': [(6, 0, event.partner_ids.ids)],
+                    'workplan_id': new_plan.id,
+                    'section_id': event.section_id.id,
+                    'priority': event.priority,
+                    'recurrence_id': event.recurrence_id.id,  # mantiene la regla de recurrencia
+                }
+                Event.create(vals)
 
         return new_plan
 
