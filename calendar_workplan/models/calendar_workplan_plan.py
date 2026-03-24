@@ -23,6 +23,51 @@ class CalendarWorkplanPlan(models.Model):
     _parent_store = True
     _order = 'plan_sequence'
 
+
+    def duplicate_plan_next_year(self):
+        """
+        Duplica el plan actual al siguiente año en estado borrador,
+        copiando sus eventos recurrentes con fecha de inicio +1 año.
+        """
+        self.ensure_one()
+
+        # Crear nuevo plan para el año siguiente
+        next_year = int(self.plan_year) + 1
+        new_plan = self.create({
+            'scope': self.scope,
+            'parent_id': self.parent_id.id if self.parent_id else False,
+            'plan_year': f"{next_year:04d}",
+            'plan_month': self.plan_month,
+            'date_start': self.date_start.replace(year=next_year),
+            'date_end': self.date_end.replace(year=next_year),
+            'state': 'draft',
+            'presented_by_partner_id': self.presented_by_partner_id.id,
+            'approved_by_partner_id': self.approved_by_partner_id.id,
+            'plan_tz': self.plan_tz,
+        })
+
+        # Duplicar eventos asociados
+        Event = self.env['calendar.event']
+        for event in self.meeting_ids:
+            new_start = event.start + timedelta(days=365)
+            new_stop = event.stop + timedelta(days=365) if event.stop else None
+
+            vals = {
+                'name': f"{event.name} ({next_year})",
+                'start': new_start,
+                'stop': new_stop,
+                'allday': event.allday,
+                'partner_ids': [(6, 0, event.partner_ids.ids)],
+                'workplan_id': new_plan.id,
+                'section_id': event.section_id.id,
+                'priority': event.priority,
+                'recurrence_id': event.recurrence_id.id,  # mantiene la recurrencia
+            }
+            Event.create(vals)
+
+        return new_plan
+
+
     @api.model
     def default_get(self, fields_list):
         res = super().default_get(fields_list)
