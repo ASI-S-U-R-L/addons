@@ -8,9 +8,9 @@ _logger = logging.getLogger(__name__)
 
 class CalendarRecurrence(models.Model):
     _inherit = 'calendar.recurrence'
-    
+
     def _get_rrule(self):
-    rrule = super()._get_rrule()
+        rrule = super()._get_rrule()
         if self.base_event_id and self.base_event_id.start:
             limit_dt = datetime(self.base_event_id.start.year, 12, 31, 23, 59, 59)
             rrule._until = limit_dt  # fuerza límite en la regla
