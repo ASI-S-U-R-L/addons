@@ -26,8 +26,9 @@ class CalendarWorkplanPlan(models.Model):
 
     def duplicate_plan_next_year(self):
         """
-        Duplica el plan anual al siguiente año en estado borrador,
-        creando nuevas reglas de recurrencia con límite 31/12 del nuevo año.
+        Duplica el plan actual al siguiente año en estado borrador,
+        creando nuevas reglas de recurrencia (una por cada evento principal),
+        con fecha límite 31 de diciembre del nuevo año.
         """
         self.ensure_one()
         next_year = int(self.plan_year) + 1
