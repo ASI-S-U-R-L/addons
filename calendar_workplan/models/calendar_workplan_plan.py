@@ -24,6 +24,7 @@ class CalendarWorkplanPlan(models.Model):
     _order = 'plan_sequence'
 
 
+
     def duplicate_plan_next_year(self):
         """
         Duplica el plan actual al siguiente año en estado borrador,
@@ -67,6 +68,7 @@ class CalendarWorkplanPlan(models.Model):
                 Event.create(vals)
 
         return new_plan
+
 
 
     @api.model
