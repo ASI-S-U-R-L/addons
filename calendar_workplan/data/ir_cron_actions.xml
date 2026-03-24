@@ -19,7 +19,11 @@
             <field name="model_id" ref="model_calendar_workplan_plan"/>
             <field name="state">code</field>
             <field name="code">
-                model.search([]).duplicate_plan_next_year()
+                <field name="code">
+                for plan in model.search([('scope','=','annual')]):
+                    plan.duplicate_plan_next_year()
+                </field>
+
             </field>
             <!-- Ejecutar cada 1 de diciembre a las 23:00 -->
             <field name="interval_number">1</field>
