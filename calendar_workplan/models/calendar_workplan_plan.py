@@ -24,68 +24,68 @@ class CalendarWorkplanPlan(models.Model):
     _order = 'plan_sequence'
 
 
-def duplicate_plan_next_year(self):
-    """
-    Duplica el plan actual al siguiente año en estado borrador,
-    creando nuevas reglas de recurrencia (una por cada recurrencia original),
-    con fecha límite 31 de diciembre del nuevo año.
-    """
-    self.ensure_one()
-    next_year = int(self.plan_year) + 1
+    def duplicate_plan_next_year(self):
+        """
+        Duplica el plan actual al siguiente año en estado borrador,
+        creando nuevas reglas de recurrencia (una por cada recurrencia original),
+        con fecha límite 31 de diciembre del nuevo año.
+        """
+        self.ensure_one()
+        next_year = int(self.plan_year) + 1
 
-    # Crear nuevo plan
-    new_plan = self.create({
-        'scope': self.scope,
-        'parent_id': self.parent_id.id if self.parent_id else False,
-        'plan_year': f"{next_year:04d}",
-        'plan_month': self.plan_month,
-        'date_start': self.date_start.replace(year=next_year),
-        'date_end': self.date_end.replace(year=next_year),
-        'state': 'draft',
-        'presented_by_partner_id': self.presented_by_partner_id.id,
-        'approved_by_partner_id': self.approved_by_partner_id.id,
-        'plan_tz': self.plan_tz,
-    })
+        # Crear nuevo plan
+        new_plan = self.create({
+            'scope': self.scope,
+            'parent_id': self.parent_id.id if self.parent_id else False,
+            'plan_year': f"{next_year:04d}",
+            'plan_month': self.plan_month,
+            'date_start': self.date_start.replace(year=next_year),
+            'date_end': self.date_end.replace(year=next_year),
+            'state': 'draft',
+            'presented_by_partner_id': self.presented_by_partner_id.id,
+            'approved_by_partner_id': self.approved_by_partner_id.id,
+            'plan_tz': self.plan_tz,
+        })
 
-    Event = self.env['calendar.event']
+        Event = self.env['calendar.event']
 
-    # Mapeo: recurrencia original → nueva recurrencia
-    old_to_new_recurrence = {}
+        # Mapeo: recurrencia original → nueva recurrencia
+        old_to_new_recurrence = {}
 
-    for event in self.meeting_ids:
-        new_start = event.start + timedelta(days=365)
-        new_stop = event.stop + timedelta(days=365) if event.stop else None
+        for event in self.meeting_ids:
+            new_start = event.start + timedelta(days=365)
+            new_stop = event.stop + timedelta(days=365) if event.stop else None
 
-        new_recurrence_id = False
+            new_recurrence_id = False
 
-        if event.recurrence_id:
-            old_rec = event.recurrence_id
+            if event.recurrence_id:
+                old_rec = event.recurrence_id
 
-            # Si aún no se copió esta recurrencia, copiarla
-            if old_rec.id not in old_to_new_recurrence:
-                new_rec = old_rec.copy({
-                    'name': f"{old_rec.name} ({next_year})",
-                    'until': datetime(next_year, 12, 31, 23, 59, 59),
-                })
-                old_to_new_recurrence[old_rec.id] = new_rec.id
+                # Si aún no se copió esta recurrencia, copiarla
+                if old_rec.id not in old_to_new_recurrence:
+                    new_rec = old_rec.copy({
+                        'name': f"{old_rec.name} ({next_year})",
+                        'until': datetime(next_year, 12, 31, 23, 59, 59),
+                    })
+                    old_to_new_recurrence[old_rec.id] = new_rec.id
 
-            new_recurrence_id = old_to_new_recurrence[old_rec.id]
+                new_recurrence_id = old_to_new_recurrence[old_rec.id]
 
-        vals = {
-            'name': f"{event.name} ({next_year})",
-            'start': new_start,
-            'stop': new_stop,
-            'allday': event.allday,
-            'partner_ids': [(6, 0, event.partner_ids.ids)],
-            'workplan_id': new_plan.id,
-            'section_id': event.section_id.id,
-            'priority': event.priority,
-            'recurrence_id': new_recurrence_id,
-        }
+            vals = {
+                'name': f"{event.name} ({next_year})",
+                'start': new_start,
+                'stop': new_stop,
+                'allday': event.allday,
+                'partner_ids': [(6, 0, event.partner_ids.ids)],
+                'workplan_id': new_plan.id,
+                'section_id': event.section_id.id,
+                'priority': event.priority,
+                'recurrence_id': new_recurrence_id,
+            }
 
-        Event.create(vals)
+            Event.create(vals)
 
-    return new_plan
+        return new_plan
 
 
 
