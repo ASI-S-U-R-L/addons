@@ -17,10 +17,10 @@ class CalendarEvent(models.Model):
     # -------------------------
     # CAMPOS DE WORKPLAN
     # -------------------------
-    workplan_id = fields.Many2one(
-        'calendar_workplan.plan',
-        string="Plan de trabajo"
-    )
+    # workplan_id = fields.Many2one(
+    #     'calendar_workplan.plan',
+    #     string="Plan de trabajo"
+    # )
     section_id = fields.Many2one(
         'calendar_workplan.section',
         string="Sección",
