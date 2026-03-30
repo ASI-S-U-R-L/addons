@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 class CalendarEvent(models.Model):
     _inherit = 'calendar.event'
-
+    pass
     # -------------------------
     # CAMPOS DE WORKPLAN
     # -------------------------
