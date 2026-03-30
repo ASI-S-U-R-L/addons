@@ -14,10 +14,14 @@ _logger = logging.getLogger(__name__)
 class CalendarEvent(models.Model):
     _inherit = 'calendar.event'
 
-    workplan_id = fields.Many2one('calendar_workplan.plan', 'Plan')
+    workplan_id = fields.Many2one(
+        'calendar_workplan.plan',
+        string="Plan de trabajo",
+        ondelete='cascade'
+    )
     section_id = fields.Many2one(
         'calendar_workplan.section',
-        "Section",
+        string="Section",
         domain="[('workplan_ids', '=', workplan_id)]"
     )
     workplan_scope = fields.Selection(related='workplan_id.scope')
