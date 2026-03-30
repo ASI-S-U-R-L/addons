@@ -19,8 +19,7 @@ class CalendarEvent(models.Model):
     # -------------------------
     workplan_id = fields.Many2one(
         'calendar_workplan.plan',
-        string="Plan de trabajo",
-        ondelete='cascade'
+        string="Plan de trabajo"
     )
     section_id = fields.Many2one(
         'calendar_workplan.section',
