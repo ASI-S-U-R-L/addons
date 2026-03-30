@@ -112,7 +112,7 @@ class CalendarWorkplanPlan(models.Model):
     @api.model
     def _get_years(self):
         current_year = fields.Datetime.today().year
-        return [('%04d' % year_number, '%02d' % year_number) for year_number in range(current_year, current_year+3)]
+        return [('%04d' % year_number, '%02d' % year_number) for year_number in range(current_year-1, current_year+3)]
 
     @api.model
     def _get_months(self):
