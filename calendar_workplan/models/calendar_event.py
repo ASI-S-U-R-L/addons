@@ -2,7 +2,7 @@
 import ast
 import calendar
 import logging
-from datetime import datetime, date
+from datetime import datetime
 
 from pytz import timezone
 from odoo import api, fields, models, Command
@@ -14,6 +14,9 @@ _logger = logging.getLogger(__name__)
 class CalendarEvent(models.Model):
     _inherit = 'calendar.event'
 
+    # -------------------------
+    # CAMPOS DE WORKPLAN
+    # -------------------------
     workplan_id = fields.Many2one(
         'calendar_workplan.plan',
         string="Plan de trabajo",
@@ -21,21 +24,31 @@ class CalendarEvent(models.Model):
     )
     section_id = fields.Many2one(
         'calendar_workplan.section',
-        string="Section",
+        string="Sección",
         domain="[('workplan_ids', '=', workplan_id)]"
     )
-    workplan_scope = fields.Selection(related='workplan_id.scope')
-    channel_ids = fields.Many2many('mail.channel', string="Canales")
-    priority = fields.Selection(
-        [('0', 'Normal'), ('1', 'High')],
-        default='0',
-        string="Priority"
-    )
-    attendees_filter_domain = fields.Char(
-        string='Attendees filter',
-        compute='_compute_attendees_filter_domain'
+    workplan_scope = fields.Selection(
+        related='workplan_id.scope',
+        string="Ámbito del plan",
+        store=True
     )
 
+    # -------------------------
+    # CAMPOS DE CALENDARIO
+    # -------------------------
+    channel_ids = fields.Many2many(
+        'mail.channel',
+        string="Canales"
+    )
+    priority = fields.Selection(
+        [('0', 'Normal'), ('1', 'Alta')],
+        default='0',
+        string="Prioridad"
+    )
+    attendees_filter_domain = fields.Char(
+        string="Dominio de asistentes",
+        compute='_compute_attendees_filter_domain'
+    )
 
     # -------------------------
     # DOMINIO DE ASISTENTES
