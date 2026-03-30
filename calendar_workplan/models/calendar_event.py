@@ -119,3 +119,7 @@ class CalendarEvent(models.Model):
             return f"{start} - {stop}"
         except Exception:
             return self.display_time
+    def get_sorted_recurrent_days(self, year, month):
+        """Días recurrentes ordenados sin duplicados"""
+        days = list(set(self.get_recurrent_days(year, month)))  # Elimina duplicados
+        return sorted(days) if days else []    
