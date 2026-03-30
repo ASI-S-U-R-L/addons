@@ -37,7 +37,7 @@ class CalendarEvent(models.Model):
     # -------------------------
     channel_ids = fields.Many2many(
         'mail.channel',
-        string="Canales"
+        string="Grupos"
     )
     priority = fields.Selection(
         [('0', 'Normal'), ('1', 'Alta')],
