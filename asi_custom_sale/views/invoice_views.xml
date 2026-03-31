@@ -19,6 +19,7 @@
                 <xpath expr="//field[@name='invoice_date']" position="after">
                     <field name="reviewed" readonly="1" attrs="{'invisible': True}"/>
                     <field name="review_date" readonly="1" attrs="{'invisible': [('reviewed', '!=', True)]}"/>
+                    <field name="analytic_accounts_ids" widget="many2many_tags"/>
                 </xpath>
                 <xpath position="after" expr="//button[@name='button_cancel']">
                     <button string="Marcar como Revisada" type="object" name="mark_as_reviewed" attrs="{'invisible': ['|', ('reviewed', '=', True), ('state', '!=', 'posted')]}"/>

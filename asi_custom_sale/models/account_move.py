@@ -5,7 +5,7 @@ class AccountMove(models.Model):
     _inherit = 'account.move' 
   
     # Campos personalizados
-    reviewed = fields.Boolean(string="Revisada", default=False, readonly=True) 
+    reviewed = fields.Boolean(string="Archivada en contabilidad", default=False, readonly=True) 
     review_date = fields.Date(string="Fecha de Revisión", readonly=True)
     customer_signer_id = fields.Many2one(
         'res.partner',
@@ -18,6 +18,20 @@ class AccountMove(models.Model):
         compute="_compute_sale_orders",
         store=True
     )
+
+    analytic_accounts_ids = fields.Many2many(
+        'account.analytic.account',
+        string='Cuentas Analíticas',
+        compute='_compute_analytic_accounts',
+        store=True
+    )
+
+    @api.depends('invoice_line_ids.analytic_account_id')
+    def _compute_analytic_accounts(self):
+        for move in self:
+            cuentas = move.invoice_line_ids.mapped('analytic_account_id')
+            move.analytic_accounts_ids = cuentas
+
 
     # Método para marcar la factura como revisada
                  
