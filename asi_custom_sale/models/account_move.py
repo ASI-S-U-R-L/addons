@@ -26,17 +26,18 @@ class AccountMove(models.Model):
         store=True
     )
 
+
     @api.depends('invoice_line_ids.analytic_distribution')
     def _compute_analytic_accounts(self):
         for move in self:
             cuentas = self.env['account.analytic.account']
             for line in move.invoice_line_ids:
                 if line.analytic_distribution:
-                    # analytic_distribution es un dict {analytic_id: porcentaje}
-                    cuentas |= self.env['account.analytic.account'].browse(
-                        list(line.analytic_distribution.keys())
-                    )
+                    analytic_ids = [int(x) for x in line.analytic_distribution.keys()]
+                    cuentas |= self.env['account.analytic.account'].browse(analytic_ids)
             move.analytic_accounts_ids = cuentas
+
+
 
     # Método para marcar la factura como revisada
                  
