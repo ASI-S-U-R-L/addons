@@ -27,15 +27,15 @@ class AccountMove(models.Model):
     )
 
 
-    @api.depends('invoice_line_ids.analytic_distribution')
-    def _compute_analytic_accounts(self):
-        for move in self:
-            cuentas = self.env['account.analytic.account']
-            for line in move.invoice_line_ids:
-                if line.analytic_distribution:
-                    analytic_ids = [int(x) for x in line.analytic_distribution.keys()]
-                    cuentas |= self.env['account.analytic.account'].browse(analytic_ids)
-            move.analytic_accounts_ids = cuentas
+    # @api.depends('invoice_line_ids.analytic_distribution')
+    # def _compute_analytic_accounts(self):
+    #     for move in self:
+    #         cuentas = self.env['account.analytic.account']
+    #         for line in move.invoice_line_ids:
+    #             if line.analytic_distribution:
+    #                 analytic_ids = [int(x) for x in line.analytic_distribution.keys()]
+    #                 cuentas |= self.env['account.analytic.account'].browse(analytic_ids)
+    #         move.analytic_accounts_ids = cuentas
 
 
 
