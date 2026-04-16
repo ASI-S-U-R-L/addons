@@ -44,7 +44,15 @@ class AccountMove(models.Model):
                 body=f"El estado de gestión cambió de <b>{old_state}</b> "
                      f"a <b>{new_state}</b> por {self.env.user.name}."
             )
+    def action_set_gestion_state_sent(self):
+        self._set_gestion_state('sent_client')
 
+    def action_set_gestion_state_received(self):
+        self._set_gestion_state('received')
+
+    def action_set_gestion_state_archived(self):
+        self._set_gestion_state('archived')
+        
     @api.depends('invoice_line_ids.analytic_distribution')
     def _compute_analytic_accounts(self):
         for move in self:

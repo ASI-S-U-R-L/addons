@@ -28,13 +28,13 @@
                     <field name="customer_signer_id" attrs="{'invisible': ['!', ('move_type', 'in', ['out_invoice', 'out_refund'])]}"/>
                 </group>
                   <xpath expr="//header" position="inside">
-                        <button name="action_set_gestion_state" type="object"
-                        args="('sent_client',)" string="Enviar al Cliente"/>
-                       <button name="action_set_gestion_state" type="object"
-                        args="('received',)" string="Marcar Recibida"/>
-                        <button name="action_set_gestion_state" type="object"
-                        args="('archived',)" string="Archivar"/>
-                   </xpath>
+                        <button name="action_set_gestion_state_sent" type="object"
+                                string="Enviar al Cliente"/>
+                        <button name="action_set_gestion_state_received" type="object"
+                                string="Marcar Recibida"/>
+                        <button name="action_set_gestion_state_archived" type="object"
+                                string="Archivar"/>
+                    </xpath>
             </field>
         </record>
     </data>
