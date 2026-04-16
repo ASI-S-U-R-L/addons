@@ -34,22 +34,30 @@ class AccountMove(models.Model):
     ], string="Estado de Gestión", default='none')
 
     def _set_gestion_state(self, new_state):
-    for move in self:
-        if move.state != 'posted':
-            raise UserError("Solo puedes cambiar el estado de gestión cuando la factura está contabilizada.")
+        for move in self:
+            if move.state != 'posted':
+                raise UserError("Solo puedes cambiar el estado de gestión cuando la factura está contabilizada.")
 
-        old_state = move.gestion_state
+            old_state = move.gestion_state
 
-        # Obtener etiquetas legibles
-        old_label = move._fields['gestion_state'].convert_to_export(old_state, move)
-        new_label = move._fields['gestion_state'].convert_to_export(new_state, move)
+            # Obtener etiquetas legibles
+            old_label = move._fields['gestion_state'].convert_to_export(old_state, move)
+            new_label = move._fields['gestion_state'].convert_to_export(new_state, move)
 
-        move.gestion_state = new_state
+            move.gestion_state = new_state
 
-        move.message_post(
-            body=f"El estado de gestión cambió de <b>{old_label}</b> "
-                 f"a <b>{new_label}</b> por {self.env.user.name}."
-        )
+            # Mensaje según si es el estado inicial
+            if old_state in (False, 'none'):
+                msg = f"Se ha cambiado al estado <b>{new_label}</b> por {self.env.user.name}."
+            else:
+                msg = (
+                    f"El estado de gestión cambió de <b>{old_label}</b> "
+                    f"a <b>{new_label}</b> por {self.env.user.name}."
+                )
+
+            move.message_post(body=msg)
+
+
     def action_set_gestion_state_sent(self):
         self._set_gestion_state('sent_client')
 
