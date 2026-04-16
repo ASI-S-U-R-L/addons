@@ -33,7 +33,7 @@ class AccountMove(models.Model):
         ('archived', 'Archivada'),
     ], string="Estado de Gestión", default='none')
 
-    def action_set_gestion_state(self, new_state):
+    def _set_gestion_state(self, new_state):
         for move in self:
             if move.state != 'posted':
                 raise UserError("Solo puedes cambiar el estado de gestión cuando la factura está contabilizada.")
@@ -52,7 +52,7 @@ class AccountMove(models.Model):
 
     def action_set_gestion_state_archived(self):
         self._set_gestion_state('archived')
-        
+
     @api.depends('invoice_line_ids.analytic_distribution')
     def _compute_analytic_accounts(self):
         for move in self:
