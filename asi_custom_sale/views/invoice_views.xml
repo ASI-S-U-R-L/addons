@@ -29,11 +29,11 @@
                 </group>
               <xpath expr="//sheet" position="before">
                 <header>
-                  <button name="action_set_extra_state" type="object"
+                  <button name="action_set_gestion_state" type="object"
                           args="('sent_client',)" string="Enviar al Cliente"/>
-                  <button name="action_set_extra_state" type="object"
+                  <button name="action_set_gestion_state" type="object"
                           args="('received',)" string="Marcar Recibida"/>
-                  <button name="action_set_extra_state" type="object"
+                  <button name="action_set_gestion_state" type="object"
                           args="('archived',)" string="Archivar"/>
                 </header>
               </xpath>
