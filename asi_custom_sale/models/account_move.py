@@ -31,7 +31,7 @@ class AccountMove(models.Model):
         ('sent_client','Enviada al Cliente'),
         ('received', 'Recibida'),
         ('archived', 'Archivada'),
-    ], string="Estado de Gestión", default='none')
+    ], string="Estado de Gestión", default='none', store=True)
 
     def _set_gestion_state(self, new_state):
         for move in self:

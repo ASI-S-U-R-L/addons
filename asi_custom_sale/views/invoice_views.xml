@@ -17,19 +17,16 @@
             <field name="inherit_id" ref="account.view_move_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='invoice_date']" position="after">
-                    <field name="reviewed" readonly="1" attrs="{'invisible': True}"/>
-                    <field name="review_date" readonly="1" attrs="{'invisible': [('reviewed', '!=', True)]}"/>
+                    <field name="gestion_state" readonly="1" attrs="{'invisible': True}"/>     
                     <field name="analytic_accounts_ids" widget="many2many_tags"/>
                 </xpath>
-                <xpath position="after" expr="//button[@name='button_cancel']">
-                    <button string="Marcar como Revisada" type="object" name="mark_as_reviewed" attrs="{'invisible': ['|', ('reviewed', '=', True), ('state', '!=', 'posted')]}"/>
-                </xpath>
+
                 <group id="header_left_group" position="inside">
                     <field name="customer_signer_id" attrs="{'invisible': ['!', ('move_type', 'in', ['out_invoice', 'out_refund'])]}"/>
                 </group>
                   <xpath expr="//header" position="inside">
                         <button name="action_set_gestion_state_sent" type="object"
-                                string="Enviar al Cliente"/>
+                                string="Enviar al Cliente" attrs="{'invisible': ['|', ('gestion_state', '=', 'sent_client'), ('state', '!=', 'posted')]}"/>
                         <button name="action_set_gestion_state_received" type="object"
                                 string="Marcar Recibida"/>
                         <button name="action_set_gestion_state_archived" type="object"
