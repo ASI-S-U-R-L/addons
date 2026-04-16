@@ -27,6 +27,17 @@
                 <group id="header_left_group" position="inside">
                     <field name="customer_signer_id" attrs="{'invisible': ['!', ('move_type', 'in', ['out_invoice', 'out_refund'])]}"/>
                 </group>
+              <xpath expr="//sheet" position="before">
+                <header>
+                  <button name="action_set_extra_state" type="object"
+                          args="('sent_client',)" string="Enviar al Cliente"/>
+                  <button name="action_set_extra_state" type="object"
+                          args="('received',)" string="Marcar Recibida"/>
+                  <button name="action_set_extra_state" type="object"
+                          args="('archived',)" string="Archivar"/>
+                </header>
+              </xpath>
+                
             </field>
         </record>
     </data>

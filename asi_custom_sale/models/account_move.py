@@ -26,6 +26,23 @@ class AccountMove(models.Model):
         store=True
     )
 
+    gestion_state = fields.Selection([
+        ('none', 'Sin gestión'),
+        ('sent_client', 'Enviada al Cliente'),
+        ('received', 'Recibida'),
+        ('archived', 'Archivada'),
+    ], string="Estado de Gestión", default='none')
+
+    def action_set_gestion_state(self, new_state):
+        for move in self:
+            if move.state == 'posted':  # Solo si está confirmada contablemente
+                old_state = move.gestion_state
+                move.gestion_state = new_state
+                move.message_post(
+                    body=f"El estado de gestión cambió de <b>{old_state}</b> "
+                         f"a <b>{new_state}</b> por {self.env.user.name}."
+                )
+
 
     @api.depends('invoice_line_ids.analytic_distribution')
     def _compute_analytic_accounts(self):
