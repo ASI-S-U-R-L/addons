@@ -28,7 +28,7 @@ class AccountMove(models.Model):
 
     gestion_state = fields.Selection([
         ('none', 'Sin gestionar'),
-        ('sent_client','Establecer Enviada'),
+        ('sent_client','Enviada al Cliente'),
         ('received', 'Recibida'),
         ('archived', 'Archivada'),
     ], string="Estado de Gestión", default='none')
