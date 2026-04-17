@@ -80,9 +80,10 @@
             <button name="action_set_gestion_state_sent"
                     string="Marcar como Enviada al Cliente"
                     type="object"
-                    class="oe_highlight"
+                    class="btn-warning"
                     context="{'from_mass_action': True}"
                     groups="account.group_account_invoice"/>
+      
         </xpath>
 
     </field>
