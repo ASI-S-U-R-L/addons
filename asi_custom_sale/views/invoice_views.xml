@@ -48,7 +48,7 @@
     <field name="inherit_id" ref="account.view_account_invoice_filter"/>
     <field name="arch" type="xml">
 
-        <!-- Insertar filtros simples antes del primer filtro existente -->
+        <!-- Filtros simples -->
         <xpath expr="//search" position="inside">
             <filter name="gestion_none" string="Sin gestionar"
                     domain="[('gestion_state','=','none')]"/>
@@ -60,8 +60,8 @@
                     domain="[('gestion_state','=','archived')]"/>
         </xpath>
 
-        <!-- Insertar agrupación dentro del grupo 'Agrupar por' -->
-        <xpath expr="//group[@string='Agrupar por']" position="inside">
+        <!-- Agrupar por -->
+        <xpath expr="//group[@expand='0']" position="inside">
             <filter name="group_gestion_state"
                     string="Estado de Gestión"
                     context="{'group_by': 'gestion_state'}"/>
@@ -69,6 +69,7 @@
 
     </field>
 </record>
+
 
 
 
