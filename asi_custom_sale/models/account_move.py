@@ -35,19 +35,42 @@ class AccountMove(models.Model):
     ], string="Estado de Gestión", default='none', store=True)
 
     def _set_gestion_state(self, new_state):
+        # Transiciones permitidas
+        allowed_transitions = {
+            'sent_client': ['none'],
+            'received': ['none', 'sent_client'],
+            'archived': ['none', 'sent_client', 'received'],
+        }
+
+        # Etiquetas legibles para mensajes de error
+        state_labels = dict(self._fields['gestion_state'].selection)
+
         for move in self:
             if move.state != 'posted':
                 raise UserError("Solo puedes cambiar el estado de gestión cuando la factura está contabilizada.")
 
             old_state = move.gestion_state
 
-            # Obtener etiquetas legibles
-            old_label = move._fields['gestion_state'].convert_to_export(old_state, move)
-            new_label = move._fields['gestion_state'].convert_to_export(new_state, move)
+            # Validación de transición
+            if new_state in allowed_transitions:
+                if old_state not in allowed_transitions[new_state]:
+                    allowed = ", ".join(
+                        f"'{state_labels[s]}'" for s in allowed_transitions[new_state]
+                    )
+                    raise UserError(
+                        f"No se puede cambiar el estado a '{state_labels[new_state]}' "
+                        f"cuando el estado actual es '{state_labels[old_state]}'.\n\n"
+                        f"Estados permitidos para esta transición: {allowed}."
+                    )
 
+            # Obtener etiquetas legibles
+            old_label = state_labels.get(old_state, old_state)
+            new_label = state_labels.get(new_state, new_state)
+
+            # Aplicar cambio
             move.gestion_state = new_state
 
-            # Mensaje según si es el estado inicial
+            # Mensaje en el chatter
             if old_state in (False, 'none'):
                 msg = f"Se ha cambiado al estado <b>{new_label}</b> por {self.env.user.name}."
             else:
