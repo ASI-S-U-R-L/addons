@@ -39,18 +39,18 @@
         </record>
 
         <record id="view_invoice_search_inherit_gestion_state" model="ir.ui.view">
-            <field name="name">account.move.search.gestion.state</field>
-            <field name="model">account.move</field>
-            <field name="inherit_id" ref="account.view_invoice_filter"/>
-            <field name="arch" type="xml">
-                <!-- Insertar dentro del bloque de agrupación -->
-                <xpath expr="//group[@expand='1' and @string='Agrupar por']" position="inside">
-                    <filter string="Estado de Gestión"
-                            name="group_by_gestion_state"
-                            context="{'group_by':'gestion_state'}"/>
-                </xpath>
-            </field>
-        </record>
+    <field name="name">account.move.search.gestion.state</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_move_search"/>
+    <field name="arch" type="xml">
+        <xpath expr="//group[@expand='1' and @string='Agrupar por']" position="inside">
+            <filter string="Estado de Gestión"
+                    name="group_by_gestion_state"
+                    context="{'group_by':'gestion_state'}"/>
+        </xpath>
+    </field>
+</record>
+
 
 
 
