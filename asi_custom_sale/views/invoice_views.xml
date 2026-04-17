@@ -28,10 +28,14 @@
                         <button name="action_set_gestion_state_sent" type="object"
                                 string="Enviar al Cliente" attrs="{'invisible': ['|', ('gestion_state', '=', 'sent_client'), ('state', '!=', 'posted')]}"/>
                         <button name="action_set_gestion_state_received" type="object"
-                                string="Marcar Recibida" attrs="{'invisible': ['|', ('gestion_state', '=', 'received'), ('state', '!=', 'posted')]}"/>
+                        string="Marcar Recibida"
+                        attrs="{'invisible': ['|', ('state', '!=', 'posted'),
+                                          ('gestion_state', 'not in', ['none','sent_client'])]}"/>
                         <button name="action_set_gestion_state_archived" type="object"
-                                string="Archivar" attrs="{'invisible': ['|', ('gestion_state', '=', 'archived'), ('state', '!=', 'posted')]}"/>
-                    </xpath>
+                                string="Archivar"
+                                attrs="{'invisible': ['|', ('state', '!=', 'posted'),
+                                                      ('gestion_state', '!=', 'received')]}"/>
+                </xpath>
             </field>
         </record>
     </data>
