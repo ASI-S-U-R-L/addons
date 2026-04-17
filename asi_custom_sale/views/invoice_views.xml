@@ -64,7 +64,10 @@
         <xpath expr="//group[@expand='0']" position="inside">
             <filter name="group_gestion_state"
                     string="Estado de Gestión"
-                    context="{'group_by': 'gestion_state'}"/>
+                    context="{'group_by': 'gestion_state'}"/>      
+            <filter name="group_analytic_accounts"
+                    string="Responsable de Factura"
+                    context="{'group_by': 'analytic_accounts_ids'}"/>                      
         </xpath>
 
     </field>
