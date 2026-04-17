@@ -83,13 +83,13 @@
 
         <xpath expr="//tree/header" position="inside">
             <button name="action_set_gestion_state_sent"
-                    string="Marcar como Enviada al Cliente"
+                    string="Marcar en el Cliente"
                     type="object"
                     class="btn-success"
                     context="{'from_mass_action': True}"
                     groups="account.group_account_invoice"/>
               <button name="action_set_gestion_state_received"
-                            string="Marcar Recibida firmada"
+                            string="Marcar Recibida"
                             type="object"
                             class="btn-success"
                             context="{'from_mass_action': True}"
@@ -100,6 +100,22 @@
                             class="btn-success"
                             context="{'from_mass_action': True}"
                             groups="account.group_account_invoice"/>                
+        </xpath>
+
+    </field>
+</record>
+
+<record id="view_invoice_tree_gestion_colors" model="ir.ui.view">
+    <field name="name">invoice.tree.gestion.colors</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_out_invoice_tree"/>
+    <field name="arch" type="xml">
+
+        <xpath expr="//tree" position="attributes">
+            <attribute name="decoration-muted">gestion_state == 'none'</attribute>
+            <attribute name="decoration-info">gestion_state == 'sent_client'</attribute>
+            <attribute name="decoration-warning">gestion_state == 'received'</attribute>
+            <attribute name="decoration-success">gestion_state == 'archived'</attribute>
         </xpath>
 
     </field>
