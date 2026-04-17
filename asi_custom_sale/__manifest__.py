@@ -17,6 +17,7 @@
         'reports/report_templates.xml',
         'reports/report_invoice_extend.xml',
         'reports/sale_report.xml',
+        'data/ir.cron.xml',
     ],
    
     'installable': True,

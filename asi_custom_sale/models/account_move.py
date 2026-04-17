@@ -87,8 +87,13 @@ class AccountMove(models.Model):
 
             move.analytic_accounts_ids = cuentas
 
-
-
+    def cron_recompute_analytic_accounts(self):
+        # Solo facturas contabilizadas
+        moves = self.search([
+            ('state', '=', 'posted'),
+            ('move_type', 'in', ['out_invoice', 'in_invoice'])
+        ])
+        moves._compute_analytic_accounts()
 
 
     # Método para marcar la factura como revisada
