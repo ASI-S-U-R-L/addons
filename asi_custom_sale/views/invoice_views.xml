@@ -48,25 +48,24 @@
     <field name="inherit_id" ref="account.view_account_invoice_filter"/>
     <field name="arch" type="xml">
 
-        <!-- Filtro por Estado de Gestión -->
-        <filter name="gestion_state" string="Estado de Gestión"
-                context="{'group_by': 'gestion_state'}"/>
+        <!-- Insertar filtros simples antes del primer filtro existente -->
+        <xpath expr="//search" position="inside">
+            <filter name="gestion_none" string="Sin gestionar"
+                    domain="[('gestion_state','=','none')]"/>
+            <filter name="gestion_sent" string="Enviada al Cliente"
+                    domain="[('gestion_state','=','sent_client')]"/>
+            <filter name="gestion_received" string="Recibida"
+                    domain="[('gestion_state','=','received')]"/>
+            <filter name="gestion_archived" string="Archivada"
+                    domain="[('gestion_state','=','archived')]"/>
+        </xpath>
 
-        <!-- Opciones de filtro específicas -->
-        <filter name="gestion_none" string="Sin gestionar"
-                domain="[('gestion_state','=','none')]"/>
-        <filter name="gestion_sent" string="Enviada al Cliente"
-                domain="[('gestion_state','=','sent_client')]"/>
-        <filter name="gestion_received" string="Recibida"
-                domain="[('gestion_state','=','received')]"/>
-        <filter name="gestion_archived" string="Archivada"
-                domain="[('gestion_state','=','archived')]"/>
-
-        <!-- Agrupación -->
-        <group expand="0" string="Agrupar por">
-            <filter name="group_gestion_state" string="Estado de Gestión"
+        <!-- Insertar agrupación dentro del grupo 'Agrupar por' -->
+        <xpath expr="//group[@string='Agrupar por']" position="inside">
+            <filter name="group_gestion_state"
+                    string="Estado de Gestión"
                     context="{'group_by': 'gestion_state'}"/>
-        </group>
+        </xpath>
 
     </field>
 </record>
