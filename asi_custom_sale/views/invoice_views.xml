@@ -51,13 +51,13 @@
         <!-- Filtros simples -->
         <xpath expr="//search" position="inside">
             <filter name="gestion_none" string="Sin gestionar"
-                    domain="[('gestion_state','=','none')]"/>
+                    domain="['&', ('gestion_state','=','none'), ('state', '=', 'posted')]"/>
             <filter name="gestion_sent" string="Enviada al Cliente"
-                    domain="[('gestion_state','=','sent_client')]"/>
+                    domain="['&', ('gestion_state','=','sent_client'), ('state', '=', 'posted')]"/>
             <filter name="gestion_received" string="Recibida"
-                    domain="[('gestion_state','=','received')]"/>
+                    domain="['&', ('gestion_state','=','received'), ('state', '=', 'posted')]"/>
             <filter name="gestion_archived" string="Archivada"
-                    domain="[('gestion_state','=','archived')]"/>
+                    domain="['&', ('gestion_state','=','archived'), ('state', '=', 'posted')]"/>
         </xpath>
 
         <!-- Agrupar por -->
