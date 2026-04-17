@@ -50,6 +50,8 @@
 
         <!-- Filtros simples -->
         <xpath expr="//search" position="inside">
+            <filter name="gestion_incomplete" string="Incompletas"
+                    domain="['&amp;', ('state', '=', 'posted'), ('gestion_state', '!=', 'archived')]"/>
             <filter name="gestion_none" string="Sin gestionar"
                     domain="['&amp;', ('gestion_state','=','none'), ('state', '=', 'posted')]"/>
             <filter name="gestion_sent" string="Enviada al Cliente"
