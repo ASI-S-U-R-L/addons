@@ -39,7 +39,7 @@ class AccountMove(models.Model):
         allowed_transitions = {
             'sent_client': ['none'],
             'received': ['none', 'sent_client'],
-            'archived': ['none', 'sent_client', 'received'],
+            'archived': ['received'],
         }
 
         # Etiquetas legibles para mensajes de error
