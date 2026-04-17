@@ -8,7 +8,9 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="sgichs_software_ai_classification.enable",
         help="Habilita la clasificación automática de software no catalogado usando IA."
     )
-
+    module_sgichs_software_ai_classification = fields.Boolean(
+        string="Clasificación AI para SGICHS"
+    )
     @api.model
     def get_values(self):
         res = super().get_values()
