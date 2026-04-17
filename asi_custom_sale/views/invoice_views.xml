@@ -83,10 +83,21 @@
             <button name="action_set_gestion_state_sent"
                     string="Marcar como Enviada al Cliente"
                     type="object"
-                    class="btn-warning"
+                    class="btn-success"
                     context="{'from_mass_action': True}"
                     groups="account.group_account_invoice"/>
-      
+              <button name="action_set_gestion_state_received"
+                            string="Marcar Recibida firmada"
+                            type="object"
+                            class="btn-success"
+                            context="{'from_mass_action': True}"
+                            groups="account.group_account_invoice"/>
+              <button name="action_set_gestion_state_archived"
+                            string="Marcar Archivada"
+                            type="object"
+                            class="btn-success"
+                            context="{'from_mass_action': True}"
+                            groups="account.group_account_invoice"/>                
         </xpath>
 
     </field>
