@@ -43,13 +43,15 @@
             <field name="model">account.move</field>
             <field name="inherit_id" ref="account.view_invoice_filter"/>
             <field name="arch" type="xml">
-                <xpath expr="//filter[@name='group_by']" position="inside">
+                <!-- Insertar dentro del bloque de agrupación -->
+                <xpath expr="//group[@expand='1' and @string='Agrupar por']" position="inside">
                     <filter string="Estado de Gestión"
                             name="group_by_gestion_state"
                             context="{'group_by':'gestion_state'}"/>
                 </xpath>
             </field>
         </record>
+
 
 
         
