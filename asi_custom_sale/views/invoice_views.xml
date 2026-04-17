@@ -50,6 +50,20 @@
 
         <!-- Filtros simples -->
         <xpath expr="//search" position="inside">
+            <filter name="current_month" string="Mes actual"
+        domain="[
+            '&amp;',
+            ('invoice_date', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%%Y-%%m-%%d')),
+            ('invoice_date', '&lt;', (context_today() + relativedelta(day=1, months=+1)).strftime('%%Y-%%m-%%d'))
+        ]"/>
+
+<filter name="last_month" string="Mes pasado"
+        domain="[
+            '&amp;',
+            ('invoice_date', '&gt;=', (context_today() + relativedelta(day=1, months=-1)).strftime('%%Y-%%m-%%d')),
+            ('invoice_date', '&lt;', (context_today() + relativedelta(day=1)).strftime('%%Y-%%m-%%d'))
+        ]"/>
+
             <filter name="gestion_incomplete" string="Incompletas"
                     domain="['&amp;', ('state', '=', 'posted'), ('gestion_state', '!=', 'archived')]"/>
             <filter name="gestion_none" string="Sin gestionar"
