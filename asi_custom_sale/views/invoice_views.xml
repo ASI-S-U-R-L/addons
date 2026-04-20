@@ -22,7 +22,7 @@
                 <xpath expr="//field[@name='invoice_date']" position="after">
                     <field name="gestion_state" readonly="1" attrs="{'invisible': True}"/>     
                     <field name="analytic_accounts_ids" widget="many2many_tags"/>
-                    <field name="format_document"/>
+                    <field name="document_format"/>
                 </xpath>
 
                 <group id="header_left_group" position="inside">
