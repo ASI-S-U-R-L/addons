@@ -34,6 +34,11 @@ class AccountMove(models.Model):
         ('archived', 'Archivada'),
     ], string="Estado de Gestión", default='none', store=True)
 
+    document_format = fields.Selection([
+        ('printed', 'Impreso'),
+        ('digital','Digital'),        
+    ], string="Formato del documento", default='printed', store=True)
+
     def _set_gestion_state(self, new_state):
         # Transiciones permitidas
         allowed_transitions = {
