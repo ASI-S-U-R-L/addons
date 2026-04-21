@@ -1,0 +1,38 @@
+<odoo>
+    <record id="view_aging_pareto_report_wizard" model="ir.ui.view">
+        <field name="name">aging.pareto.report.wizard.form</field>
+        <field name="model">aging.pareto.report</field>
+        <field name="arch" type="xml">
+            <form string="Informe de Cobros - Pareto y Envejecimiento">
+                <group>
+                    <field name="date_to"/>
+                </group>
+                <footer>
+                    <button name="action_print_report"
+                            type="object"
+                            string="Imprimir informe"
+                            class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_aging_pareto_report_wizard" model="ir.actions.act_window">
+        <field name="name">Informe de Cobros (Pareto / Envejecimiento)</field>
+        <field name="res_model">aging.pareto.report</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_aging_pareto_root"
+              name="Gestión de Cobros"
+              parent="account.menu_finance"
+              sequence="90"/>
+
+    <menuitem id="menu_aging_pareto_report"
+              name="Informe Pareto y Envejecimiento"
+              parent="menu_aging_pareto_root"
+              action="action_aging_pareto_report_wizard"
+              sequence="10"/>
+</odoo>

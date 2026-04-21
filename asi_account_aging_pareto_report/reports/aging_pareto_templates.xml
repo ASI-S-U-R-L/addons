@@ -1,0 +1,68 @@
+<odoo>
+    <template id="report_aging_pareto">
+        <t t-call="web.external_layout">
+            <t t-set="doc" t-value="doc"/>
+            <div class="page">
+                <h2>Informe de Cobros - Pareto y Envejecimiento</h2>
+                <p>
+                    Fecha de corte:
+                    <span t-esc="doc.date_to"/>
+                </p>
+
+                <!-- Sección Pareto -->
+                <h3>1. Clientes que concentran el 80% de la deuda (Regla 20/80)</h3>
+                <t t-set="pareto_clients" t-value="doc.get_pareto_clients()"/>
+                <t t-if="pareto_clients">
+                    <table class="table table-sm o_main_table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Deuda</th>
+                                <th>% Deuda</th>
+                                <th>% Acumulado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="pareto_clients" t-as="c">
+                                <td t-esc="c['partner_name']"/>
+                                <td t-esc="formatLang(c['deuda'], currency_obj=doc.company_id.currency_id)"/>
+                                <td t-esc="round(c['porcentaje'], 2)"/>
+                                <td t-esc="round(c['porcentaje_acumulado'], 2)"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                </t>
+                <t t-if="not pareto_clients">
+                    <p>No se encontraron deudas para calcular Pareto.</p>
+                </t>
+
+                <!-- Sección Envejecimiento -->
+                <h3>2. Clientes con mayor envejecimiento de deudas</h3>
+                <t t-set="aging_clients" t-value="doc.get_aging_clients()"/>
+                <t t-if="aging_clients">
+                    <table class="table table-sm o_main_table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Máx. días vencidos</th>
+                                <th>Promedio días vencidos</th>
+                                <th>Total vencido</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="aging_clients" t-as="a">
+                                <td t-esc="a['partner_name']"/>
+                                <td t-esc="a['max_dias']"/>
+                                <td t-esc="round(a['promedio'], 2)"/>
+                                <td t-esc="formatLang(a['total_vencido'], currency_obj=doc.company_id.currency_id)"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                </t>
+                <t t-if="not aging_clients">
+                    <p>No se encontraron deudas vencidas para calcular envejecimiento.</p>
+                </t>
+            </div>
+        </t>
+    </template>
+</odoo>
