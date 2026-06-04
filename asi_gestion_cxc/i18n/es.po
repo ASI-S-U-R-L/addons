@@ -1,0 +1,24 @@
+﻿# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#	* asi_gestion_cxc
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: asi_gestion_cxc
+#: model:ir.model.fields,field_description:informe.pendientes.equipo.field_fecha_factura_antigua
+msgid "Factura mÃ¡s Antigua del Equipo"
+msgstr "Factura mÃ¡s antigua del equipo"
+
+#. module: asi_gestion_cxc
+#: model:ir.model.fields,field_description:informe.pendientes.equipo.field_team_id
+msgid "Equipo de Ventas"
+msgstr "Equipo de ventas"
